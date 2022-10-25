@@ -25,13 +25,14 @@ do_CopyNumberVariantPlot(
   font.type = "sans",
   border.size = 2,
   border.color = "black",
-  rotate_x_axis_labels = TRUE,
+  rotate_x_axis_labels = 45,
   plot_cell_borders = TRUE,
   enforce_symmetry = TRUE,
   legend.title = NULL,
   na.value = "grey75",
   viridis_color_map = "G",
-  viridis_direction = 1
+  viridis_direction = 1,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -88,7 +89,7 @@ do_CopyNumberVariantPlot(
 
 \item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Whether to rotate X axis labels.}
+\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{plot_cell_borders}{\strong{\code{\link[base]{logical}}} | Whether to plot border around cells.}
 
@@ -101,6 +102,8 @@ do_CopyNumberVariantPlot(
 \item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
 \item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{verbose}{\strong{\code{\link[base]{logical}}} | Whether to show extra comments, warnings,etc.}
 }
 \value{
 A list containing Feature Plots for different chromosome regions and corresponding dot plots by groups..
@@ -114,6 +117,8 @@ Display CNV scores from inferCNV as Feature Plots.
   value <- SCpubr:::check_suggests(function_name = "do_CopyNumberVariantPlot", passive = TRUE)
 
   if (isTRUE(value)){
+    # Consult the full documentation in https://enblacar.github.io/SCpubr-book/
+
     # This function expects that you have run inferCNV on your
     # own and you have access to the output object.
 
@@ -124,42 +129,21 @@ Display CNV scores from inferCNV as Feature Plots.
     # Define your inferCNV object.
     infercnv_object <- readRDS(system.file("extdata/infercnv_object_example.rds",
                                            package = "SCpubr"))
-    file_name <- "extdata/infercnv_object_metacells_example.rds"
-    infercnv_object_metacells <- readRDS(system.file(file_name,
-                                                     package = "SCpubr"))
 
     # Get human chromosome locations.
     chromosome_locations = SCpubr::human_chr_locations
 
-    # Get metacell mapping if used metacells with inferCNV.
-    metacell_mapping <- readRDS(system.file("extdata/metacell_mapping_example.rds",
-                                            package = "SCpubr"))
-
-    # Using a normal run - compute for all chromosome arms.
+    # Compute for a single chromosome.
     out <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
                                             infercnv_object = infercnv_object,
                                             using_metacells = FALSE,
-                                            chromosome_locations = chromosome_locations)
+                                            chromosome_locations = chromosome_locations,
+                                            chromosome_focus = "1")
     # Retrieve the UMAP for 1p region.
     out$`1p_umap`
     # Retrieve the dot plot for 1p region.
     out$`1p_dotplot`
 
-    # Compute for a single chromosoome.
-    out <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
-                                            infercnv_object = infercnv_object,
-                                            using_metacells = FALSE,
-                                            chromosome_focus = "2",
-                                            chromosome_locations = chromosome_locations)
-
-    # Compute for a run using metacells.
-    ## metacell_mapping has to be a vector that, for each cell,
-    ## tells which is the corresponding metacell.
-    out <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
-                                            infercnv_object = infercnv_object_metacells,
-                                            using_metacells = TRUE,
-                                            metacell_mapping = metacell_mapping,
-                                            chromosome_locations = chromosome_locations)
   } else if (isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")

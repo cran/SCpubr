@@ -13,7 +13,7 @@ do_BoxPlot(
   slot = "data",
   font.size = 14,
   font.type = "sans",
-  rotate_x_axis_labels = TRUE,
+  rotate_x_axis_labels = 45,
   colors.use = NULL,
   na.value = "grey75",
   plot.title = NULL,
@@ -77,7 +77,7 @@ do_BoxPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Whether to rotate X axis labels.}
+\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
 
@@ -167,27 +167,14 @@ Generate Box Plots.
   value <- SCpubr:::check_suggests(function_name = "do_BoxPlot", passive = TRUE)
 
   if (isTRUE(value)){
+    # Consult the full documentation in https://enblacar.github.io/SCpubr-book/
+
     # Define your Seurat object.
     sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
 
     # Basic box plot.
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA")
-    p
-
-    # Generate a custom group.
-    sample$custom_group = ifelse(colnames(sample) \%in\% sample(colnames(sample), 50), "A", "B")
-
-    # Use custom grouping.
-    p <- SCpubr::do_BoxPlot(sample = sample,
-                            feature = "nCount_RNA",
-                            group.by = "custom_group")
-    p
-
-    # Flip the box plot.
-    p <- SCpubr::do_BoxPlot(sample = sample,
-                            feature = "nCount_RNA",
-                            flip = TRUE)
     p
 
     # Use silhouette style.
@@ -203,13 +190,13 @@ Generate Box Plots.
     p
 
     # Apply second grouping.
+    sample$orig.ident <- ifelse(sample$seurat_clusters \%in\% c("0", "1", "2", "3"), "A", "B")
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
-                            split.by = "custom_group")
+                            split.by = "orig.ident")
     p
 
     # Apply statistical tests.
-    sample$orig.ident <- ifelse(sample$seurat_clusters \%in\% c("0", "1", "2", "3"), "A", "B")
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "orig.ident",
@@ -217,14 +204,6 @@ Generate Box Plots.
                             comparisons = list(c("A", "B")))
     p
 
-    # Apply statistical tests and show the p-value.
-    p <- SCpubr::do_BoxPlot(sample = sample,
-                            feature = "nCount_RNA",
-                            group.by = "orig.ident",
-                            use_test = TRUE,
-                            comparisons = list(c("A", "B")),
-                            map_signif_level = FALSE)
-    p
   } else if (isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")

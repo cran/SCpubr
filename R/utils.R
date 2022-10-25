@@ -49,7 +49,7 @@
 #' @param border.size \strong{\code{\link[base]{numeric}}} | Width of the border of the cells.
 #' @param border.color \strong{\code{\link[base]{character}}} | Color to use for the border of the cells.
 #' @param na.value \strong{\code{\link[base]{character}}} | Color value for NA.
-#' @param rotate_x_axis_labels \strong{\code{\link[base]{numeric}}} | Whether to rotate X axis labels.
+#' @param rotate_x_axis_labels \strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.
 #' @param xlab,ylab \strong{\code{\link[base]{character}}} | Titles for the X and Y axis.
 #' @param pt.size \strong{\code{\link[base]{numeric}}} | Size of the dots.
 #' @param flip \strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.
@@ -72,7 +72,8 @@
 #' @param column_title \strong{\code{\link[base]{character}}} | Title for the columns of the heatmaps. Only works with single heatmaps.
 #' @param row_title \strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.
 #' @param cluster_cols,cluster_rows \strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.
-#' @param column_names_rot,row_names_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column and row labels.
+#' @param column_names_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.
+#' @param row_names_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.
 #' @param cell_size \strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.
 #' @param input_gene_list \strong{\code{\link[SCpubr]{named_list}}} | Named list of lists of genes to be used as input.
 #' @param column_title_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column titles.
@@ -108,6 +109,8 @@
 #' @param plot.axes \strong{\code{\link[base]{logical}}} | Whether to plot axes or not.
 #' @param nbin \strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.
 #' @param ctrl \strong{\code{\link[base]{numeric}}} | Number of genes in the control set to use in \link[Seurat]{AddModuleScore}.
+#' @param repel \strong{\code{\link[base]{logical}}} | Whether to repel the text labels.
+#'
 #'
 #' @usage NULL
 #' @return Nothing. This is a mock function.
@@ -194,7 +197,8 @@ doc_function <- function(sample,
                          individual.titles,
                          individual.subtitles,
                          individual.captions,
-                         legend.title.position){}
+                         legend.title.position,
+                         repel){}
 
 #' Named vector.
 #'
@@ -253,6 +257,7 @@ check_suggests <- function(function_name, passive = FALSE){
                               "scales",
                               "grid",
                               "assertthat"),
+                   "do_AlluvialPlot" = c("ggalluvial", "ggrepel"),
                    "do_BarPlot" = c("colorspace", "ggrepel"),
                    "do_BeeSwarmPlot" = c("colorspace", "ggbeeswarm", "ggrastr"),
                    "do_BoxPlot" = c("ggsignif"),
@@ -372,10 +377,10 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
       }
     }
   }
-  cran_packages <- c("circlize",
+  cran_packages <- c("assertthat",
+                     "circlize",
                      "colorspace",
                      "dplyr",
-                     "forcats",
                      "ggbeeswarm",
                      "ggdist",
                      "ggExtra",
@@ -384,22 +389,25 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
                      "ggrastr",
                      "ggrepel",
                      "ggridges",
-                     "grDevices",
-                     "grid",
+                     "ggsignif",
+                     "graphics",
                      "magrittr",
                      "patchwork",
-                     "pbapply",
+                     "pheatmap",
                      "plyr",
                      "rlang",
                      "scales",
                      "scattermore",
                      "Seurat",
-                     "stats",
-                     "stringr",
-                     "svglite",
                      "tibble",
                      "tidyr",
+                     "forcats",
+                     "Matrix",
+                     "purrr",
+                     "stringr",
+                     "svglite",
                      "viridis")
+
   bioconductor_packages <- c("ComplexHeatmap",
                              "infercnv",
                              "Nebulosa")
@@ -1161,15 +1169,15 @@ compute_barplot_annotation <- function(sample,
   `%>%`<- magrittr::`%>%`
   # Compute column/row annotation. Obtain the percentage of a group per variable.
   annotation <- sample@meta.data %>%
-                dplyr::select(!!rlang::sym(group.by), !!rlang::sym(annotation)) %>%
+                dplyr::select(dplyr::all_of(c(group.by, annotation))) %>%
                 dplyr::mutate(cluster = !!rlang::sym(group.by)) %>%
                 dplyr::mutate(subgroup = !!rlang::sym(annotation)) %>%
-                dplyr::select(.data$cluster, .data$subgroup) %>%
+                dplyr::select(dplyr::all_of(c("cluster", "subgroup"))) %>%
                 dplyr::group_by(.data$cluster, .data$subgroup) %>%
                 dplyr::summarise(n = dplyr::n()) %>%
                 dplyr::mutate(freq = .data$n / sum(.data$n)) %>%
-                dplyr::select(.data$cluster, .data$subgroup, .data$freq) %>%
-                tidyr::pivot_wider(values_from = .data$freq, names_from = .data$subgroup)
+                dplyr::select(dplyr::all_of(c("cluster", "subgroup", "freq"))) %>%
+                tidyr::pivot_wider(values_from = "freq", names_from = "subgroup")
   return(annotation)
 }
 
@@ -1426,21 +1434,21 @@ heatmap_inner <- function(data,
 
 
   lgd <- ComplexHeatmap::Legend(at = breaks,
-                               labels = labels,
-                               col_fun = col_fun,
-                               title = legend.title,
-                               direction = direction,
-                               legend_height = legend_height,
-                               legend_width = legend_width,
-                               grid_width = grid_width,
-                               grid_height = grid_height,
-                               border = legend.framecolor,
-                               title_position = title_position,
-                               break_dist = rep(1, length(breaks) - 1),
-                               labels_gp = grid::gpar(fontsize = fontsize,
-                                                      fontface = "bold"),
-                               title_gp = grid::gpar(fontsize = fontsize,
-                                                     fontface = "bold"))
+                                labels = labels,
+                                col_fun = col_fun,
+                                title = legend.title,
+                                direction = direction,
+                                legend_height = legend_height,
+                                legend_width = legend_width,
+                                grid_width = grid_width,
+                                grid_height = grid_height,
+                                border = legend.framecolor,
+                                title_position = title_position,
+                                break_dist = rep(1, length(breaks) - 1),
+                                labels_gp = grid::gpar(fontsize = fontsize,
+                                                       fontface = "bold"),
+                                title_gp = grid::gpar(fontsize = fontsize,
+                                                      fontface = "bold"))
 
 
   if (!(is.null(row_annotation))){
@@ -1502,7 +1510,7 @@ heatmap_inner <- function(data,
                                column_title_gp = grid::gpar(fontsize = fontsize,
                                                             fontface = "bold"),
                                row_title_gp = grid::gpar(fontsize = fontsize,
-                                                            fontface = "bold"),
+                                                         fontface = "bold"),
                                border = border,
                                rect_gp = grid::gpar(col= grid_color),
                                cell_fun = function(j, i, x, y, w, h, fill) {
@@ -1724,9 +1732,9 @@ get_data_column <- function(sample,
 
   if (isTRUE(feature %in% colnames(sample@meta.data))){
     feature_column <- sample@meta.data %>%
-      dplyr::select(.data[[feature]]) %>%
-      tibble::rownames_to_column(var = "cell") %>%
-      dplyr::rename("feature" = .data[[feature]])
+                      dplyr::select(dplyr::all_of(c(feature))) %>%
+                      tibble::rownames_to_column(var = "cell") %>%
+                      dplyr::rename("feature" = dplyr::all_of(c(feature)))
   } else if (isTRUE(feature %in% rownames(sample))){
     feature_column <- Seurat::GetAssayData(object = sample,
                                            assay = assay,
@@ -1735,12 +1743,12 @@ get_data_column <- function(sample,
       t() %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "cell") %>%
-      dplyr::rename("feature" = .data[[feature]])
+      dplyr::rename("feature" = dplyr::all_of(c(feature)))
   } else if (isTRUE(feature %in% dim_colnames)){
     feature_column <- sample@reductions[[reduction]][[]][, feature, drop = FALSE] %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "cell") %>%
-      dplyr::rename("feature" = .data[[feature]])
+      dplyr::rename("feature" = dplyr::all_of(c(feature)))
   }
   return(feature_column)
 }
@@ -1782,7 +1790,10 @@ get_data_column_in_context <- function(sample,
   data <- sample@meta.data %>%
           tibble::rownames_to_column(var = "cell") %>%
           dplyr::select(dplyr::all_of(vars)) %>%
-          dplyr::left_join(y = get_data_column(sample = sample, feature = feature, assay = assay, slot = slot),
+          dplyr::left_join(y = get_data_column(sample = sample,
+                                               feature = feature,
+                                               assay = assay,
+                                               slot = slot),
                            by = "cell") %>%
           tibble::as_tibble()
 
@@ -1850,10 +1861,156 @@ check_parameters <- function(parameter,
   } else if (parameter_name == "scale_type"){
     assertthat::assert_that(parameter %in% c("categorical", "continuous"),
                             msg = "Please provide one of the following to scale_type: continuous, categorical.")
+  } else if (parameter_name == "rotate_x_axis_labels"){
+    assertthat::assert_that(parameter %in% c(0, 45, 90),
+                            msg = "Please provide one of the following to rotate_x_axis_labels: 0, 45, 90.")
   }
 }
 
+#' Helper for do_AlluvialPlot.
+#'
+#' @param data  Data to plot.
+#' @param vars.use  Names of the variables.
+#'
+#' @noRd
+#' @examples
+#' \donttest{
+#' TBD
+#' }
+prepare_ggplot_alluvial_plot <- function(data,
+                                         vars.use){
+  items <- length(vars.use)
+  `%>%` <- magrittr::`%>%`
+  assertthat::assert_that(items <= 10,
+                          msg = "Please provide between first_group, middle_groups, and last_group only up to 10 different elements.")
+  if (items == 2){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]]))
+  } else if (items == 3){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]]))
+  } else if (items == 4){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]]))
+  } else if (items == 5){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]]))
+  } else if (items == 6){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]],
+                                                axis6 = data[[vars.use[6]]]))
+  } else if (items == 7){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]],
+                                                axis6 = data[[vars.use[6]]],
+                                                axis7 = data[[vars.use[7]]]))
+  } else if (items == 8) {
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]],
+                                                axis6 = data[[vars.use[6]]],
+                                                axis7 = data[[vars.use[7]]],
+                                                axis8 = data[[vars.use[8]]]))
+  } else if (items == 9){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]],
+                                                axis6 = data[[vars.use[6]]],
+                                                axis7 = data[[vars.use[7]]],
+                                                axis8 = data[[vars.use[8]]],
+                                                axis9 = data[[vars.use[9]]]))
+  } else if (items == 10){
+    p <- data %>%
+         ggplot2::ggplot(mapping = ggplot2::aes(y = data$n,
+                                                axis1 = data[[vars.use[1]]],
+                                                axis2 = data[[vars.use[2]]],
+                                                axis3 = data[[vars.use[3]]],
+                                                axis4 = data[[vars.use[4]]],
+                                                axis5 = data[[vars.use[5]]],
+                                                axis6 = data[[vars.use[6]]],
+                                                axis7 = data[[vars.use[7]]],
+                                                axis8 = data[[vars.use[8]]],
+                                                axis9 = data[[vars.use[9]]],
+                                                axis10 = data[[vars.use[10]]]))
+  }
+  return(p)
+}
 
+#' Helper for rotate_x_axis_labels.
+#'
+#' @param angle Angle of rotation.
+#' @param flip Whether the plot if flipped or not.
+#'
+#' @noRd
+#' @examples
+#' \donttest{
+#' TBD
+#' }
+get_axis_parameters <- function(angle,
+                               flip){
+  if (isTRUE(flip)){
+    if (angle == 0){
+      out <- list("angle" = angle,
+                  "hjust" = 0.5,
+                  "vjust" = 0.5)
+    } else if (angle == 45){
+      out <- list("angle" = angle,
+                  "hjust" = 1,
+                  "vjust" = 1)
+    } else if (angle == 90){
+      out <- list("angle" = angle,
+                  "hjust" = 0.5,
+                  "vjust" = 0.5)
+    }
+  } else if (isFALSE(flip)){
+    if (angle == 0){
+      out <- list("angle" = angle,
+                  "hjust" = 0.5,
+                  "vjust" = 0)
+    } else if (angle == 45){
+      out <- list("angle" = angle,
+                  "hjust" = 1,
+                  "vjust" = 1)
+    } else if (angle == 90){
+      out <- list("angle" = angle,
+                  "hjust" = 0.5,
+                  "vjust" = 0.5)
+    }
+  }
+  return(out)
+}
 
 
 

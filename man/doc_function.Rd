@@ -61,7 +61,7 @@
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Whether to rotate X axis labels.}
+\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
 
@@ -108,7 +108,9 @@
 
 \item{cluster_cols, cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
 
-\item{column_names_rot, row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column and row labels.}
+\item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
+
+\item{row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.}
 
 \item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
 
@@ -176,6 +178,8 @@
 \item \emph{\code{left}}: Left of the legend.
 \item \emph{\code{right}}: Right of the legend.
 }}
+
+\item{repel}{\strong{\code{\link[base]{logical}}} | Whether to repel the text labels.}
 
 \item{nbin}{\strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.}
 

@@ -32,18 +32,18 @@ do_CopyNumberVariantPlot <- function(sample,
                                      font.type = "sans",
                                      border.size = 2,
                                      border.color = "black",
-                                     rotate_x_axis_labels = TRUE,
+                                     rotate_x_axis_labels = 45,
                                      plot_cell_borders = TRUE,
                                      enforce_symmetry = TRUE,
                                      legend.title = NULL,
                                      na.value = "grey75",
                                      viridis_color_map = "G",
-                                     viridis_direction = 1){
+                                     viridis_direction = 1,
+                                     verbose = FALSE){
 
 
   # Check logical parameters.
   logical_list <- list("using_metacells" = using_metacells,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels,
                        "enforce_symmetry" = enforce_symmetry,
                        "plot_cell_borders" = plot_cell_borders)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
@@ -55,7 +55,8 @@ do_CopyNumberVariantPlot <- function(sample,
                        "legend.tickwidth" = legend.tickwidth,
                        "pt.size" = pt.size,
                        "border.size" = border.size,
-                       "viridis_direction" = viridis_direction)
+                       "viridis_direction" = viridis_direction,
+                       "rotate_x_axis_labels" = rotate_x_axis_labels)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("group.by" = group.by,
@@ -81,6 +82,7 @@ do_CopyNumberVariantPlot <- function(sample,
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
   check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
   check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
+  check_parameters(parameter = rotate_x_axis_labels, parameter_name = "rotate_x_axis_labels")
 
   if (is.null(chromosome_focus)){
     chromosome_list <- c(as.character(seq(1, 22)))
@@ -111,20 +113,35 @@ do_CopyNumberVariantPlot <- function(sample,
     locations <- chr_locations %>%
                  dplyr::filter(.data[["chr"]] == chromosome)
 
-    for (chr_arm in c("p", "q")){
-      # Retrieve the start.
-      start <- locations %>%
+    for (chr_arm in c("p", "q", "whole")){
+      if (chr_arm != "whole"){
+        # Retrieve the start.
+        start <- locations %>%
+                 dplyr::filter(.data[["arm"]] == chr_arm) %>%
+                 dplyr::pull(start)
+        # Retrieve the end.
+        end <- locations %>%
                dplyr::filter(.data[["arm"]] == chr_arm) %>%
-               dplyr::pull(start)
-      # Retrieve the end.
-      end <- locations %>%
-             dplyr::filter(.data[["arm"]] == chr_arm) %>%
-             dplyr::pull(end)
+               dplyr::pull(end)
 
-      # Retrieve the genes present in the chromosome arm.
-      genes_use <- rownames(genes %>%
-                            dplyr::filter(.data[["chr"]] == paste0("chr", chromosome),
-                                          stop <= end))
+        # Retrieve the genes present in the chromosome arm.
+        genes_use <- rownames(genes %>%
+                              dplyr::filter(.data[["chr"]] == paste0("chr", chromosome),
+                                            stop <= end))
+      } else {
+        # Retrieve the start.
+        start <- locations %>%
+                 dplyr::filter(.data[["arm"]] == "p") %>%
+                 dplyr::pull(start)
+        # Retrieve the end.
+        end <- locations %>%
+               dplyr::filter(.data[["arm"]] == "q") %>%
+               dplyr::pull(end)
+
+        # Retrieve the genes present in the chromosome arm.
+        genes_use <- rownames(genes %>%
+                              dplyr::filter(.data[["chr"]] == paste0("chr", chromosome)))
+      }
 
       # Retrieve the CNV scores from the inferCNV object.
       CNV_scores <- infercnv_object@expr.data
@@ -134,7 +151,7 @@ do_CopyNumberVariantPlot <- function(sample,
         # Filter the scores for only the genes in the chromosome arm.
         CNV_scores <- CNV_scores[genes_use[genes_use %in% rownames(CNV_scores)], ]
 
-        scores_name <- paste0(chromosome, chr_arm)
+        scores_name <- if (chr_arm != "whole"){paste0(chromosome, chr_arm)} else {chromosome}
         CNV_scores_final <- tibble::tibble(!!scores_name := colMeans(CNV_scores),
                                            "cells" = colnames(CNV_scores))
 
@@ -145,11 +162,11 @@ do_CopyNumberVariantPlot <- function(sample,
           sample@meta.data <- sample@meta.data %>%
                               dplyr::mutate("cells" = colnames(sample)) %>%
                               dplyr::left_join(y = {sample@meta.data %>%
-                                                    dplyr::select(.data[["metacell_mapping"]]) %>%
+                                                    dplyr::select(dplyr::all_of(c("metacell_mapping"))) %>%
                                                     tibble::rownames_to_column(var = "cells") %>%
-                                                    dplyr::left_join(y = {CNV_scores_final %>% dplyr::rename("metacell_mapping" = "cells")},
+                                                    dplyr::left_join(y = {CNV_scores_final %>% dplyr::rename("metacell_mapping" = dplyr::all_of(c("cells")))},
                                                                      by = "metacell_mapping") %>%
-                                                    dplyr::select(-.data[["metacell_mapping"]])},
+                                                    dplyr::select(-dplyr::all_of(c("metacell_mapping")))},
                                                by = "cells") %>%
                               tibble::column_to_rownames(var = "cells")
           # If no metacells were used.
@@ -157,6 +174,8 @@ do_CopyNumberVariantPlot <- function(sample,
           sample@meta.data[, scores_name] <- CNV_scores_final[, scores_name]
         }
         events_list <- append(events_list, scores_name)
+      } else {
+        if(isTRUE(verbose)){message(paste0("Your sample has only one gene in ", chromosome, chr_arm, ". Skipping this chromosome arm."))}
       }
     }
   }
@@ -189,7 +208,7 @@ do_CopyNumberVariantPlot <- function(sample,
                        legend.width = legend.width,
                        xlab = if (is.null(group.by)) {"Clusters"} else {group.by},
                        ylab = paste0(event, " score"),
-                       legend.title = paste0(event, " score"),
+                       legend.title = paste0(event, " scores"),
                        rotate_x_axis_labels = rotate_x_axis_labels,
                        viridis_color_map = viridis_color_map,
                        viridis_direction = viridis_direction)
@@ -211,7 +230,8 @@ do_CopyNumberVariantPlot <- function(sample,
                           legend.length = legend.length,
                           legend.width = legend.width,
                           viridis_color_map = viridis_color_map,
-                          viridis_direction = viridis_direction)
+                          viridis_direction = viridis_direction,
+                          legend.title = paste0(event, " scores"))
 
     if (isTRUE(enforce_symmetry)){
       limits <- max(abs(c(min(sample@meta.data[, event]),
@@ -219,7 +239,7 @@ do_CopyNumberVariantPlot <- function(sample,
 
       scale_limit <- c((1 - (limits - 1)), limits)
 
-      scale.use <- ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "#fdf0d5", "#c94040", "#65010C"),
+      scale.use <- ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
                                                   limits = c(-limits, limits),
                                                   na.value = na.value)
       suppressMessages({
@@ -229,11 +249,11 @@ do_CopyNumberVariantPlot <- function(sample,
                                  color = "grey50",
                                  linetype = "dashed",
                                  size = 1) +
-             ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "#fdf0d5", "#c94040", "#65010C"),
+             ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
                                             limits = scale_limit,
                                             na.value = na.value)
         p.f <- p.f +
-               ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "#fdf0d5", "#c94040", "#65010C"),
+               ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
                                               limits = scale_limit,
                                               na.value = na.value)
       })

@@ -46,7 +46,7 @@ do_GeyserPlot <- function(sample,
                           legend.type = "colorbar",
                           font.size = 14,
                           font.type = "sans",
-                          rotate_x_axis_labels = TRUE,
+                          rotate_x_axis_labels = 45,
                           viridis_color_map = "G",
                           viridis_direction = 1,
                           colors.use = NULL,
@@ -60,7 +60,8 @@ do_GeyserPlot <- function(sample,
                           plot.subtitle = NULL,
                           plot.caption = NULL,
                           xlab = "Groups",
-                          ylab = feature){
+                          ylab = feature,
+                          flip = FALSE){
 
   check_suggests(function_name = "do_GeyserPlot")
   # Check if the sample provided is a Seurat object.
@@ -69,8 +70,8 @@ do_GeyserPlot <- function(sample,
   # Check logical parameters.
   logical_list <- list("enforce_symmetry" = enforce_symmetry,
                        "order_by_mean" = order_by_mean,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels,
-                       "plot_cell_borders" = plot_cell_borders)
+                       "plot_cell_borders" = plot_cell_borders,
+                       "flip" = flip)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -84,7 +85,8 @@ do_GeyserPlot <- function(sample,
                        "legend.ncol" = legend.ncol,
                        "legend.nrow" = legend.nrow,
                        "legend.icon.size" = legend.icon.size,
-                       "viridis_direction" = viridis_direction)
+                       "viridis_direction" = viridis_direction,
+                       "rotate_x_axis_labels" = rotate_x_axis_labels)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
 
@@ -119,6 +121,7 @@ do_GeyserPlot <- function(sample,
   check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
   check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
   check_parameters(parameter = scale_type, parameter_name = "scale_type")
+  check_parameters(parameter = rotate_x_axis_labels, parameter_name = "rotate_x_axis_labels")
 
   `%>%` <- magrittr::`%>%`
   # Check the assay.
@@ -196,9 +199,9 @@ do_GeyserPlot <- function(sample,
     # Generate a column for the color.by parameter that will be added later on to the data dataframe.
     if (isTRUE(color.by %in% colnames(sample@meta.data))){
       color.by_column <- sample@meta.data %>%
-                         dplyr::select(.data[[color.by]]) %>%
+                         dplyr::select(dplyr::all_of(c(color.by))) %>%
                          tibble::rownames_to_column(var = "cell") %>%
-                         dplyr::rename("color.by" = .data[[color.by]])
+                         dplyr::rename("color.by" = dplyr::all_of(c(color.by)))
     } else if (isTRUE(color.by %in% rownames(sample))){
       color.by_column <- Seurat::GetAssayData(object = sample,
                                               assay = assay,
@@ -207,19 +210,19 @@ do_GeyserPlot <- function(sample,
                          t() %>%
                          as.data.frame() %>%
                          tibble::rownames_to_column(var = "cell") %>%
-                         dplyr::rename("color.by" = .data[[color.by]])
+                         dplyr::rename("color.by" = dplyr::all_of(c(color.by)))
     } else if (isTRUE(color.by %in% dim_colnames)){
       color.by_column <- sample@reductions[[reduction_color.by]][[]][, color.by, drop = FALSE] %>%
                          as.data.frame() %>%
                          tibble::rownames_to_column(var = "cell") %>%
-                         dplyr::rename("color.by" = .data[[color.by]])
+                         dplyr::rename("color.by" = dplyr::all_of(c(color.by)))
     }
 
 
     # Depending on where the feature is, generate a tibble accordingly.
     if (isTRUE(feature %in% colnames(sample@meta.data))){
       data <- sample@meta.data %>%
-              dplyr::select(c(.data[[group.by]], .data[[feature]])) %>%
+              dplyr::select(dplyr::all_of(c(group.by, feature))) %>%
               tibble::rownames_to_column(var = "cell") %>%
               dplyr::left_join(y = color.by_column,
                                by = "cell") %>%
@@ -236,7 +239,7 @@ do_GeyserPlot <- function(sample,
               dplyr::left_join(y = color.by_column,
                                by = "cell") %>%
               dplyr::left_join(y = {sample@meta.data %>%
-                                    dplyr::select(.data[[group.by]]) %>%
+                                    dplyr::select(dplyr::all_of(c(group.by))) %>%
                                     tibble::rownames_to_column(var = "cell")},
                                by = "cell")
     } else if (isTRUE(feature %in% dim_colnames)){
@@ -247,7 +250,7 @@ do_GeyserPlot <- function(sample,
                                by = "cell") %>%
               tibble::tibble() %>%
               dplyr::left_join(y = {sample@meta.data %>%
-                                    dplyr::select(.data[[group.by]]) %>%
+                                    dplyr::select(dplyr::all_of(c(group.by))) %>%
                                     tibble::rownames_to_column(var = "cell")},
                                     by = "cell")
     }
@@ -256,11 +259,11 @@ do_GeyserPlot <- function(sample,
     if (!(is.null(split.by))){
       data <- data %>%
               dplyr::left_join(y = {sample@meta.data %>%
-                                    dplyr::select(.data[[split.by]]) %>%
+                                    dplyr::select(dplyr::all_of(c(split.by))) %>%
                                     tibble::rownames_to_column(var = "cell")},
                                by = "cell") %>%
               dplyr::mutate("split.by" = .data[[split.by]]) %>%
-              dplyr::select(-.data[[split.by]])
+              dplyr::select(-dplyr::all_of(c(split.by)))
 
     }
 
@@ -311,7 +314,7 @@ do_GeyserPlot <- function(sample,
         limits <- c(min(data[, "color.by"]),
                     max(data[, "color.by"]))
         end_value <- max(abs(limits))
-        scale.use <- ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "#fdf0d5", "#c94040", "#65010C"),
+        scale.use <- ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
                                                     limits = c(-end_value, end_value),
                                                     na.value = na.value)
       } else if (isFALSE(enforce_symmetry)){
@@ -364,12 +367,13 @@ do_GeyserPlot <- function(sample,
          ggplot2::theme_minimal(base_size = font.size) +
          ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
                                                            face = "bold"),
-                        axis.line.x = ggplot2::element_line(color = "black"),
+                        axis.line.x = if (isFALSE(flip)) {ggplot2::element_line(color = "black")} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                        axis.line.y = if (isTRUE(flip)) {ggplot2::element_line(color = "black")} else if (isFALSE(flip)) {ggplot2::element_blank()},
                         axis.text.x = ggplot2::element_text(color = "black",
                                                             face = "bold",
-                                                            angle = ifelse(isTRUE(rotate_x_axis_labels), 45, 0),
-                                                            hjust = ifelse(isTRUE(rotate_x_axis_labels), 1, 0.5),
-                                                            vjust = ifelse(isTRUE(rotate_x_axis_labels), 1, 1)),
+                                                            angle = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["angle"]],
+                                                            hjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["hjust"]],
+                                                            vjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["vjust"]]),
                         axis.text.y = ggplot2::element_text(color = "black", face = "bold"),
                         axis.ticks = ggplot2::element_line(color = "black"),
                         panel.grid.major = ggplot2::element_blank(),
@@ -419,6 +423,11 @@ do_GeyserPlot <- function(sample,
                                                          title.hjust = 0.5))
     }
     list.out[[feature]] <- p
+  }
+
+  if (isTRUE(flip)){
+    p <- p +
+         ggplot2::coord_flip()
   }
   return(if (length(features) > 1) {list.out} else {p})
 }

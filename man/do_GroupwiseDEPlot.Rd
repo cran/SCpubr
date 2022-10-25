@@ -7,7 +7,7 @@
 do_GroupwiseDEPlot(
   sample,
   de_genes,
-  group.by = "seurat_clusters",
+  group.by = NULL,
   viridis_map_pvalues = "B",
   viridis_map_logfc = "D",
   viridis_map_expression = "G",
@@ -18,7 +18,12 @@ do_GroupwiseDEPlot(
   viridis_direction = -1,
   row_title_p_values = "",
   row_title_logfc = "Clusters",
-  row_title_expression = c(""),
+  row_title_expression = if (is.null(group.by)) {
+     ""
+ } else {
+     rep("",
+    length(group.by))
+ },
   column_title = "DE genes",
   heatmap_gap = 0.5,
   legend_gap = 1,
@@ -28,7 +33,8 @@ do_GroupwiseDEPlot(
   row_names_side = "right",
   row_title_side = "left",
   row_title_rot = 90,
-  cell_size = 5
+  column_names_rot = 45,
+  cell_size = 6
 )
 }
 \arguments{
@@ -79,6 +85,8 @@ do_GroupwiseDEPlot(
 
 \item{row_title_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row titles.}
 
+\item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
+
 \item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
 }
 \value{
@@ -93,6 +101,8 @@ Compute a heatmap with the results of a group-wise DE analysis.
   value <- SCpubr:::check_suggests(function_name = "do_GroupwiseDEPlot", passive = TRUE)
 
   if (isTRUE(value)){
+    # Consult the full documentation in https://enblacar.github.io/SCpubr-book/
+
     # Define your Seurat object.
     sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
 
@@ -105,49 +115,6 @@ Compute a heatmap with the results of a group-wise DE analysis.
 
     p
 
-    # Increase the number of top DE genes by cluster.
-    p <- SCpubr::do_GroupwiseDEPlot(sample = sample,
-                                    de_genes = de_genes,
-                                    top_genes = 2)
-
-    p
-
-    # Modify the row and column titles and the rotation.
-    p <- SCpubr::do_GroupwiseDEPlot(sample = sample,
-                                    de_genes = de_genes,
-                                    column_title = "Title A",
-                                    row_title_p_values = "Title B",
-                                    row_title_logfc = "Title C",
-                                    row_title_expression = "Title D",
-                                    row_title_rot = 0)
-
-    p
-
-    sample$modified_orig.ident <- sample(x = c("Sample_A", "Sample_B", "Sample_C"),
-                                         size = ncol(sample),
-                                         replace = TRUE,
-                                         prob = c(0.2, 0.7, 0.1))
-
-    # Add more layers of mean expression with group.by.
-    p <- SCpubr::do_GroupwiseDEPlot(sample = sample,
-                                    de_genes = de_genes,
-                                    group.by = c("seurat_clusters",
-                                                 "modified_orig.ident",
-                                                 "orig.ident"),
-                                    row_title_expression = c("",
-                                                             "Title A",
-                                                             "Title B"))
-
-    p
-
-    # Change the viridis scales.
-    p <- SCpubr::do_GroupwiseDEPlot(sample = sample,
-                                    de_genes = de_genes,
-                                    viridis_map_pvalues = "C",
-                                    viridis_map_logfc = "E",
-                                    viridis_map_expression = "D")
-
-    p
   } else if (isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")

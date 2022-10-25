@@ -47,7 +47,7 @@ do_PathwayActivityPlot <- function(sample,
                                    legend.type = "colorbar",
                                    font.size = 14,
                                    font.type = "sans",
-                                   rotate_x_axis_labels = TRUE,
+                                   rotate_x_axis_labels = 45,
                                    enforce_symmetry = TRUE,
                                    geyser_order_by_mean = TRUE,
                                    geyser_scale_type = "continuous",
@@ -65,7 +65,6 @@ do_PathwayActivityPlot <- function(sample,
                        "flip" = flip,
                        "cluster_cols" = cluster_cols,
                        "cluster_rows" = cluster_rows,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels,
                        "plot_cell_borders" = plot_cell_borders,
                        "geyser_order_by_mean" = geyser_order_by_mean,
                        "enforce_symmetry" = enforce_symmetry)
@@ -83,7 +82,8 @@ do_PathwayActivityPlot <- function(sample,
                        "legend.length" = legend.length,
                        "legend.framewidth" = legend.framewidth,
                        "legend.tickwidth" = legend.tickwidth,
-                       "viridis_direction" = viridis_direction)
+                       "viridis_direction" = viridis_direction,
+                       "rotate_x_axis_labels" = rotate_x_axis_labels)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("group.by" = group.by,
@@ -109,6 +109,7 @@ do_PathwayActivityPlot <- function(sample,
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
   check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
   check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
+  check_parameters(parameter = rotate_x_axis_labels, parameter_name = "rotate_x_axis_labels")
 
 
   `%v%` <- ComplexHeatmap::`%v%`
@@ -213,15 +214,15 @@ do_PathwayActivityPlot <- function(sample,
                 as.data.frame() %>%
                 tibble::rownames_to_column(var = "cell") %>%
                 dplyr::left_join(y = {sample@meta.data[, group.by, drop = FALSE] %>%
-                    tibble::rownames_to_column(var = "cell")},
-                    by = "cell") %>%
-                dplyr::select(c(-.data$cell)) %>%
-                tidyr::pivot_longer(cols = -.data[[group.by]],
+                                      tibble::rownames_to_column(var = "cell")},
+                                      by = "cell") %>%
+                dplyr::select(-dplyr::all_of(c("cell"))) %>%
+                tidyr::pivot_longer(cols = -dplyr::all_of(c(group.by)),
                                     names_to = "source",
                                     values_to = "score") %>%
                 dplyr::group_by(.data[[group.by]], .data$source) %>%
                 dplyr::summarise(mean = mean(.data$score)) %>%
-                tidyr::pivot_wider(id_cols = group.by,
+                tidyr::pivot_wider(id_cols = dplyr::all_of(c(group.by)),
                                    names_from = 'source',
                                    values_from = 'mean') %>%
                 tibble::column_to_rownames(group.by) %>%
@@ -284,16 +285,16 @@ do_PathwayActivityPlot <- function(sample,
                   as.data.frame() %>%
                   tibble::rownames_to_column(var = "cell") %>%
                   dplyr::left_join(y = {sample@meta.data[, c(group.by, split.by)] %>%
-                      tibble::rownames_to_column(var = "cell")},
-                      by = "cell") %>%
+                                        tibble::rownames_to_column(var = "cell")},
+                                        by = "cell") %>%
                   dplyr::filter(.data[[split.by]] == split.value) %>%  # This is key.
-                  dplyr::select(c(-.data$cell, -.data[[split.by]])) %>%
-                  tidyr::pivot_longer(cols = -.data[[group.by]],
+                  dplyr::select(-dplyr::all_of(c("cell", split.by))) %>%
+                  tidyr::pivot_longer(cols = -dplyr::all_of(c(group.by)),
                                       names_to = "source",
                                       values_to = "score") %>%
                   dplyr::group_by(.data[[group.by]], .data$source) %>%
                   dplyr::summarise(mean = mean(.data$score)) %>%
-                  tidyr::pivot_wider(id_cols = group.by,
+                  tidyr::pivot_wider(id_cols = dplyr::all_of(c(group.by)),
                                      names_from = 'source',
                                      values_from = 'mean') %>%
                   tibble::column_to_rownames(group.by) %>%
