@@ -44,7 +44,7 @@
 #' @param slot \strong{\code{\link[base]{character}}} | Data slot to use. Only one of: counts, data, scale.data. Defaults to "data".
 #' @param viridis_color_map \strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.
 #' @param raster \strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.
-#' @param raster.dpi \strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024.
+#' @param raster.dpi \strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024. Only activates on Seurat versions higher or equal than 4.1.0.
 #' @param plot_cell_borders \strong{\code{\link[base]{logical}}} | Whether to plot border around cells.
 #' @param border.size \strong{\code{\link[base]{numeric}}} | Width of the border of the cells.
 #' @param border.color \strong{\code{\link[base]{character}}} | Color to use for the border of the cells.
@@ -110,8 +110,13 @@
 #' @param nbin \strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.
 #' @param ctrl \strong{\code{\link[base]{numeric}}} | Number of genes in the control set to use in \link[Seurat]{AddModuleScore}.
 #' @param repel \strong{\code{\link[base]{logical}}} | Whether to repel the text labels.
-#'
-#'
+#' @param plot_density_contour \strong{\code{\link[base]{logical}}} | Whether to plot density contours in the UMAP.
+#' @param contour.position \strong{\code{\link[base]{character}}} | Whether to plot density contours on top or at the bottom of the visualization layers, thus overlapping the clusters/cells or not.
+#' @param contour.color \strong{\code{\link[base]{character}}} | Color of the density lines.
+#' @param contour.lineend \strong{\code{\link[base]{character}}} | Line end style (round, butt, square).
+#' @param contour.linejoin \strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).
+#' @param contour_expand_axes \strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.
+#' @param min.cutoff,max.cutoff \strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.
 #' @usage NULL
 #' @return Nothing. This is a mock function.
 #' @keywords internal
@@ -198,7 +203,13 @@ doc_function <- function(sample,
                          individual.subtitles,
                          individual.captions,
                          legend.title.position,
-                         repel){}
+                         repel,
+                         plot_density_contour,
+                         contour.position,
+                         contour.color,
+                         contour.lineend,
+                         contour.linejoin,
+                         contour_expand_axes){}
 
 #' Named vector.
 #'
@@ -1560,45 +1571,101 @@ modify_string <- function(string_to_modify){
 #' \donttest{
 #' TBD
 #' }
-compute_enrichment_scores <- function(sample, input_gene_list, verbose = FALSE, nbin = 24, ctrl = 100){
+compute_enrichment_scores <- function(sample,
+                                      input_gene_list,
+                                      verbose = FALSE,
+                                      nbin = 24,
+                                      ctrl = 100,
+                                      assay = NULL,
+                                      slot = NULL,
+                                      flavor = "Seurat",
+                                      ncores = 1,
+                                      storeRanks = TRUE){
+  # Checks for UCell.
+  if (flavor == "UCell"){
+    R_version <- paste0(R.version$major, ".", R.version$minor)
+    assertthat::assert_that(R_version >= "4.2.0",
+                            msg = "To run UCell scoring, R version 4.2.0 is required. Please select flavor = 'Seurat' if you are running a version inferior to this.")
+    if (!requireNamespace("UCell", quietly = TRUE)) {
+      stop(paste0("Package UCell must be installed to run UCell scoring."), call. = FALSE)
+    }
+  }
+
   if (!is.list(input_gene_list) & is.character(input_gene_list)){
     input_gene_list <- list("Input" = input_gene_list)
   }
   for (celltype in names(input_gene_list)){
     list_markers <- list(input_gene_list[[celltype]])
 
-    # Compute Seurat AddModuleScore as well.
-    if (verbose){
-      sample <- Seurat::AddModuleScore(sample,
-                                       list_markers,
-                                       name = celltype,
-                                       search = TRUE,
-                                       verbose = TRUE,
-                                       nbin = nbin,
-                                       ctrl = ctrl)
-    } else {
-      sample <- suppressMessages(suppressWarnings(Seurat::AddModuleScore(sample,
-                                                                         list_markers,
-                                                                         name = celltype,
-                                                                         search = TRUE,
-                                                                         verbose = FALSE,
-                                                                         nbin = nbin,
-                                                                         ctrl = ctrl)))
+    if (flavor == "Seurat"){
+      # Compute Seurat AddModuleScore as well.
+      if (verbose){
+        sample <- Seurat::AddModuleScore(sample,
+                                         list_markers,
+                                         name = celltype,
+                                         search = TRUE,
+                                         verbose = TRUE,
+                                         nbin = nbin,
+                                         ctrl = ctrl,
+                                         assay = assay)
+      } else {
+        sample <- suppressMessages(suppressWarnings(Seurat::AddModuleScore(sample,
+                                                                           list_markers,
+                                                                           name = celltype,
+                                                                           search = TRUE,
+                                                                           verbose = FALSE,
+                                                                           nbin = nbin,
+                                                                           ctrl = ctrl,
+                                                                           assay = assay)))
+      }
+
+
+      # Retrieve the scores.
+      col_name <- stringr::str_replace_all(paste0(celltype, "1"), " ", ".")
+      col_name <- stringr::str_replace_all(col_name, "-", ".")
+      col_name <- stringr::str_replace_all(col_name, "\\+", ".")
+
+      # Modify the name that Seurat::AddModuleScore gives by default.
+      sample@meta.data[, celltype] <- sample@meta.data[, col_name]
+      # Remove old metadata.
+      sample@meta.data[, col_name] <- NULL
     }
+  }
+  if (flavor == "UCell"){
+    list.names <- c()
+    for (celltype in names(input_gene_list)){
+      col_name <- celltype
+      col_name <- stringr::str_replace_all(col_name, "-", ">")
+      col_name <- stringr::str_replace_all(col_name, " ", "_")
+      col_name <- stringr::str_replace_all(col_name, "\\+", ".")
+      list.names <- append(list.names, col_name)
+    }
+    list.originals <- names(input_gene_list)
+    names(input_gene_list) <- list.names
 
+    sample <- UCell::AddModuleScore_UCell(obj = sample,
+                                          features = input_gene_list,
+                                          assay = assay,
+                                          slot = if (is.null(slot)){"data"} else {slot},
+                                          name = "",
+                                          ncores = ncores,
+                                          storeRanks = storeRanks)
 
-    # Retrieve the scores.
-    col_name <- stringr::str_replace_all(paste0(celltype, "1"), " ", ".")
-    col_name <- stringr::str_replace_all(col_name, "-", ".")
-    col_name <- stringr::str_replace_all(col_name, "\\+", ".")
-
-    # Modify the name that Seurat::AddModuleScore gives by default.
-    sample@meta.data[, celltype] <- sample@meta.data[, col_name]
-    # Remove old metadata.
-    sample@meta.data[, col_name] <- NULL
+    for (i in seq_len(length(list.names))){
+      old.name <- list.originals[i]
+      mod.name <- list.names[i]
+      # Modify the name that Seurat::AddModuleScore gives by default.
+      sample@meta.data[, old.name] <- sample@meta.data[, mod.name]
+      # Remove old metadata.
+      if (old.name != mod.name){
+        sample@meta.data[, mod.name] <- NULL
+      }
+    }
   }
   return(sample)
 }
+
+
 
 
 #' Modify the aspect of the legend.
@@ -1864,6 +1931,18 @@ check_parameters <- function(parameter,
   } else if (parameter_name == "rotate_x_axis_labels"){
     assertthat::assert_that(parameter %in% c(0, 45, 90),
                             msg = "Please provide one of the following to rotate_x_axis_labels: 0, 45, 90.")
+  } else if (parameter_name == "contour.lineend"){
+    assertthat::assert_that(parameter %in% c("round", "butt", "square"),
+                            msg = "Please provide one of the following to contour_lineend: round, butt, square.")
+  } else if (parameter_name == "contour.linejoin"){
+    assertthat::assert_that(parameter %in% c("round", "mitre", "bevel"),
+                            msg = "Please provide one of the following to contour_linejoin: round, mitre, bevel.")
+  } else if (parameter_name == "contour.position"){
+    assertthat::assert_that(parameter %in% c("bottom", "top"),
+                            msg = "Please provide one of the following to contour_position: top, bottom.")
+  } else if (parameter_name == "flavor"){
+    assertthat::assert_that(parameter %in% c("Seurat", "UCell"),
+                            msg = "Please provide one of the following to contour_position: Seurat, UCell")
   }
 }
 

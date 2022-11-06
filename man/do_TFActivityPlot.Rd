@@ -13,14 +13,13 @@ do_TFActivityPlot(
   plot_FeaturePlots = FALSE,
   plot_Heatmaps = TRUE,
   plot_GeyserPlots = FALSE,
-  geyser_color.by = NULL,
   row_title = NULL,
   column_title = NULL,
   flip = FALSE,
   cluster_cols = TRUE,
   cluster_rows = TRUE,
   row_names_rot = 0,
-  column_names_rot = 90,
+  column_names_rot = 45,
   cell_size = 5,
   pt.size = 1,
   plot_cell_borders = TRUE,
@@ -44,7 +43,9 @@ do_TFActivityPlot(
   geyser_order_by_mean = TRUE,
   geyser_scale_type = "continuous",
   viridis_color_map = "G",
-  viridis_direction = 1
+  viridis_direction = 1,
+  min.cutoff = NULL,
+  max.cutoff = NULL
 )
 }
 \arguments{
@@ -58,13 +59,11 @@ do_TFActivityPlot(
 
 \item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
 
-\item{plot_FeaturePlots}{\strong{\code{\link[base]{logical}}} | Compute output feature plots for each of the top regulons.}
+\item{plot_FeaturePlots}{\strong{\code{\link[base]{logical}}} | Compute output FeaturePlots for each of the top regulons.}
 
 \item{plot_Heatmaps}{\strong{\code{\link[base]{logical}}} | Compute output heatmap showcasing the average TF activity per regulon and group.by variable.}
 
-\item{plot_GeyserPlots}{\strong{\code{\link[base]{logical}}} | Compute output dotplot for each of the top regulons and group.by variable.}
-
-\item{geyser_color.by}{\strong{\code{\link[base]{character}}} | Additional variable to color the Geyser plots by, as the Y axis and the color scale are repeated. Has to be a continuous variable.}
+\item{plot_GeyserPlots}{\strong{\code{\link[base]{logical}}} | Compute output GeyserPlots for each of the top regulons and group.by variable.}
 
 \item{row_title}{\strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.}
 
@@ -136,6 +135,8 @@ do_TFActivityPlot(
 \item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
 \item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
 }
 \value{
 A list containing several output plots according to the user's specifications.

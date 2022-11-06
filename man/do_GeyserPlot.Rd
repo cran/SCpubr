@@ -13,7 +13,6 @@ do_GeyserPlot(
   split.by = NULL,
   enforce_symmetry = FALSE,
   scale_type = "continuous",
-  color.by = NULL,
   order_by_mean = TRUE,
   plot_cell_borders = TRUE,
   jitter = 0.45,
@@ -45,7 +44,9 @@ do_GeyserPlot(
   plot.caption = NULL,
   xlab = "Groups",
   ylab = feature,
-  flip = FALSE
+  flip = FALSE,
+  min.cutoff = NULL,
+  max.cutoff = NULL
 )
 }
 \arguments{
@@ -65,11 +66,9 @@ do_GeyserPlot(
 
 \item{scale_type}{\strong{\code{\link[base]{character}}} | Type of color scale to use.  One of:
 \itemize{
-\item \emph{\code{categorical}}: Use a categorical color scale based on the values of "color.by" or "group.by".
-\item \emph{\code{continuous}}: Use a continuous color scale based on the values of "color.by" or "feature".
+\item \emph{\code{categorical}}: Use a categorical color scale based on the values of "group.by".
+\item \emph{\code{continuous}}: Use a continuous color scale based on the values of "feature".
 }}
-
-\item{color.by}{\strong{\code{\link[base]{character}}} | Metadata variable to color the cells by if scale is categorical or continuous variable if the scale is continuous.}
 
 \item{order_by_mean}{\strong{\code{\link[base]{logical}}} | Whether to order the groups by the mean of the data (highest to lowest).}
 
@@ -122,7 +121,7 @@ do_GeyserPlot(
 
 \item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
 
-\item{colors.use}{\strong{\code{\link[base]{character}}} | Named vector of colors to use. Has to match the unique values of group.by or color.by (if used) when scale_type is set to categorical.}
+\item{colors.use}{\strong{\code{\link[base]{character}}} | Named vector of colors to use. Has to match the unique values of group.by when scale_type is set to categorical.}
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
@@ -139,6 +138,8 @@ do_GeyserPlot(
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
+
+\item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
 }
 \value{
 Either a plot of a list of plots, depending on the number of features provided.

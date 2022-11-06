@@ -2,10 +2,9 @@
 #'
 #' @inheritParams doc_function
 #' @param activities \strong{\code{\link[tibble]{tibble}}} | Result of running decoupleR method with progeny regulon prior knowledge.
-#' @param plot_FeaturePlots \strong{\code{\link[base]{logical}}} | Compute output feature plots for each of the top regulons.
+#' @param plot_FeaturePlots \strong{\code{\link[base]{logical}}} | Compute output FeaturePlots for each of the top regulons.
 #' @param plot_Heatmaps \strong{\code{\link[base]{logical}}} | Compute output heatmap showcasing the average TF activity per regulon and group.by variable.
 #' @param plot_GeyserPlots \strong{\code{\link[base]{logical}}} | Compute output GeyserPlots for each of the top regulons and group.by variable.
-#' @param geyser_color.by \strong{\code{\link[base]{character}}} | Additional variable to color the Geyser plots by, as the Y axis and the color scale are repeated. Has to be a continuous variable.
 #' @param geyser_order_by_mean \strong{\code{\link[base]{logical}}} | Whether to order the X axis by the mean of the values.
 #' @param geyser_scale_type \strong{\code{\link[base]{character}}} | Type of scale to use. Either "continuous" or "categorical.
 #'
@@ -27,8 +26,7 @@ do_PathwayActivityPlot <- function(sample,
                                    cluster_cols = TRUE,
                                    cluster_rows = TRUE,
                                    row_names_rot = 0,
-                                   column_names_rot = 90,
-                                   geyser_color.by = NULL,
+                                   column_names_rot = 45,
                                    cell_size = 5,
                                    pt.size = 1,
                                    plot_cell_borders = TRUE,
@@ -52,7 +50,9 @@ do_PathwayActivityPlot <- function(sample,
                                    geyser_order_by_mean = TRUE,
                                    geyser_scale_type = "continuous",
                                    viridis_color_map = "G",
-                                   viridis_direction = 1){
+                                   viridis_direction = 1,
+                                   min.cutoff = NULL,
+                                   max.cutoff = NULL){
 
   check_suggests(function_name = "do_PathwayActivityPlot")
   # Check if the sample provided is a Seurat object.
@@ -83,7 +83,9 @@ do_PathwayActivityPlot <- function(sample,
                        "legend.framewidth" = legend.framewidth,
                        "legend.tickwidth" = legend.tickwidth,
                        "viridis_direction" = viridis_direction,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels)
+                       "rotate_x_axis_labels" = rotate_x_axis_labels,
+                       "min.cutoff" = min.cutoff,
+                       "max.cutoff" = max.cutoff)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("group.by" = group.by,
@@ -94,7 +96,6 @@ do_PathwayActivityPlot <- function(sample,
                          "font.type" = font.type,
                          "legend.tickcolor" = legend.tickcolor,
                          "legend.type" = legend.type,
-                         "geyser_color.by" = geyser_color.by,
                          "geyser_scale_type" = geyser_scale_type,
                          "viridis_color_map" = viridis_color_map)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
@@ -154,7 +155,9 @@ do_PathwayActivityPlot <- function(sample,
                           legend.length = legend.length,
                           legend.width = legend.width,
                           viridis_color_map = viridis_color_map,
-                          viridis_direction = viridis_direction)
+                          viridis_direction = viridis_direction,
+                          min.cutoff = if (is.null(min.cutoff)) {NA} else {min.cutoff},
+                          max.cutoff = if (is.null(max.cutoff)) {NA} else {max.cutoff})
 
       list.features[[pathway]] <- p
     }
@@ -169,7 +172,6 @@ do_PathwayActivityPlot <- function(sample,
                          slot = "scale.data",
                          features = pathway,
                          group.by = group.by,
-                         color.by = geyser_color.by,
                          pt.size = pt.size,
                          border.size = border.size,
                          enforce_symmetry = enforce_symmetry,
@@ -188,10 +190,12 @@ do_PathwayActivityPlot <- function(sample,
                          legend.width = legend.width,
                          xlab = if (is.null(group.by)) {"Clusters"} else {group.by},
                          ylab = paste0(pathway, " activity"),
-                         legend.title = if (is.null(geyser_color.by)) {paste0(pathway, " activity")} else {geyser_color.by},
+                         legend.title = paste0(pathway, " activity"),
                          rotate_x_axis_labels = rotate_x_axis_labels,
                          viridis_color_map = viridis_color_map,
-                         viridis_direction = viridis_direction)
+                         viridis_direction = viridis_direction,
+                         min.cutoff = min.cutoff,
+                         max.cutoff = max.cutoff)
       list.geysers[[pathway]] <- p
     }
     list.out[["geyser_plots"]] <- list.geysers
@@ -247,6 +251,31 @@ do_PathwayActivityPlot <- function(sample,
         data <- t(data)
       }
 
+      range.data <- c(min(data), max(data))
+      if (!is.null(min.cutoff) & !is.null(max.cutoff)){
+        assertthat::assert_that(min.cutoff < max.cutoff,
+                                msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
+
+        assertthat::assert_that(max.cutoff > min.cutoff,
+                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") has to be higher than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
+
+        assertthat::assert_that(max.cutoff != min.cutoff,
+                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") can not be the same than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
+
+      }
+
+      if (!is.null(min.cutoff)){
+        assertthat::assert_that(min.cutoff >= range.data[1],
+                                msg = paste0("The value provided for min.cutoff (", min.cutoff, ") is lower than the minimum value in the enrichment matrix (", range.data[1], "). Please select another value."))
+        range.data <- c(min.cutoff, range.data[2])
+      }
+
+      if (!is.null(max.cutoff)){
+        assertthat::assert_that(max.cutoff <= range.data[2],
+                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") is lower than the maximum value in the enrichment matrix (", range.data[2], "). Please select another value."))
+        range.data <- c(range.data[1], max.cutoff)
+      }
+
       out <- heatmap_inner(data,
                            legend.title = "Pathway activity",
                            column_title = column_title,
@@ -257,6 +286,8 @@ do_PathwayActivityPlot <- function(sample,
                            row_names_rot = row_names_rot,
                            cell_size = cell_size,
                            na.value = na.value,
+                           data_range = "both",
+                           range.data = range.data,
                            legend.position = legend.position,
                            legend.length = heatmap.legend.length,
                            legend.width = heatmap.legend.width,
@@ -277,7 +308,38 @@ do_PathwayActivityPlot <- function(sample,
       split.values <- as.character(sort(unique(sample@meta.data %>% dplyr::pull(!!rlang::sym(split.by)))))
       list.heatmaps <- list()
       # Get the maximum range.
-      range <- max(abs(sample@assays$progeny@scale.data))
+      data <- sample@assays$progeny@scale.data %>%
+        t() %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column(var = "cell") %>%
+        dplyr::left_join(y = {sample@meta.data[, c(group.by, split.by)] %>%
+            tibble::rownames_to_column(var = "cell")},
+            by = "cell") %>%
+        dplyr::select(-dplyr::all_of(c("cell", split.by))) %>%
+        tidyr::pivot_longer(cols = -dplyr::all_of(c(group.by)),
+                            names_to = "source",
+                            values_to = "score") %>%
+        dplyr::group_by(.data[[group.by]], .data$source) %>%
+        dplyr::summarise(mean = mean(.data$score)) %>%
+        tidyr::pivot_wider(id_cols = dplyr::all_of(c(group.by)),
+                           names_from = 'source',
+                           values_from = 'mean') %>%
+        tibble::column_to_rownames(group.by) %>%
+        as.matrix()
+      range.data <- c(min(data), max(data))
+
+      if (!is.null(min.cutoff)){
+        assertthat::assert_that(min.cutoff >= range.data[1],
+                                msg = paste0("The value provided for min.cutoff (", min.cutoff, ") is lower than the minimum value in the enrichment matrix (", range.data[1], "). Please select another value."))
+        range.data <- c(min.cutoff, range.data[2])
+      }
+
+      if (!is.null(max.cutoff)){
+        assertthat::assert_that(max.cutoff <= range.data[2],
+                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") is lower than the maximum value in the enrichment matrix (", range.data[2], "). Please select another value."))
+        range.data <- c(range.data[1], max.cutoff)
+
+      }
       for (split.value in split.values){
         suppressMessages({
           data <- sample@assays$progeny@scale.data %>%
@@ -315,6 +377,7 @@ do_PathwayActivityPlot <- function(sample,
                              row_title = row_title,
                              cluster_columns = cluster_cols,
                              cluster_rows = cluster_rows,
+                             range.data = range.data,
                              column_names_rot = column_names_rot,
                              row_names_rot = row_names_rot,
                              cell_size = cell_size,

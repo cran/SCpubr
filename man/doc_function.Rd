@@ -51,7 +51,7 @@
 
 \item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
 
-\item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024.}
+\item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024. Only activates on Seurat versions higher or equal than 4.1.0.}
 
 \item{plot_cell_borders}{\strong{\code{\link[base]{logical}}} | Whether to plot border around cells.}
 
@@ -181,9 +181,23 @@
 
 \item{repel}{\strong{\code{\link[base]{logical}}} | Whether to repel the text labels.}
 
+\item{plot_density_contour}{\strong{\code{\link[base]{logical}}} | Whether to plot density contours in the UMAP.}
+
+\item{contour.position}{\strong{\code{\link[base]{character}}} | Whether to plot density contours on top or at the bottom of the visualization layers, thus overlapping the clusters/cells or not.}
+
+\item{contour.color}{\strong{\code{\link[base]{character}}} | Color of the density lines.}
+
+\item{contour.lineend}{\strong{\code{\link[base]{character}}} | Line end style (round, butt, square).}
+
+\item{contour.linejoin}{\strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).}
+
+\item{contour_expand_axes}{\strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.}
+
 \item{nbin}{\strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.}
 
 \item{ctrl}{\strong{\code{\link[base]{numeric}}} | Number of genes in the control set to use in \link[Seurat]{AddModuleScore}.}
+
+\item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
 }
 \value{
 Nothing. This is a mock function.

@@ -44,7 +44,13 @@ do_DimPlot(
   marginal.type = "density",
   marginal.size = 5,
   marginal.group = TRUE,
-  plot.axes = FALSE
+  plot.axes = FALSE,
+  plot_density_contour = FALSE,
+  contour.position = "bottom",
+  contour.color = "grey90",
+  contour.lineend = "butt",
+  contour.linejoin = "round",
+  contour_expand_axes = 0.25
 )
 }
 \arguments{
@@ -107,7 +113,7 @@ do_DimPlot(
 
 \item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
 
-\item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024.}
+\item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024. Only activates on Seurat versions higher or equal than 4.1.0.}
 
 \item{dims}{\strong{\code{\link[base]{numeric}}} | Vector of 2 numerics indicating the dimensions to plot out of the selected reduction. Defaults to c(1, 2) if not specified.}
 
@@ -144,6 +150,18 @@ do_DimPlot(
 \item{marginal.group}{\strong{\code{\link[base]{logical}}} | Whether to group the marginal distribution by group.by or current identities.}
 
 \item{plot.axes}{\strong{\code{\link[base]{logical}}} | Whether to plot axes or not.}
+
+\item{plot_density_contour}{\strong{\code{\link[base]{logical}}} | Whether to plot density contours in the UMAP.}
+
+\item{contour.position}{\strong{\code{\link[base]{character}}} | Whether to plot density contours on top or at the bottom of the visualization layers, thus overlapping the clusters/cells or not.}
+
+\item{contour.color}{\strong{\code{\link[base]{character}}} | Color of the density lines.}
+
+\item{contour.lineend}{\strong{\code{\link[base]{character}}} | Line end style (round, butt, square).}
+
+\item{contour.linejoin}{\strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).}
+
+\item{contour_expand_axes}{\strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.}
 }
 \value{
 A ggplot2 object containing a DimPlot.
