@@ -1,6 +1,6 @@
-0906844fd5c603448de87bdac7ecb4a4 *DESCRIPTION
+d41b877105b8d4ef3c6d94112a88f71f *DESCRIPTION
 a3a903060f24864bfe3653bd91bd35fa *NAMESPACE
-52b2db5f3d37efc9d04d9ce45d99e9bc *NEWS.md
+213f8d80e9190959a669b42adc86e408 *NEWS.md
 0389521335dbbc9db460e2db5dc59b45 *R/data.R
 fc14a8926824234e94c264f088bf2783 *R/do_BarPlot.R
 5c72b80d28bdf406cef7548203747881 *R/do_BeeSwarmPlot.R
@@ -14,7 +14,7 @@ cf546d86342d6af83879e503a04c0f10 *R/do_CopyNumberVariantPlot.R
 df3864829131e1e18f993db2d616ad69 *R/do_DotPlot.R
 76c8cf07490d04aaec725871fd8ed91e *R/do_EnrichmentHeatmap.R
 10aff6b6849bc66d28b6da1e0757697b *R/do_FeaturePlot.R
-07d88d8cf1bd62b6f9c31443334de7e5 *R/do_GeyserPlot.R
+e53ed533b083dfbdcda72b9eac4607c1 *R/do_GeyserPlot.R
 6ab88f93807f6526b568033f5afbcbd6 *R/do_GroupwiseDEPlot.R
 7d99b4f91576b1df5450e911ab3aeb72 *R/do_NebulosaPlot.R
 155ca7211e76a99919bca68c881a22a7 *R/do_PathwayActivityPlot.R
@@ -26,7 +26,7 @@ e81fa4586c05f6d8f3bcb06150b4810a *R/do_ViolinPlot.R
 f6d4a491e438b532ff776cf460f3ee7c *R/globals.R
 188e1e9591dff91c899fec1bac74ad86 *R/utils.R
 f2a5d8e5f64d14513f75145860ac4272 *R/zzz.R
-903146c4d79205af323178586a28c0ad *README.md
+bed2b4ccf137088243a6e34377cdc3b8 *README.md
 1961639f6f4f7f9efffa91b624b3d060 *build/partial.rdb
 44845ce27ac9318c60efd17c56c2ecb1 *build/vignette.rds
 203d0f90b46a88058108474c78ada938 *data/human_chr_locations.rda

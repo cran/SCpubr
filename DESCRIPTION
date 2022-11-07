@@ -2,7 +2,7 @@ Package: SCpubr
 Type: Package
 Title: Generate Publication Ready Visualizations of Single Cell
         Transcriptomics Data
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: person("Enrique", "Blanco-Carmona", email = "scpubr@gmail.com", role = c("cre", "aut"), comment = c(ORCID = "0000-0002-1208-1691"))
 Description: A system that provides a streamlined way of generating publication ready plots for known Single-Cell transcriptomics data in a “publication ready” format. This is, the goal is to automatically generate plots with the highest quality possible, that can be used right away or with minimal modifications for a research article.
 License: GPL-3
@@ -25,9 +25,9 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 biocViews: Software, SingleCell, Visualization
 NeedsCompilation: no
-Packaged: 2022-11-06 23:06:52 UTC; e420a
+Packaged: 2022-11-07 11:41:51 UTC; e420a
 Author: Enrique Blanco-Carmona [cre, aut]
     (<https://orcid.org/0000-0002-1208-1691>)
 Maintainer: Enrique Blanco-Carmona <scpubr@gmail.com>
 Repository: CRAN
-Date/Publication: 2022-11-06 23:20:02 UTC
+Date/Publication: 2022-11-07 13:30:02 UTC
