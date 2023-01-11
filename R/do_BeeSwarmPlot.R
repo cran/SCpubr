@@ -10,7 +10,7 @@
 #' @example /man/examples/examples_do_BeeSwarmPlot.R
 do_BeeSwarmPlot <- function(sample,
                             feature_to_rank,
-                            group.by,
+                            group.by = NULL,
                             assay = NULL,
                             reduction = NULL,
                             slot = NULL,
@@ -18,32 +18,45 @@ do_BeeSwarmPlot <- function(sample,
                             colors.use = NULL,
                             legend.title = NULL,
                             legend.type = "colorbar",
-                            legend.position = "bottom",
-                            legend.framewidth = 1.5,
-                            legend.tickwidth = 1.5,
+                            legend.position = if (isTRUE(continuous_feature)) {"bottom"} else {"none"},
+                            legend.framewidth = 0.5,
+                            legend.tickwidth = 0.5,
                             legend.length = 20,
                             legend.width = 1,
                             legend.framecolor = "grey50",
                             legend.tickcolor = "white",
+                            legend.ncol = NULL,
+                            legend.icon.size = 4,
                             plot.title = NULL,
                             plot.subtitle = NULL,
                             plot.caption = NULL,
                             xlab = NULL,
-                            ylab = "",
+                            ylab = NULL,
                             font.size = 14,
                             font.type = "sans",
                             remove_x_axis = FALSE,
                             remove_y_axis = FALSE,
                             flip = FALSE,
                             viridis_color_map = "G",
+                            viridis_direction = 1,
                             verbose = TRUE,
                             raster = FALSE,
                             raster.dpi = 300,
                             plot_cell_borders = TRUE,
                             border.size = 1.5,
                             border.color = "black",
-                            pt.size = 2){
+                            pt.size = 2,
+                            min.cutoff = NULL,
+                            max.cutoff = NULL){
   check_suggests(function_name = "do_BeeSwarmPlot")
+
+  # Check ggbeeswarm version:
+  # nocov start
+  if(utils::packageVersion("ggbeeswarm") < "0.7.1"){
+    warning("Due to recent updates in ggbeeswarm package, some internal interaction with ggplot2 have changed. Please update ggbeeswarm and ggplot2 to ensure correct plotting.", call. = FALSE)
+  }
+  # nocov end
+
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
   # Check the assay.
@@ -69,7 +82,12 @@ do_BeeSwarmPlot <- function(sample,
                        "legend.length" = legend.length,
                        "legend.width" = legend.width,
                        "pt.size" = pt.size,
-                       "border.size" = border.size)
+                       "border.size" = border.size,
+                       "min.cutoff" = min.cutoff,
+                       "max.cutoff" = max.cutoff,
+                       "viridis_direction" = viridis_direction,
+                       "legend.ncol" = legend.ncol,
+                       "legend.icon.size" = legend.icon.size)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("legend.position" = legend.position,
@@ -114,6 +132,12 @@ do_BeeSwarmPlot <- function(sample,
     legend.barheight <- legend.length
   }
 
+  if (is.null(group.by)){
+    aggr_entities <- levels(sample)
+    sample@meta.data[, "Groups"] <- sample@active.ident
+    group.by <- "Groups"
+  }
+
   dim_colnames <- check_feature(sample = sample, features = feature_to_rank, dump_reduction_names = TRUE)
   if (feature_to_rank %in% colnames(sample@meta.data)) {
     sample[["rank_me"]] <- sample@meta.data[, feature_to_rank]
@@ -135,6 +159,34 @@ do_BeeSwarmPlot <- function(sample,
 
   color_by <- ifelse(continuous_feature == TRUE, "rank_me", "ranked_groups")
 
+
+  # Compute the limits.
+  if (isTRUE(continuous_feature)){
+    data <- sample$rank_me
+    range.data <- c(min(data, na.rm = TRUE), max(data, na.rm = TRUE))
+
+    if (!is.null(min.cutoff) & !is.null(max.cutoff)){
+      assertthat::assert_that(min.cutoff < max.cutoff,
+                              msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
+    }
+
+    if (!is.null(min.cutoff)){
+      assertthat::assert_that(min.cutoff >= range.data[1],
+                              msg = paste0("The value provided for min.cutoff (", min.cutoff, ") is lower than the minimum value in the enrichment matrix (", range.data[1], "). Please select another value."))
+      range.data <- c(min.cutoff, range.data[2])
+    }
+
+    if (!is.null(max.cutoff)){
+      assertthat::assert_that(max.cutoff <= range.data[2],
+                              msg = paste0("The value provided for max.cutoff (", max.cutoff, ") is lower than the maximum value in the enrichment matrix (", range.data[2], "). Please select another value."))
+      range.data <- c(range.data[1], max.cutoff)
+
+    }
+
+    sample$rank_me[sample$rank_me < min.cutoff] <- min.cutoff
+    sample$rank_me[sample$rank_me > max.cutoff] <- max.cutoff
+  }
+
   p <- ggplot2::ggplot(sample@meta.data,
                        mapping = ggplot2::aes(x = .data[["rank"]],
                                               y = .data[["ranked_groups"]],
@@ -143,13 +195,11 @@ do_BeeSwarmPlot <- function(sample,
   # Add raster layer if desired.
   if (isTRUE(raster)){
     p <- p +
-         ggrastr::geom_quasirandom_rast(groupOnX = FALSE,
-                                        raster.dpi = raster.dpi,
+         ggrastr::geom_quasirandom_rast(raster.dpi = raster.dpi,
                                         size = pt.size)
   } else {
     p <- p +
-         ggbeeswarm::geom_quasirandom(groupOnX = FALSE,
-                                      size = pt.size)
+         ggbeeswarm::geom_quasirandom(size = pt.size)
   }
 
   p <- p +
@@ -171,6 +221,8 @@ do_BeeSwarmPlot <- function(sample,
                       legend.justification = "center",
                       axis.title.x = ggplot2::element_text(face = "bold"),
                       axis.title.y = ggplot2::element_text(face = "bold", angle = 90),
+                      axis.ticks.y = if(isFALSE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
+                      axis.ticks.x = if(isTRUE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
                       axis.text = ggplot2::element_text(face = "bold", color = "black"),
                       axis.line = ggplot2::element_line(color = "black"),
                       plot.background = ggplot2::element_rect(fill = "white", color = "white"),
@@ -180,7 +232,9 @@ do_BeeSwarmPlot <- function(sample,
   if (continuous_feature == TRUE){
     p <- p +
          ggplot2::scale_color_viridis_c(na.value = "grey75",
-                                        option = viridis_color_map)
+                                        option = viridis_color_map,
+                                        direction = viridis_direction,
+                                        limits = range.data)
     p <- modify_continuous_legend(p = p,
                                   legend.title = legend.title,
                                   legend.aes = "color",
@@ -198,9 +252,18 @@ do_BeeSwarmPlot <- function(sample,
     } else {
       colors.use <- check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
     }
+    # Adapt the legend to categorical variables.
+    if (is.null(legend.title)){
+      legend.title <- "Groups"
+    }
     p <- p +
          ggplot2::scale_color_manual(values = colors.use) +
-         ggplot2::theme(legend.position = "none")
+         ggplot2::guides(color = ggplot2::guide_legend(title = legend.title,
+                                                       title.position = "top",
+                                                       title.hjust = 0.5,
+                                                       ncol = legend.ncol,
+                                                       override.aes = list(size = legend.icon.size))) +
+         ggplot2::theme(legend.position = legend.position)
   }
 
   if (remove_x_axis == TRUE){
@@ -218,15 +281,15 @@ do_BeeSwarmPlot <- function(sample,
          ggplot2::coord_flip() +
          ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                         axis.ticks.y = ggplot2::element_blank()) +
-         ggplot2::xlab(ifelse(is.null(ylab), ifelse(isTRUE(continuous_feature), "Ranking", paste0("Ranking for ", feature_to_rank)), ylab)) +
-         ggplot2::ylab(xlab)
+         ggplot2::xlab(ifelse(is.null(ylab), paste0("Ranking of ", feature_to_rank), ylab)) +
+         ggplot2::ylab(if(is.null(xlab)) {group.by} else {xlab})
 
   } else {
     p <- p +
          ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                         axis.ticks.x = ggplot2::element_blank()) +
-         ggplot2::xlab(ifelse(is.null(xlab), ifelse(isTRUE(continuous_feature), "Ranking", paste0("Ranking for ", feature_to_rank)), xlab)) +
-         ggplot2::ylab(ylab)
+         ggplot2::xlab(ifelse(is.null(xlab), paste0("Ranking of ", feature_to_rank), xlab)) +
+         ggplot2::ylab(if(is.null(ylab)) {group.by} else {ylab})
 
   }
 
@@ -236,7 +299,6 @@ do_BeeSwarmPlot <- function(sample,
       base_layer <- ggrastr::geom_quasirandom_rast(data = sample@meta.data,
                                                    mapping = ggplot2::aes(x = .data[["rank"]],
                                                                           y = .data[["ranked_groups"]]),
-                                                   groupOnX = FALSE,
                                                    raster.dpi = raster.dpi,
                                                    color = border.color,
                                                    size = pt.size * border.size,
@@ -245,7 +307,6 @@ do_BeeSwarmPlot <- function(sample,
       base_layer <-ggbeeswarm::geom_quasirandom(data = sample@meta.data,
                                                  mapping = ggplot2::aes(x = .data[["rank"]],
                                                                         y = .data[["ranked_groups"]]),
-                                                 groupOnX = FALSE,
                                                  color = border.color,
                                                  size = pt.size * border.size,
                                                  show.legend = FALSE)

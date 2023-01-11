@@ -15,15 +15,14 @@ do_EnrichmentHeatmap(
   flip = FALSE,
   cluster_cols = FALSE,
   cluster_rows = FALSE,
-  legend.title = "Enrichment",
   row_names_rot = 0,
   column_names_rot = 45,
-  cell_size = 5,
+  cell_size = 8,
   na.value = "grey75",
   legend.position = "bottom",
   use_viridis = TRUE,
   viridis_color_map = "G",
-  viridis_direction = -1,
+  viridis_direction = 1,
   heatmap.legend.length = 75,
   heatmap.legend.width = 5,
   heatmap.legend.framecolor = "black",
@@ -42,30 +41,35 @@ do_EnrichmentHeatmap(
   row_names_side = "right",
   row_title_side = "left",
   row_title_rot = 90,
-  column_title = if (isFALSE(flip)) {
-     "List of Genes"
- } else {
-     "Groups"
- },
-  row_title = if (isFALSE(flip)) {
-     "Groups"
- } else {
-     "List of Genes"
- },
+  column_title = NULL,
+  row_title = NULL,
   nbin = 24,
   ctrl = 100,
   flavor = "Seurat",
+  legend.title = if (flavor != "AUCell") {
+     "Enrichment"
+ } else {
+     "AUC"
+ },
   ncores = 1,
   storeRanks = TRUE,
   min.cutoff = NULL,
   max.cutoff = NULL,
   plot_FeaturePlots = FALSE,
   plot_GeyserPlots = FALSE,
+  plot_BeeSwarmPlots = FALSE,
+  plot_BoxPlots = FALSE,
+  plot_ViolinPlots = FALSE,
   pt.size = 1,
   plot_cell_borders = TRUE,
   border.size = 2,
   geyser_order_by_mean = TRUE,
-  geyser_scale_type = "continuous"
+  geyser_scale_type = "continuous",
+  boxplot_order_by_mean = TRUE,
+  violin_plot_boxplot = TRUE,
+  violin_boxplot_width = 0.2,
+  return_object = FALSE,
+  return_matrix = FALSE
 )
 }
 \arguments{
@@ -85,9 +89,9 @@ do_EnrichmentHeatmap(
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 
-\item{cluster_cols, cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
 
-\item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
+\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
 
 \item{row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.}
 
@@ -162,15 +166,15 @@ do_EnrichmentHeatmap(
 
 \item{flavor}{\strong{\code{\link[base]{character}}} | One of: Seurat, UCell. Compute the enrichment scores using \link[Seurat]{AddModuleScore} or \link[UCell]{AddModuleScore_UCell}.}
 
+\item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
+
 \item{ncores}{\strong{\code{\link[base]{numeric}}} | Number of cores used to run UCell scoring.}
 
 \item{storeRanks}{\strong{\code{\link[base]{logical}}} | Whether to store the ranks for faster UCell scoring computations. Might require large amounts of RAM.}
 
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
 
-\item{plot_FeaturePlots}{\strong{\code{\link[base]{logical}}} | Compute output FeaturePlots for each of the gene lists.}
-
-\item{plot_GeyserPlots}{\strong{\code{\link[base]{logical}}} | Compute output GeyserPlots for each of the gene lists and group.by variable.}
+\item{plot_FeaturePlots, plot_GeyserPlots, plot_BeeSwarmPlots, plot_BoxPlots, plot_ViolinPlots}{\strong{\code{\link[base]{logical}}} | Compute extra visualizations for each of the gene lists.}
 
 \item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots.}
 
@@ -178,9 +182,17 @@ do_EnrichmentHeatmap(
 
 \item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
-\item{geyser_order_by_mean}{\strong{\code{\link[base]{logical}}} | Whether to order the X axis by the mean of the values.}
+\item{geyser_order_by_mean, boxplot_order_by_mean}{\strong{\code{\link[base]{logical}}} | Whether to order the X axis by the mean of the values.}
 
 \item{geyser_scale_type}{\strong{\code{\link[base]{character}}} | Type of scale to use. Either "continuous" or "categorical.}
+
+\item{violin_plot_boxplot}{\strong{\code{\link[base]{logical}}} | Whether to plot the boxplots inside the violin plots.}
+
+\item{violin_boxplot_width}{\strong{\code{\link[base]{numeric}}} | Width of the boxplots in the violin plots.}
+
+\item{return_object}{\strong{\code{\link[base]{logical}}} | Return the Seurat object with the enrichment scores stored.}
+
+\item{return_matrix}{\strong{\code{\link[base]{logical}}} | Return the enrichment matrix used for the heatmaps for each value in group.by.}
 }
 \value{
 A ComplexHeatmap object.

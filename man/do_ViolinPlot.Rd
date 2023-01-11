@@ -13,7 +13,7 @@ do_ViolinPlot(
   split.by = NULL,
   colors.use = NULL,
   pt.size = 0,
-  line_width = 1,
+  line_width = 0.5,
   y_cut = rep(NA, length(features)),
   plot_boxplot = TRUE,
   boxplot_width = 0.2,
@@ -33,7 +33,9 @@ do_ViolinPlot(
   ncol = NULL,
   share.y.lims = FALSE,
   legend.title = NULL,
-  legend.ncol = NULL
+  legend.ncol = NULL,
+  legend.nrow = NULL,
+  legend.byrow = FALSE
 )
 }
 \arguments{
@@ -109,6 +111,10 @@ do_ViolinPlot(
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
 
 \item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of rows in the legend.}
+
+\item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 }
 \value{
 A ggplot2 object containing a Violin Plot.

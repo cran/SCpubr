@@ -20,7 +20,7 @@ do_TFActivityPlot(
   cluster_rows = TRUE,
   row_names_rot = 0,
   column_names_rot = 45,
-  cell_size = 5,
+  cell_size = 8,
   pt.size = 1,
   plot_cell_borders = TRUE,
   border.size = 2,
@@ -31,8 +31,8 @@ do_TFActivityPlot(
   heatmap.legend.framecolor = "black",
   legend.width = 1,
   legend.length = 20,
-  legend.framewidth = 1.5,
-  legend.tickwidth = 1.5,
+  legend.framewidth = 0.5,
+  legend.tickwidth = 0.5,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
   legend.type = "colorbar",
@@ -71,7 +71,9 @@ do_TFActivityPlot(
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 
-\item{cluster_cols, cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+
+\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
 
 \item{row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.}
 

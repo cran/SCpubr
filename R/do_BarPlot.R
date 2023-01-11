@@ -23,8 +23,11 @@ do_BarPlot <- function(sample,
                        font.size = 14,
                        font.type = "sans",
                        legend.position = "bottom",
-                       rotate_x_axis_labels = 45,
                        legend.title = NULL,
+                       legend.ncol = NULL,
+                       legend.nrow = NULL,
+                       legend.byrow = FALSE,
+                       rotate_x_axis_labels = 45,
                        xlab = NULL,
                        ylab = NULL,
                        colors.use = NULL,
@@ -44,11 +47,14 @@ do_BarPlot <- function(sample,
   # Check logical parameters.
   logical_list <- list("order" = order,
                        "flip" = flip,
-                       "plot.grid" = plot.grid)
+                       "plot.grid" = plot.grid,
+                       "legend.byrow" = legend.byrow)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("font.size" = font.size,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels)
+                       "rotate_x_axis_labels" = rotate_x_axis_labels,
+                       "legend.ncol" = legend.ncol,
+                       "legend.nrow" = legend.nrow)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
 
@@ -64,7 +70,8 @@ do_BarPlot <- function(sample,
                          "plot.subtitle" = plot.subtitle,
                          "plot.caption" = plot.caption,
                          "grid.color" = grid.color,
-                         "grid.type" = grid.type)
+                         "grid.type" = grid.type,
+                         "legend.title" = legend.title)
   # Checks
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
@@ -84,6 +91,7 @@ do_BarPlot <- function(sample,
   } else {
     check_colors(colors.use, parameter_name = "colors.use")
     check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
+    colors.use <- colors.use[unique(sample@meta.data[, group.by])]
   }
   data <-  sample@meta.data %>%
            tibble::as_tibble() %>%
@@ -105,17 +113,47 @@ do_BarPlot <- function(sample,
          ggplot2::ggplot(mapping = ggplot2::aes(x = .data[[split.by]],
                                                 fill = .data[[group.by]]))
   }
+
+  xlab <- {
+    if (!is.null(xlab)){
+      xlab
+    } else {
+      if (!is.null(group.by) & is.null(split.by)){
+        group.by
+      } else if (!is.null(group.by) & !is.null(split.by)){
+        split.by
+      }
+    }
+  }
+
+ ylab <- {
+   ifelse(is.null(ylab),
+          paste0(ifelse(position == "stack", "Count", "Frequency"), " of ", group.by),
+          ylab)
+ }
+
+ legend.title <- {
+   if (!is.null(legend.title)){
+     legend.title
+   } else {
+     group.by
+   }
+ }
+
   p <- p +
        ggplot2::stat_count(geom = "bar", position = position, color = "black") +
-       ggplot2::xlab(if (!is.null(split.by) & is.null(xlab)) {split.by} else {ifelse(is.null(group.by), "Idents", group.by)}) +
-       ggplot2::ylab(ifelse(is.null(ylab), paste0(ifelse(position == "stack", "Count", "Frequency"), " of ", group.by), ylab)) +
+       ggplot2::xlab(xlab) +
+       ggplot2::ylab(ylab) +
        ggplot2::labs(title = plot.title,
                      subtitle = plot.subtitle,
                      caption = plot.caption) +
        ggplot2::scale_fill_manual(values = colors.use) +
-       ggplot2::guides(fill = ggplot2::guide_legend(title = if (!is.null(split.by) & is.null(legend.title)) {ifelse(is.null(group.by), "Idents", group.by)} else {legend.title},
+       ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title,
                                                     title.position = "top",
-                                                    title.hjust = 0.5)) +
+                                                    title.hjust = 0.5,
+                                                    ncol = legend.ncol,
+                                                    nrow = legend.nrow,
+                                                    byrow = legend.byrow)) +
        ggplot2::theme_minimal(base_size = font.size) +
        ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
                                                          face = "bold"),

@@ -7,7 +7,7 @@
 do_BeeSwarmPlot(
   sample,
   feature_to_rank,
-  group.by,
+  group.by = NULL,
   assay = NULL,
   reduction = NULL,
   slot = NULL,
@@ -15,31 +15,41 @@ do_BeeSwarmPlot(
   colors.use = NULL,
   legend.title = NULL,
   legend.type = "colorbar",
-  legend.position = "bottom",
-  legend.framewidth = 1.5,
-  legend.tickwidth = 1.5,
+  legend.position = if (isTRUE(continuous_feature)) {
+     "bottom"
+ } else {
+    
+    "none"
+ },
+  legend.framewidth = 0.5,
+  legend.tickwidth = 0.5,
   legend.length = 20,
   legend.width = 1,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
+  legend.ncol = NULL,
+  legend.icon.size = 4,
   plot.title = NULL,
   plot.subtitle = NULL,
   plot.caption = NULL,
   xlab = NULL,
-  ylab = "",
+  ylab = NULL,
   font.size = 14,
   font.type = "sans",
   remove_x_axis = FALSE,
   remove_y_axis = FALSE,
   flip = FALSE,
   viridis_color_map = "G",
+  viridis_direction = 1,
   verbose = TRUE,
   raster = FALSE,
   raster.dpi = 300,
   plot_cell_borders = TRUE,
   border.size = 1.5,
   border.color = "black",
-  pt.size = 2
+  pt.size = 2,
+  min.cutoff = NULL,
+  max.cutoff = NULL
 )
 }
 \arguments{
@@ -85,6 +95,10 @@ do_BeeSwarmPlot(
 
 \item{legend.tickcolor}{\strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.}
 
+\item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.icon.size}{\strong{\code{\link[base]{numeric}}} | Size of the icons in legend.}
+
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
 
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
@@ -104,6 +118,8 @@ do_BeeSwarmPlot(
 
 \item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
+\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
 \item{verbose}{\strong{\code{\link[base]{logical}}} | Whether to show extra comments, warnings,etc.}
 
 \item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
@@ -117,6 +133,8 @@ do_BeeSwarmPlot(
 \item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
 
 \item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots.}
+
+\item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
 }
 \value{
 A ggplot2 object containing a Bee Swarm plot.

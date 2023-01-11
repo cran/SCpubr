@@ -13,11 +13,14 @@ do_RidgePlot(
   slot = "data",
   continuous_scale = FALSE,
   legend.title = NULL,
+  legend.ncol = NULL,
+  legend.nrow = NULL,
+  legend.byrow = FALSE,
   legend.position = NULL,
   legend.width = 1,
   legend.length = 20,
-  legend.framewidth = 1.5,
-  legend.tickwidth = 1.5,
+  legend.framewidth = 0.5,
+  legend.tickwidth = 0.5,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
   legend.type = "colorbar",
@@ -60,6 +63,12 @@ do_RidgePlot(
 \item{continuous_scale}{\strong{\code{\link[base]{logical}}} | Whether to color the ridges depending on a categorical or continuous scale.}
 
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
+
+\item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of rows in the legend.}
+
+\item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
 \itemize{

@@ -83,7 +83,9 @@
 
 \item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 
-\item{legend.ncol, legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of columns/rows in the legend.}
+\item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of rows in the legend.}
 
 \item{plot_marginal_distributions}{\strong{\code{\link[base]{logical}}} |  Whether to plot marginal distributions on the figure or not.}
 
@@ -106,7 +108,9 @@
 
 \item{row_title}{\strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.}
 
-\item{cluster_cols, cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+
+\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
 
 \item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
 
@@ -192,6 +196,27 @@
 \item{contour.linejoin}{\strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).}
 
 \item{contour_expand_axes}{\strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.}
+
+\item{label}{\strong{\code{\link[base]{logical}}} | Whether to plot the cluster labels in the UMAP. The cluster labels will have the same color as the cluster colors.}
+
+\item{label.color}{\strong{\code{\link[base]{character}}} | Color of the labels in the plot.}
+
+\item{label.size}{\strong{\code{\link[base]{numeric}}} | Size of the labels in the plot.}
+
+\item{label.box}{\strong{\code{\link[base]{logical}}} | Whether to plot the plot labels as \strong{\code{\link[ggplot2]{geom_text}}} (FALSE) or \strong{\code{\link[ggplot2]{geom_label}}} (TRUE).}
+
+\item{min.overlap}{\strong{\code{\link[base]{numeric}}} | Filter the output result to the terms which are supported by this many genes.}
+
+\item{GO_ontology}{\strong{\code{\link[base]{character}}} | GO ontology to use. One of:
+\itemize{
+\item \emph{\code{BP}}: For \strong{B}iological \strong{P}rocess.
+\item \emph{\code{MF}}: For \strong{M}olecular \strong{F}unction.
+\item \emph{\code{CC}}: For \strong{C}ellular \strong{C}omponent.
+}}
+
+\item{genes}{\strong{\code{\link[base]{character}}} | Vector of gene symbols to query for functional annotation.}
+
+\item{org.db}{\strong{\code{OrgDB}} | Database object to use for the query.}
 
 \item{nbin}{\strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.}
 

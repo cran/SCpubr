@@ -29,7 +29,7 @@ do_GroupwiseDEPlot <- function(sample,
                                column_title = "DE genes",
                                heatmap_gap = 0.5,
                                legend_gap = 1,
-                               assay = "SCT",
+                               assay = NULL,
                                slot = "data",
                                legend.position = "bottom",
                                row_names_side = "right",
@@ -84,6 +84,11 @@ do_GroupwiseDEPlot <- function(sample,
   check_parameters(parameter = viridis_map_pvalues, parameter_name = "viridis_color_map")
   check_parameters(parameter = viridis_map_expression, parameter_name = "viridis_color_map")
   check_parameters(parameter = viridis_map_logfc, parameter_name = "viridis_color_map")
+
+  # Check the assay.
+  out <- check_and_set_assay(sample = sample, assay = assay)
+  sample <- out[["sample"]]
+  assay <- out[["assay"]]
 
   if (!is.null(group.by)){
     for (value in group.by){
@@ -251,13 +256,6 @@ do_GroupwiseDEPlot <- function(sample,
   if (!is.null(min.cutoff) & !is.null(max.cutoff)){
     assertthat::assert_that(min.cutoff < max.cutoff,
                             msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
-
-    assertthat::assert_that(max.cutoff > min.cutoff,
-                            msg = paste0("The value provided for max.cutoff (", max.cutoff, ") has to be higher than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
-    assertthat::assert_that(max.cutoff != min.cutoff,
-                            msg = paste0("The value provided for max.cutoff (", max.cutoff, ") can not be the same than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
   }
 
   if (!is.null(min.cutoff)){

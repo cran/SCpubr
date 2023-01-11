@@ -19,7 +19,105 @@ if(isFALSE(dep_check[["do_GeyserPlot"]])){
 
 
     p <- SCpubr::do_GeyserPlot(sample = sample,
-                               features = "EPC1")
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               enforce_symmetry = FALSE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               enforce_symmetry = FALSE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    sample$seurat_clusters <- as.character(sample$seurat_clusters)
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical")
+    testthat::expect_type(p, "list")
+  })
+
+  testthat::test_that("do_GeyserPlot: PASS - flip", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               flip = FALSE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               flip = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               flip = FALSE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               flip = TRUE)
+    testthat::expect_type(p, "list")
+  })
+
+  testthat::test_that("do_GeyserPlot: PASS - cutoffs", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               min.cutoff = 1)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               min.cutoff = 1)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               max.cutoff = 2)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               max.cutoff = 2)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               min.cutoff = 1,
+                               max.cutoff = 2)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "continuous",
+                               min.cutoff = 1,
+                               max.cutoff = 2)
     testthat::expect_type(p, "list")
   })
 
@@ -46,6 +144,14 @@ if(isFALSE(dep_check[["do_GeyserPlot"]])){
     p <- SCpubr::do_GeyserPlot(sample = sample,
                                features = "EPC1",
                                scale_type = "categorical")
+    testthat::expect_type(p, "list")
+
+    sample$seurat_clusters_character <- as.character(sample$seurat_clusters)
+    p <- SCpubr::do_GeyserPlot(sample = sample,
+                               features = "EPC1",
+                               scale_type = "categorical",
+                               group.by = "seurat_clusters_character",
+                               colors.use = NULL)
     testthat::expect_type(p, "list")
   })
 

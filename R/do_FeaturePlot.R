@@ -26,8 +26,8 @@ do_FeaturePlot <- function(sample,
                            legend.title = NULL,
                            legend.type = "colorbar",
                            legend.position = "bottom",
-                           legend.framewidth = 1.5,
-                           legend.tickwidth = 1.5,
+                           legend.framewidth = 0.5,
+                           legend.tickwidth = 0.5,
                            legend.length = 20,
                            legend.width = 1,
                            legend.framecolor = "grey50",
@@ -56,7 +56,10 @@ do_FeaturePlot <- function(sample,
                            contour.color = "grey90",
                            contour.lineend = "butt",
                            contour.linejoin = "round",
-                           contour_expand_axes = 0.25){
+                           contour_expand_axes = 0.25,
+                           label = FALSE,
+                           label.color = "black",
+                           label.size = 4){
 
   check_suggests(function_name = "do_FeaturePlot")
   # Check if the sample provided is a Seurat object.
@@ -76,7 +79,8 @@ do_FeaturePlot <- function(sample,
                        "order" = order,
                        "enforce_symmetry" = enforce_symmetry,
                        "plot.axes" = plot.axes,
-                       "plot_density_contour" = plot_density_contour)
+                       "plot_density_contour" = plot_density_contour,
+                       "label" = label)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -91,7 +95,8 @@ do_FeaturePlot <- function(sample,
                        "viridis_direction" = viridis_direction,
                        "min.cutoff" = min.cutoff,
                        "max.cutoff" = max.cutoff,
-                       "contour_expand_axes" = contour_expand_axes)
+                       "contour_expand_axes" = contour_expand_axes,
+                       "label.size" = label.size)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   # Workaround for features.
@@ -123,7 +128,8 @@ do_FeaturePlot <- function(sample,
                          "contour.position" = contour.position,
                          "contour.color" = contour.color,
                          "contour.lineend" = contour.lineend,
-                         "contour.linejoin" = contour.linejoin)
+                         "contour.linejoin" = contour.linejoin,
+                         "label.color" = label.color)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
   # Check slot.
@@ -161,6 +167,7 @@ do_FeaturePlot <- function(sample,
   check_colors(legend.framecolor, parameter_name = "legend.framecolor")
   check_colors(legend.tickcolor, parameter_name = "legend.tickcolor")
   check_colors(contour.color, parameter_name = "contour.color")
+  check_colors(label.color, parameter_name = "label.color")
 
   check_parameters(parameter = font.type, parameter_name = "font.type")
   check_parameters(parameter = legend.type, parameter_name = "legend.type")
@@ -240,8 +247,11 @@ do_FeaturePlot <- function(sample,
                                raster = raster,
                                raster.dpi = c(raster.dpi, raster.dpi),
                                min.cutoff = min.cutoff,
-                               max.cutoff = max.cutoff)
-    } else {
+                               max.cutoff = max.cutoff,
+                               label = label,
+                               label.size = label.size,
+                               label.color = label.color)
+    } else { # nocov start
       p <- Seurat::FeaturePlot(sample,
                                features,
                                slot = slot,
@@ -252,8 +262,12 @@ do_FeaturePlot <- function(sample,
                                ncol = ncol,
                                raster = raster,
                                min.cutoff = min.cutoff,
-                               max.cutoff = max.cutoff)
-    }
+                               max.cutoff = max.cutoff,
+                               label = label,
+                               label.size = label.size,
+                               label.color = label.color)
+    } # nocov end
+    p$layers[[length(p$layers)]]$aes_params$fontface = "bold"
      p <- p &
       # Remove Seurat::FeaturePlot() default plot title.
       ggplot2::ggtitle("")
@@ -272,9 +286,11 @@ do_FeaturePlot <- function(sample,
           p.build <- ggplot2::ggplot_build(p)
           feature.select <- gsub("-", ".", features)
           scale.name <- feature.select
+          # nocov start
           if (stringr::str_starts(feature.select, "[0-9]")){
             feature.select <- paste0("x", feature.select)
           }
+          # nocov end
           limits <- c(min(p.build$plot$data[, feature.select]),
                       max(p.build$plot$data[, feature.select]))
           end_value <- max(abs(limits))
@@ -296,9 +312,11 @@ do_FeaturePlot <- function(sample,
           p.build <- ggplot2::ggplot_build(p[[counter]])
           feature.select <- gsub("-", ".",  features[counter])
           scale.name <- feature.select
+          # nocov start
           if (stringr::str_starts(feature.select, "[0-9]")){
             feature.select <- paste0("x", feature.select)
           }
+          # nocov end
           limits <- c(min(p.build$plot$data[, feature.select]),
                       max(p.build$plot$data[, feature.select]))
           end_value <- max(abs(limits))
@@ -451,8 +469,11 @@ do_FeaturePlot <- function(sample,
                                         raster = raster,
                                         raster.dpi = c(raster.dpi, raster.dpi),
                                         min.cutoff = min.cutoff.use,
-                                        max.cutoff = max.cutoff.use)
-        } else {
+                                        max.cutoff = max.cutoff.use,
+                                        label = label,
+                                        label.size = label.size,
+                                        label.color = label.color)
+        } else { # nocov start
           p.loop <- Seurat::FeaturePlot(sample,
                                         feature.use,
                                         reduction = reduction,
@@ -462,9 +483,12 @@ do_FeaturePlot <- function(sample,
                                         pt.size = pt.size,
                                         raster = raster,
                                         min.cutoff = min.cutoff.use,
-                                        max.cutoff = max.cutoff.use)
-        }
-
+                                        max.cutoff = max.cutoff.use,
+                                        label = label,
+                                        label.size = label.size,
+                                        label.color = label.color)
+        } # nocov end
+        p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface = "bold"
 
         # Add scale.
 
@@ -478,9 +502,11 @@ do_FeaturePlot <- function(sample,
           p.build <- ggplot2::ggplot_build(p.loop)
           feature.select <- gsub("-", ".", feature.use)
           scale.name <- feature.select
+          # nocov start
           if (stringr::str_starts(feature.select, "[0-9]")){
             feature.select <- paste0("x", feature.select)
           }
+          # nocov end
           limits <- c(min(p.build$plot$data[, feature.select], na.rm = TRUE),
                       max(p.build$plot$data[, feature.select], na.rm = TRUE))
           end_value <- max(abs(limits))
@@ -572,8 +598,11 @@ do_FeaturePlot <- function(sample,
                                           raster = raster,
                                           raster.dpi = c(raster.dpi, raster.dpi),
                                           min.cutoff = min.cutoff.use,
-                                          max.cutoff = max.cutoff.use)
-          } else {
+                                          max.cutoff = max.cutoff.use,
+                                          label = label,
+                                          label.size = label.size,
+                                          label.color = label.color)
+          } else { # nocov start
             p.loop <- Seurat::FeaturePlot(sample,
                                           feature.use,
                                           slot = slot,
@@ -583,9 +612,12 @@ do_FeaturePlot <- function(sample,
                                           pt.size = pt.size,
                                           raster = raster,
                                           min.cutoff = min.cutoff.use,
-                                          max.cutoff = max.cutoff.use)
-          }
-
+                                          max.cutoff = max.cutoff.use,
+                                          label = label,
+                                          label.size = label.size,
+                                          label.color = label.color)
+          } # nocov end
+          p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface = "bold"
 
 
           if (isFALSE(enforce_symmetry)){

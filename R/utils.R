@@ -35,7 +35,8 @@
 #' @param legend.tickcolor \strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.
 #' @param legend.length,legend.width \strong{\code{\link[base]{numeric}}} | Length and width of the legend. Will adjust automatically depending on legend side.
 #' @param legend.icon.size \strong{\code{\link[base]{numeric}}} | Size of the icons in legend.
-#' @param legend.ncol,legend.nrow \strong{\code{\link[base]{numeric}}} | Number of columns/rows in the legend.
+#' @param legend.ncol \strong{\code{\link[base]{numeric}}} | Number of columns in the legend.
+#' @param legend.nrow \strong{\code{\link[base]{numeric}}} | Number of rows in the legend.
 #' @param legend.byrow \strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.
 #' @param plot.title,plot.subtitle,plot.caption \strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.
 #' @param individual.titles,individual.subtitles,individual.captions \strong{\code{\link[base]{character}}} | Vector. Title, subtitle or caption to use in the plot when multiple features are passed on. Use NA to keep the original title.
@@ -71,7 +72,8 @@
 #' @param enforce_symmetry \strong{\code{\link[base]{logical}}} | Return a symmetrical plot axes-wise or continuous color scale-wise, when applicable.
 #' @param column_title \strong{\code{\link[base]{character}}} | Title for the columns of the heatmaps. Only works with single heatmaps.
 #' @param row_title \strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.
-#' @param cluster_cols,cluster_rows \strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.
+#' @param cluster_cols \strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.
+#' @param cluster_rows \strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.
 #' @param column_names_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.
 #' @param row_names_rot \strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.
 #' @param cell_size \strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.
@@ -117,6 +119,19 @@
 #' @param contour.linejoin \strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).
 #' @param contour_expand_axes \strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.
 #' @param min.cutoff,max.cutoff \strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.
+#' @param label \strong{\code{\link[base]{logical}}} | Whether to plot the cluster labels in the UMAP. The cluster labels will have the same color as the cluster colors.
+#' @param label.color \strong{\code{\link[base]{character}}} | Color of the labels in the plot.
+#' @param label.size \strong{\code{\link[base]{numeric}}} | Size of the labels in the plot.
+#' @param label.box \strong{\code{\link[base]{logical}}} | Whether to plot the plot labels as \strong{\code{\link[ggplot2]{geom_text}}} (FALSE) or \strong{\code{\link[ggplot2]{geom_label}}} (TRUE).
+#' @param min.overlap \strong{\code{\link[base]{numeric}}} | Filter the output result to the terms which are supported by this many genes.
+#' @param GO_ontology \strong{\code{\link[base]{character}}} | GO ontology to use. One of:
+#' \itemize{
+#'   \item \emph{\code{BP}}: For \strong{B}iological \strong{P}rocess.
+#'   \item \emph{\code{MF}}: For \strong{M}olecular \strong{F}unction.
+#'   \item \emph{\code{CC}}: For \strong{C}ellular \strong{C}omponent.
+#' }
+#' @param genes \strong{\code{\link[base]{character}}} | Vector of gene symbols to query for functional annotation.
+#' @param org.db \strong{\code{OrgDB}} | Database object to use for the query.
 #' @usage NULL
 #' @return Nothing. This is a mock function.
 #' @keywords internal
@@ -209,7 +224,15 @@ doc_function <- function(sample,
                          contour.color,
                          contour.lineend,
                          contour.linejoin,
-                         contour_expand_axes){}
+                         contour_expand_axes,
+                         label,
+                         label.color,
+                         label.size,
+                         label.box,
+                         min.overlap,
+                         GO_ontology,
+                         genes,
+                         org.db){}
 
 #' Named vector.
 #'
@@ -269,6 +292,7 @@ check_suggests <- function(function_name, passive = FALSE){
                               "grid",
                               "assertthat"),
                    "do_AlluvialPlot" = c("ggalluvial", "ggrepel"),
+                   "do_AzimuthAnalysisPlot" = c(),
                    "do_BarPlot" = c("colorspace", "ggrepel"),
                    "do_BeeSwarmPlot" = c("colorspace", "ggbeeswarm", "ggrastr"),
                    "do_BoxPlot" = c("ggsignif"),
@@ -280,8 +304,11 @@ check_suggests <- function(function_name, passive = FALSE){
                    "do_DimPlot" = c("colorspace", "ggplotify", "scattermore"),
                    "do_DotPlot" = c(),
                    "do_EnrichmentHeatmap" = c("ComplexHeatmap", "circlize"),
+                   "do_ExpressionHeatmap" = c("ComplexHeatmap", "circlize"),
                    "do_FeaturePlot" = c("scattermore"),
+                   "do_FunctionalAnnotationPlot" = c("clusterProfiler", "enrichplot", "ggnewscale"),
                    "do_GeyserPlot" = c("ggdist"),
+                   "do_GroupedGOTermPlot" = c("clusterProfiler"),
                    "do_GroupwiseDEPlot" = c("ComplexHeatmap"),
                    "do_LigandReceptorPlot" = c("liana"),
                    "do_NebulosaPlot" = c("Nebulosa"),
@@ -317,7 +344,9 @@ check_suggests <- function(function_name, passive = FALSE){
       if (isFALSE(passive)){
         stop(paste0("Package ", pkg, " must be installed to use ", function_name, "."), call. = FALSE)
       } else{
+        # nocov start
         value <- FALSE
+        # nocov end
       }
     }
   }
@@ -355,6 +384,8 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
                               "scales",
                               "grid",
                               "assertthat"),
+                   "do_AlluvialPlot" = c("ggalluvial"),
+                   "do_AzimuthAnalysisPlot" = c(),
                    "do_BarPlot" = c("colorspace", "ggrepel"),
                    "do_BeeSwarmPlot" = c("colorspace", "ggbeeswarm", "ggrastr"),
                    "do_BoxPlot" = c("ggsignif"),
@@ -366,8 +397,11 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
                    "do_DimPlot" = c("colorspace", "ggplotify", "scattermore"),
                    "do_DotPlot" = c(),
                    "do_EnrichmentHeatmap" = c("ComplexHeatmap", "circlize"),
+                   "do_ExpressionHeatmap" = c("ComplexHeatmap", "circlize"),
                    "do_FeaturePlot" = c("scattermore"),
+                   "do_FunctionalAnnotationPlot" = c("clusterProfiler", "enrichplot", "ggnewscale"),
                    "do_GeyserPlot" = c("ggdist"),
+                   "do_GroupedGOTermPlot" = c("clusterProfiler"),
                    "do_GroupwiseDEPlot" = c("ComplexHeatmap"),
                    "do_LigandReceptorPlot" = c("liana"),
                    "do_NebulosaPlot" = c("Nebulosa"),
@@ -395,6 +429,7 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
                      "ggbeeswarm",
                      "ggdist",
                      "ggExtra",
+                     "ggnewscale",
                      "ggplot2",
                      "ggplotify",
                      "ggrastr",
@@ -419,9 +454,14 @@ state_dependencies <- function(function_name = NULL, return_dependencies = FALSE
                      "svglite",
                      "viridis")
 
-  bioconductor_packages <- c("ComplexHeatmap",
+  bioconductor_packages <- c("AUCell",
+                             "ComplexHeatmap",
+                             "clusterProfiler",
+                             "enrichplot",
                              "infercnv",
-                             "Nebulosa")
+                             "Nebulosa",
+                             "UCell")
+
   github_packages <- c("ggsankey",
                        "liana",
                        "monocle3")
@@ -1274,11 +1314,12 @@ heatmap_inner <- function(data,
                           viridis_color_map = "D",
                           viridis_direction = 1,
                           zeros_are_white = FALSE,
-                          symmetrical_scale = FALSE){
+                          symmetrical_scale = FALSE,
+                          use_middle_white = TRUE){
   `%>%`<- magrittr::`%>%`
 
   assertthat::assert_that((nrow(data) >= 1 & ncol(data) > 1) | (nrow(data) > 1 & ncol(data) >= 1),
-                          msg = "Please provide a matrix that is not 1x1.")
+                          msg = "Please provide a matrix that is not 1x1. This might be caused by a categorical variable with only 1 unique value and only 1 value to plot for it. Consider increasing the number of rows or columns. In other words, either include a categorical variable with more than 1 value or more than 1 list of genes to plot in the heatmap. This should be an edge case for this specific function. If you are seeing this error way too often, please consider taking the time to open an Issue in SCpubr GitHub with as many details as you can. Thanks!")
 
   if (!(is.null(range.data)) & data_range == "both"){
     assertthat::assert_that(length(range.data) == 2,
@@ -1345,9 +1386,19 @@ heatmap_inner <- function(data,
   }
 
   if (is.null(colors.use)){
-    colors.use <- c("#023f73", "white", "#7a0213")
+    if (isTRUE(use_middle_white)){
+      colors.use <- c("#023f73", "white", "#7a0213")
+    } else {
+      colors.use <- c("#023f73", "#7a0213")
+    }
+
   } else {
-    colors.use <- c(colors.use[1], "white", colors.use[2])
+    if (isTRUE(use_middle_white)){
+      colors.use <- c(colors.use[1], "white", colors.use[2])
+    } else {
+      colors.use <- c(colors.use[1], colors.use[2])
+    }
+
   }
   if (data_range == "both"){
     if (isTRUE(symmetrical_scale)){
@@ -1581,13 +1632,17 @@ compute_enrichment_scores <- function(sample,
                                       flavor = "Seurat",
                                       ncores = 1,
                                       storeRanks = TRUE){
+  `%>%` <- magrittr::`%>%`
+
   # Checks for UCell.
   if (flavor == "UCell"){
     R_version <- paste0(R.version$major, ".", R.version$minor)
     assertthat::assert_that(R_version >= "4.2.0",
                             msg = "To run UCell scoring, R version 4.2.0 is required. Please select flavor = 'Seurat' if you are running a version inferior to this.")
     if (!requireNamespace("UCell", quietly = TRUE)) {
+      # nocov start
       stop(paste0("Package UCell must be installed to run UCell scoring."), call. = FALSE)
+      # nocov end
     }
   }
 
@@ -1658,9 +1713,41 @@ compute_enrichment_scores <- function(sample,
       sample@meta.data[, old.name] <- sample@meta.data[, mod.name]
       # Remove old metadata.
       if (old.name != mod.name){
+        # nocov start
         sample@meta.data[, mod.name] <- NULL
+        # nocov end
       }
     }
+  }
+
+  if (flavor == "AUCell"){
+    if (is.null(assay)){
+      assay <- Seurat::DefaultAssay(sample)
+    }
+
+    if (is.null(slot)){
+      slot <- "data"
+    }
+    scores <- AUCell::AUCell_run(exprMat = Seurat::GetAssayData(sample, assay = assay, slot = slot),
+                                 geneSets = input_gene_list)
+    scores <- scores@assays@data$AUC %>%
+              as.matrix() %>%
+              t() %>%
+              as.data.frame() %>%
+              tibble::rownames_to_column(var = "cell")
+
+    # This is to remove some head title that prevents the left join afterwards.
+    col.names <- colnames(scores)
+    row.names <- rownames(scores)
+    scores <- unname(scores)
+    colnames(scores) <- col.names
+    row.names(scores) <- row.names
+
+    sample@meta.data <- sample@meta.data %>%
+                        tibble::rownames_to_column(var = "cell") %>%
+                        dplyr::left_join(y = scores,
+                                         by = "cell") %>%
+                        tibble::column_to_rownames(var = "cell")
   }
   return(sample)
 }
@@ -1933,16 +2020,28 @@ check_parameters <- function(parameter,
                             msg = "Please provide one of the following to rotate_x_axis_labels: 0, 45, 90.")
   } else if (parameter_name == "contour.lineend"){
     assertthat::assert_that(parameter %in% c("round", "butt", "square"),
-                            msg = "Please provide one of the following to contour_lineend: round, butt, square.")
+                            msg = "Please provide one of the following to contour.lineend: round, butt, square.")
   } else if (parameter_name == "contour.linejoin"){
     assertthat::assert_that(parameter %in% c("round", "mitre", "bevel"),
-                            msg = "Please provide one of the following to contour_linejoin: round, mitre, bevel.")
+                            msg = "Please provide one of the following to contour.linejoin: round, mitre, bevel.")
   } else if (parameter_name == "contour.position"){
     assertthat::assert_that(parameter %in% c("bottom", "top"),
-                            msg = "Please provide one of the following to contour_position: top, bottom.")
+                            msg = "Please provide one of the following to contour.position: top, bottom.")
   } else if (parameter_name == "flavor"){
-    assertthat::assert_that(parameter %in% c("Seurat", "UCell"),
-                            msg = "Please provide one of the following to contour_position: Seurat, UCell")
+    assertthat::assert_that(parameter %in% c("Seurat", "UCell", "AUCell"),
+                            msg = "Please provide one of the following to flavor: Seurat, UCell, AUCell.")
+  } else if (parameter_name == "arrange_interactions_by"){
+    assertthat::assert_that(parameter %in% c("specificity", "magnitude", "both", "aggregate_rank"),
+                            msg = "Please provide one of the following to arrange_interactions_by: aggregate_rank, specificity, magnitude, both.")
+  } else if (parameter_name == "database"){
+    assertthat::assert_that(parameter %in% c("GO", "KEGG"),
+                            msg = "Please provide one of the following to database: GO, KEGG")
+  } else if (parameter_name == "GO_ontology"){
+    assertthat::assert_that(parameter %in% c("BP", "MF", "CC"),
+                            msg = "Please provide one of the following to GO_ontology: BP, MF, CC")
+  } else if (parameter_name == "pAdjustMethod"){
+    assertthat::assert_that(parameter %in% c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"),
+                            msg = "Please provide one of the following to pAdjustMethod: holm, hochberg, hommel, bonferroni, BH, BY, fdr, none")
   }
 }
 
@@ -2092,5 +2191,890 @@ get_axis_parameters <- function(angle,
 }
 
 
+do_GroupedGO_matrices <- function(genes,
+                                  org.db,
+                                  levels.use = NULL,
+                                  ontologies = c("BP", "CC", "MF"),
+                                  min.overlap = 3,
+                                  verbose = TRUE){
+  `%>%` <- magrittr::`%>%`
+  # Convert genes to ENTREZIDs.
+  suppressMessages({
+    conversion <-clusterProfiler::bitr(genes, fromType = "SYMBOL",
+                                       toType = c("ENTREZID"),
+                                       OrgDb = org.db)
+  })
 
 
+  # Iterate over the three ontologies.
+  result_ontologies <- list()
+  for (ont in ontologies){
+    if(isTRUE(verbose)){
+      message(paste0("Computing grouped GO terms for the ontology: ", ont))
+    }
+    result_list <- list()
+
+    # To break out of the while loop.
+    breakpoint <- FALSE
+
+    # Set a counter, that will act as level of the ontologies.
+    counter <- 0
+
+    if (is.null(levels.use)){
+      if (isTRUE(verbose)){
+        message("Computing for all possible ontology levels...")
+      }
+      while(isFALSE(breakpoint)){
+        # Set the ontology level.
+        counter <- counter + 1
+        if (isTRUE(verbose)){
+          message(paste0("Computing level ", counter, "..."))
+        }
+
+        grouped_terms <- clusterProfiler::groupGO(gene = conversion$ENTREZID,
+                                                  OrgDb = org.db,
+                                                  ont = ont,
+                                                  level = counter,
+                                                  readable = TRUE)
+
+        # Arrange the dataframe by descending count and filter.
+        result <- grouped_terms@result %>%
+                  dplyr::arrange(dplyr::desc(.data$Count)) %>%
+                  dplyr::filter(.data$Count >= min.overlap)
+
+
+        if (dim(result)[1] > 0){
+          result <- result %>%
+                    dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " ")))
+          result_list[[paste0("Lv. ", counter)]] <- result
+        } else {
+          # nocov start
+          if (isTRUE(verbose)){
+            message("No results for this level. This can be due to the filtering cutoffs applied or because no terms were found for the genes.")
+          }
+          breakpoint <- TRUE
+          # nocov end
+        }
+      }
+    } else {
+      if (isTRUE(verbose)){
+        message("Computing for the requested levels...")
+      }
+      for (level in levels.use){
+        if (isTRUE(verbose)){
+          message(paste0("Computing level ", level, "..."))
+        }
+
+        grouped_terms <- clusterProfiler::groupGO(gene = conversion$ENTREZID,
+                                                  OrgDb = org.db,
+                                                  ont = ont,
+                                                  level = level,
+                                                  readable = TRUE)
+
+        # Arrange the dataframe by descending count and filter.
+        result <- grouped_terms@result %>%
+                  dplyr::arrange(dplyr::desc(.data$Count)) %>%
+                  dplyr::filter(.data$Count >= min.overlap)
+
+        if (dim(result)[1] > 0){
+          result <- result %>%
+                    dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " ")))
+          result_list[[paste0("Lv. ", level)]] <- result
+        } else {
+          # nocov start
+          if (isTRUE(verbose)){
+            message("No results for this level. This can be due to the filtering cutoffs applied or because no terms were found for the genes.")
+          }
+          breakpoint <- TRUE
+          # nocov end
+        }
+      }
+    }
+    result_ontologies[[ont]] <- result_list
+  }
+
+  if (isTRUE(verbose)){
+    message("Finished computing!")
+  }
+  return(result_ontologies)
+}
+
+do_GroupedGO_analysis_heatmaps <- function(result,
+                                           genes,
+                                           flip = TRUE,
+                                           levels.use = NULL,
+                                           legend.position = "none",
+                                           heatmap_gap = 0.5,
+                                           ontologies = c("BP", "CC", "MF"),
+                                           cluster_rows = TRUE,
+                                           cluster_cols = TRUE,
+                                           cell_size = 5,
+                                           reverse.levels = TRUE,
+                                           colors.use = c("grey90", "#29353d"),
+                                           rotate_x_axis_labels = 45,
+                                           font.size = 10,
+                                           verbose = TRUE){
+  if (isTRUE(verbose)){
+    message("Plotting heatmaps...")
+  }
+  `%v%` <- ComplexHeatmap::`%v%`
+  `%>%` <- magrittr::`%>%`
+
+  # Use a custom legend for all heatmaps
+  legend.use <- ComplexHeatmap::Legend(labels = c("Present", "Absent"),
+                                       legend_gp = grid::gpar(fill = c("Present" = colors.use[2], "Absent" = colors.use[1])),
+                                       labels_gp = grid::gpar(font.size = font.size))
+
+  list.h <- list()
+  for (ont in ontologies){
+    list.heatmaps <- list()
+    list.legends <- list()
+    list.individual <- list()
+
+
+    levels.use <- names(result[[ont]])
+
+    if (isTRUE(reverse.levels)){
+      levels.use <- rev(levels.use)
+    }
+
+    for (level in levels.use){
+      data <- result[[ont]][[level]]
+      # Transform output to data frame of genes and whether they contribute to the term or not.
+      df <- data.frame(row.names = genes)
+
+      for (term in data$Description){
+        genes.use <- stringr::str_split(data %>%
+                                          dplyr::filter(.data$Description == term) %>%
+                                          dplyr::pull(.data$geneID), pattern = "/")[[1]]
+        df[[term]] <- ifelse(rownames(df) %in% genes.use, 1, 0)
+      }
+
+      df <- as.matrix(df)
+
+      if (isFALSE(flip)){
+        df <- t(df)
+      }
+
+      data <- df
+      breaks <- c(0, 1)
+      col_fun <- circlize::colorRamp2(breaks = breaks, colors = colors.use)
+      h <- ComplexHeatmap::Heatmap(matrix = data,
+                                   name = " ",
+                                   col = col_fun,
+                                   na_col = "grey75",
+                                   show_heatmap_legend = FALSE,
+                                   cluster_rows = cluster_rows,
+                                   cluster_columns = cluster_cols,
+                                   show_row_dend = FALSE,
+                                   show_column_dend = FALSE,
+                                   top_annotation = NULL,
+                                   bottom_annotation = NULL,
+                                   right_annotation = NULL,
+                                   left_annotation = NULL,
+                                   width = ncol(data)*grid::unit(cell_size, "mm"),
+                                   height = nrow(data)*grid::unit(cell_size, "mm"),
+                                   column_names_gp = grid::gpar(fontsize = font.size,
+                                                                fontface = "bold"),
+                                   row_names_gp = grid::gpar(fontsize = font.size,
+                                                             fontface = "bold"),
+                                   row_names_side = "left",
+                                   column_names_side = "bottom",
+                                   row_title = if (isFALSE(flip)) {level} else {NULL},
+                                   column_title = if(isTRUE(flip)) {level} else {NULL},
+                                   column_title_side = "top",
+                                   row_title_side = "right",
+                                   column_title_rot = 0,
+                                   row_title_rot = 0,
+                                   column_names_rot = 45,
+                                   row_names_rot = 0,
+                                   column_title_gp = grid::gpar(fontsize = font.size,
+                                                                fontface = "bold"),
+                                   row_title_gp = grid::gpar(fontsize = font.size,
+                                                             fontface = "bold"),
+                                   border = TRUE,
+                                   rect_gp = grid::gpar(col= "grey50"),
+                                   cell_fun = function(j, i, x, y, w, h, fill) {
+                                     grid::grid.rect(x, y, w, h, gp = grid::gpar(alpha = 0))
+                                   },
+                                   column_names_centered = FALSE,
+                                   row_names_centered = FALSE)
+
+
+      grDevices::pdf(NULL)
+      out <- ComplexHeatmap::draw(h,
+                                  heatmap_legend_list = if (legend.position != "none") {list(legend.use)} else {NULL},
+                                  heatmap_legend_side = if (legend.position != "none") {legend.position} else {NULL},
+                                  padding = ggplot2::unit(c(5, 5, 5, 5), "mm"))
+      grDevices::dev.off()
+
+      list.heatmaps[[level]] <- h
+      list.individual[[level]] <- out
+    }
+
+    # Compute joint heatmap.
+    grDevices::pdf(NULL)
+    ht_list <- NULL
+    # Append heatmaps vertically.
+    suppressWarnings({
+      for (heatmap in list.heatmaps){
+        if (isTRUE(flip)){
+          ht_list <- ht_list + heatmap
+        } else if (isFALSE(flip)){
+          ht_list <- ht_list %v% heatmap
+        }
+      }
+    })
+
+    # Control gap between legends.
+    ComplexHeatmap::ht_opt(message = FALSE)
+
+    # Draw final heatmap.
+    h <- ComplexHeatmap::draw(ht_list,
+                              heatmap_legend_list = if (legend.position != "none") {list(legend.use)} else {NULL},
+                              heatmap_legend_side = if (legend.position != "none") {legend.position} else {NULL},
+                              padding = ggplot2::unit(c(5, 5, 5, 5), "mm"),
+                              ht_gap = ggplot2::unit(heatmap_gap, "cm"))
+    grDevices::dev.off()
+
+
+    list.h[[ont]][["Individual"]] <- list.individual
+    list.h[[ont]][["Combined"]] <- h
+  }
+  return(list.h)
+}
+
+do_EnrichedTermMatrix <- function(genes,
+                                  result,
+                                  flip = TRUE,
+                                  cluster_cols = TRUE,
+                                  cluster_rows = TRUE,
+                                  cell_size = 7,
+                                  heatmap_gap = 0.5,
+                                  heatmap.legend.length = 75,
+                                  heatmap.legend.width = 5,
+                                  heatmap.legend.framecolor = "black",
+                                  legend_gap = 1,
+                                  font.size = 14,
+                                  legend.position = "bottom"){
+  `%v%` <- ComplexHeatmap::`%v%`
+  `%>%` <- magrittr::`%>%`
+
+  df.presence <- data.frame(row.names = genes)
+  results <- result@result %>%
+             dplyr::arrange(result@result, dplyr::desc(.data$Count)) %>%
+             dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " ")))
+  df.count <- data.frame(row.names = unique(results$Description),
+                         "Gene count" = results$Count)
+  df.count <- as.matrix(df.count)
+  colnames(df.count) <- "Gene count"
+
+  df.p.adj <- data.frame(row.names = unique(results$Description),
+                         "-log10(p.adj)" = -log10(results$p.adjust))
+  df.p.adj <- as.matrix(df.p.adj)
+  colnames(df.p.adj) <- "-log10(p.adj)"
+
+  # Map presence/absence.
+  for (term in results$Description){
+    data.use <- results %>% dplyr::filter(.data$Description == term)
+    genes.use <- data.use$geneID
+    genes.use <- stringr::str_split(genes.use, pattern = "/")[[1]]
+    df.presence[[term]] <- ifelse(rownames(df.presence) %in% genes.use, 1, 0)
+  }
+
+
+  df.presence <- as.matrix(df.presence)
+
+  if (isTRUE(flip)){
+    df.presence <- t(df.presence)
+  } else {
+    df.count <- t(df.count)
+    df.p.adj <- t(df.p.adj)
+  }
+
+
+  if (legend.position %in% c("top", "bottom")){
+    legend_width <- grid::unit(heatmap.legend.length, "mm")
+    legend_height <- NULL
+    grid_height <- grid::unit(heatmap.legend.width, "mm")
+    grid_width <- grid::unit(4, "mm")
+    direction <- "horizontal"
+    title_position <- "topcenter"
+  } else if (legend.position %in% c("left", "right")){
+    grid_width <- grid::unit(heatmap.legend.width, "mm")
+    legend_height <- grid::unit(heatmap.legend.length, "mm")
+    legend_width <- NULL
+    grid_height <- grid::unit(4, "mm")
+    direction <- "vertical"
+    title_position <- "topleft"
+  }
+
+
+  data <- df.presence
+  breaks <- c(0, 1)
+  col_fun <- circlize::colorRamp2(breaks = breaks, colors = c("white", "#29353d"))
+
+  h.presence <- ComplexHeatmap::Heatmap(matrix = data,
+                               name = " ",
+                               col = col_fun,
+                               na_col = "grey75",
+                               show_heatmap_legend = FALSE,
+                               cluster_rows = cluster_rows,
+                               cluster_columns = cluster_cols,
+                               show_row_dend = FALSE,
+                               show_column_dend = FALSE,
+                               top_annotation = NULL,
+                               bottom_annotation = NULL,
+                               right_annotation = NULL,
+                               left_annotation = NULL,
+                               width = ncol(data)*grid::unit(cell_size, "mm"),
+                               height = nrow(data)*grid::unit(cell_size, "mm"),
+                               column_names_gp = grid::gpar(fontsize = font.size,
+                                                            fontface = "bold"),
+                               row_names_gp = grid::gpar(fontsize = font.size,
+                                                         fontface = "bold"),
+                               row_names_side = "left",
+                               column_names_side = "bottom",
+                               column_title = if (isFALSE(flip)){"Enriched terms"} else {"Genes in signature"},
+                               column_title_side = "top",
+                               row_title_side = "left",
+                               row_title = NULL,
+                               column_title_rot = 0,
+                               row_title_rot = 90,
+                               column_names_rot = 45,
+                               row_names_rot = 0,
+                               column_title_gp = grid::gpar(fontsize = font.size,
+                                                            fontface = "bold"),
+                               row_title_gp = grid::gpar(fontsize = font.size,
+                                                         fontface = "bold"),
+                               border = TRUE,
+                               rect_gp = grid::gpar(col= "grey50"),
+                               cell_fun = function(j, i, x, y, w, h, fill) {
+                                 grid::grid.rect(x, y, w, h, gp = grid::gpar(alpha = 0))
+                               },
+                               column_names_centered = FALSE,
+                               row_names_centered = FALSE)
+
+  if (legend.position != "none"){
+    lgd.presence <- ComplexHeatmap::Legend(at = breaks,
+                                           labels = as.character(breaks),
+                                           col_fun = col_fun,
+                                           title = " ",
+                                           direction = direction,
+                                           legend_height = legend_height,
+                                           legend_width = legend_width,
+                                           grid_width = grid_width,
+                                           grid_height = grid_height,
+                                           border = heatmap.legend.framecolor,
+                                           title_position = title_position,
+                                           break_dist = rep(1, length(breaks) - 1),
+                                           labels_gp = grid::gpar(fontsize = font.size,
+                                                                  fontface = "bold"),
+                                           title_gp = grid::gpar(fontsize = font.size,
+                                                                 fontface = "bold"))
+  }
+
+  data <- df.count
+  breaks <- c(0, max(data))
+  col_fun <- circlize::colorRamp2(breaks = breaks, colors = c("#d8ecf3", "#2E3192"))
+  h.count <- ComplexHeatmap::Heatmap(matrix = data,
+                                        name = " ",
+                                        col = col_fun,
+                                        na_col = "grey75",
+                                        show_heatmap_legend = FALSE,
+                                        cluster_rows = cluster_rows,
+                                        cluster_columns = cluster_cols,
+                                        show_row_dend = FALSE,
+                                        show_column_dend = FALSE,
+                                        top_annotation = NULL,
+                                        bottom_annotation = NULL,
+                                        right_annotation = NULL,
+                                        left_annotation = NULL,
+                                        width = ncol(data)*grid::unit(cell_size, "mm"),
+                                        height = nrow(data)*grid::unit(cell_size, "mm"),
+                                        column_names_gp = grid::gpar(fontsize = font.size,
+                                                                     fontface = "bold"),
+                                        row_names_gp = grid::gpar(fontsize = font.size,
+                                                                  fontface = "bold"),
+                                        row_names_side = "left",
+                                        column_names_side = "bottom",
+                                        column_title = NULL,
+                                        column_title_side = "top",
+                                        row_title_side = "left",
+                                        row_title = NULL,
+                                        column_title_rot = 0,
+                                        row_title_rot = 90,
+                                        column_names_rot = 45,
+                                        row_names_rot = 0,
+                                        column_title_gp = grid::gpar(fontsize = font.size,
+                                                                     fontface = "bold"),
+                                        row_title_gp = grid::gpar(fontsize = font.size,
+                                                                  fontface = "bold"),
+                                        border = TRUE,
+                                        rect_gp = grid::gpar(col= "grey50"),
+                                        cell_fun = function(j, i, x, y, w, h, fill) {
+                                          grid::grid.rect(x, y, w, h, gp = grid::gpar(alpha = 0))
+                                        },
+                                        column_names_centered = FALSE,
+                                        row_names_centered = FALSE)
+
+  if (legend.position != "none"){
+    lgd.count <- ComplexHeatmap::Legend(at = breaks,
+                                        labels = as.character(breaks),
+                                        col_fun = col_fun,
+                                        title = "Gene count",
+                                        direction = direction,
+                                        legend_height = legend_height,
+                                        legend_width = legend_width,
+                                        grid_width = grid_width,
+                                        grid_height = grid_height,
+                                        border = heatmap.legend.framecolor,
+                                        title_position = title_position,
+                                        break_dist = rep(1, length(breaks) - 1),
+                                        labels_gp = grid::gpar(fontsize = font.size,
+                                                               fontface = "bold"),
+                                        title_gp = grid::gpar(fontsize = font.size,
+                                                              fontface = "bold"))
+  }
+
+
+
+  data <- df.p.adj
+  breaks <- c(0, round(max(data), 2))
+  col_fun <- circlize::colorRamp2(breaks = breaks, colors = c("#f3dfd8", "#925D2E"))
+  h.p.adj <- ComplexHeatmap::Heatmap(matrix = data,
+                                     name = " ",
+                                     col = col_fun,
+                                     na_col = "grey75",
+                                     show_heatmap_legend = FALSE,
+                                     cluster_rows = cluster_rows,
+                                     cluster_columns = cluster_cols,
+                                     show_row_dend = FALSE,
+                                     show_column_dend = FALSE,
+                                     top_annotation = NULL,
+                                     bottom_annotation = NULL,
+                                     right_annotation = NULL,
+                                     left_annotation = NULL,
+                                     width = ncol(data)*grid::unit(cell_size, "mm"),
+                                     height = nrow(data)*grid::unit(cell_size, "mm"),
+                                     column_names_gp = grid::gpar(fontsize = font.size,
+                                                                  fontface = "bold"),
+                                     row_names_gp = grid::gpar(fontsize = font.size,
+                                                               fontface = "bold"),
+                                     row_names_side = "left",
+                                     column_names_side = "bottom",
+                                     column_title = NULL,
+                                     column_title_side = "top",
+                                     row_title_side = "left",
+                                     row_title = NULL,
+                                     column_title_rot = 0,
+                                     row_title_rot = 90,
+                                     column_names_rot = 45,
+                                     row_names_rot = 0,
+                                     column_title_gp = grid::gpar(fontsize = font.size,
+                                                                  fontface = "bold"),
+                                     row_title_gp = grid::gpar(fontsize = font.size,
+                                                               fontface = "bold"),
+                                     border = TRUE,
+                                     rect_gp = grid::gpar(col= "grey50"),
+                                     cell_fun = function(j, i, x, y, w, h, fill) {
+                                       grid::grid.rect(x, y, w, h, gp = grid::gpar(alpha = 0))
+                                     },
+                                     column_names_centered = FALSE,
+                                     row_names_centered = FALSE)
+
+  if (legend.position != "none"){
+    lgd.p.adj <- ComplexHeatmap::Legend(at = breaks,
+                                        labels = as.character(breaks),
+                                        col_fun = col_fun,
+                                        title = "-log10(p.adj)",
+                                        direction = direction,
+                                        legend_height = legend_height,
+                                        legend_width = legend_width,
+                                        grid_width = grid_width,
+                                        grid_height = grid_height,
+                                        border = heatmap.legend.framecolor,
+                                        title_position = title_position,
+                                        break_dist = rep(1, length(breaks) - 1),
+                                        labels_gp = grid::gpar(fontsize = font.size,
+                                                               fontface = "bold"),
+                                        title_gp = grid::gpar(fontsize = font.size,
+                                                              fontface = "bold"))
+  }
+
+
+  list.heatmaps <- list(h.presence, h.count, h.p.adj)
+  if (legend.position != "none"){
+    list.legends <- list(lgd.count, lgd.p.adj)
+  }
+
+
+  # Compute joint heatmap.
+  grDevices::pdf(NULL)
+  ht_list <- NULL
+  # Append heatmaps vertically.
+  suppressWarnings({
+    for (heatmap in list.heatmaps){
+      if (isTRUE(flip)){
+        ht_list <- ht_list + heatmap
+      } else if (isFALSE(flip)){
+        ht_list <- ht_list %v% heatmap
+      }
+    }
+  })
+
+  # Control gap between legends.
+  ComplexHeatmap::ht_opt(message = FALSE,
+                         legend_gap = ggplot2::unit(rep(legend_gap, 2), "cm"))
+
+  # Draw final heatmap.
+  h <- ComplexHeatmap::draw(ht_list,
+                            heatmap_legend_list = if (legend.position != "none") {list.legends} else {NULL},
+                            heatmap_legend_side = if (legend.position != "none") {if (legend.position %in% c("top", "bottom")){"bottom"} else {"right"}} else {NULL},
+                            padding = ggplot2::unit(c(5, 5, 5, 5), "mm"),
+                            ht_gap = ggplot2::unit(heatmap_gap, "cm"))
+  grDevices::dev.off()
+
+  return(h)
+}
+
+do_EnrichedTermBarPlot <- function(result,
+                                   font.size = 14,
+                                   font.type = "sans",
+                                   rotate_x_axis_labels = 45,
+                                   plot.title = NULL,
+                                   plot.subtitle = NULL,
+                                   plot.caption = NULL,
+                                   plot.grid = TRUE,
+                                   grid.color = "grey75",
+                                   grid.type = "dashed",
+                                   flip = TRUE,
+                                   legend.type = "colorbar",
+                                   legend.position = "bottom",
+                                   legend.framewidth = 1.5,
+                                   legend.tickwidth = 1.5,
+                                   legend.length = 20,
+                                   legend.width = 1,
+                                   legend.framecolor = "grey50",
+                                   legend.tickcolor = "white",
+                                   viridis_color_map = "G",
+                                   viridis_direction = -1,
+                                   xlab = "Gene count",
+                                   ylab = "Enriched terms"){
+  `%>%` <- magrittr::`%>%`
+
+  xlab <- ifelse(is.null(xlab), "Gene count", xlab)
+  ylab <- ifelse(is.null(ylab), "Enriched terms", ylab)
+
+  data <- result@result
+  p <- dplyr::select(data, dplyr::all_of(c("Description", "Count", "p.adjust"))) %>%
+    dplyr::arrange(dplyr::desc(.data$Count)) %>%
+    dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " "))) %>%
+    dplyr::mutate("p.adjust" = -log10(.data$p.adjust),
+                  "Description" = factor(.data$Description, levels = rev(.data$Description))) %>%
+    ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Count,
+                                           y = .data$Description,
+                                           fill = .data$p.adjust)) +
+    ggplot2::geom_col(color = "black") +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab) +
+    ggplot2::labs(title = plot.title,
+                  subtitle = plot.subtitle,
+                  caption = plot.caption)
+
+  suppressWarnings({
+    p <- p +
+      ggplot2::scale_fill_viridis_c(na.value = "grey75",
+                                    option = viridis_color_map,
+                                    direction = viridis_direction)
+  })
+  if (legend.position != "none"){
+    p <- modify_continuous_legend(p = p,
+                                  legend.title = expression(bold(paste("-", log["10"], "(p.adjust)"))),
+                                  legend.aes = "fill",
+                                  legend.type = legend.type,
+                                  legend.position = legend.position,
+                                  legend.length = legend.length,
+                                  legend.width = legend.width,
+                                  legend.framecolor = legend.framecolor,
+                                  legend.tickcolor = legend.tickcolor,
+                                  legend.framewidth = legend.framewidth,
+                                  legend.tickwidth = legend.tickwidth)
+  }
+
+  p <- p +
+    ggplot2::theme_minimal(base_size = font.size) +
+    ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
+                                                      face = "bold"),
+                   panel.grid.major.y = if (isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                   panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                   axis.line.x = if (isFALSE(flip)) {ggplot2::element_line(color = "black")} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                   axis.line.y = if (isTRUE(flip)) {ggplot2::element_line(color = "black")} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                   axis.text.x = ggplot2::element_text(color = "black",
+                                                       face = "bold",
+                                                       angle = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["angle"]],
+                                                       hjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["hjust"]],
+                                                       vjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["vjust"]]),
+                   axis.text.y = ggplot2::element_text(color = "black", face = "bold"),
+                   axis.ticks = ggplot2::element_line(color = "black"),
+                   plot.title.position = "plot",
+                   plot.title = ggplot2::element_text(face = "bold", hjust = 0),
+                   plot.subtitle = ggplot2::element_text(hjust = 0),
+                   plot.caption = ggplot2::element_text(hjust = 1),
+                   panel.grid = ggplot2::element_blank(),
+                   text = ggplot2::element_text(family = font.type),
+                   plot.caption.position = "plot",
+                   legend.text = ggplot2::element_text(face = "bold"),
+                   legend.position = legend.position,
+                   legend.title = ggplot2::element_text(face = "bold"),
+                   legend.justification = "center",
+                   plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
+                   plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   legend.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   strip.text =ggplot2::element_text(color = "black", face = "bold"))
+
+  return(p)
+}
+
+
+do_EnrichedTermDotPlot <- function(result,
+                                   font.size = 14,
+                                   font.type = "sans",
+                                   rotate_x_axis_labels = 45,
+                                   plot.title = NULL,
+                                   plot.subtitle = NULL,
+                                   plot.caption = NULL,
+                                   plot.grid = TRUE,
+                                   grid.color = "grey75",
+                                   grid.type = "dashed",
+                                   flip = TRUE,
+                                   legend.type = "colorbar",
+                                   legend.position = "bottom",
+                                   legend.framewidth = 1.5,
+                                   legend.tickwidth = 1.5,
+                                   legend.length = 20,
+                                   legend.width = 1,
+                                   legend.framecolor = "grey50",
+                                   legend.tickcolor = "white",
+                                   viridis_color_map = "G",
+                                   viridis_direction = -1,
+                                   xlab = "Gene count",
+                                   ylab = "Enriched terms"){
+  `%>%` <- magrittr::`%>%`
+
+  xlab <- ifelse(is.null(xlab), "Gene count", xlab)
+  ylab <- ifelse(is.null(ylab), "Enriched terms", ylab)
+
+  data <- result@result
+  p <- dplyr::select(data, dplyr::all_of(c("Description", "Count", "p.adjust"))) %>%
+    dplyr::arrange(dplyr::desc(.data$Count)) %>%
+    dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " "))) %>%
+    dplyr::mutate("p.adjust" = -log10(.data$p.adjust),
+                  "Description" = factor(.data$Description, levels = rev(.data$Description))) %>%
+    ggplot2::ggplot(mapping = ggplot2::aes(x = .data$Count,
+                                           y = .data$Description,
+                                           fill = .data$p.adjust,
+                                           size = .data$Count)) +
+    ggplot2::geom_point(shape = 21, color = "black")
+
+  suppressWarnings({
+    p <- p +
+      ggplot2::scale_fill_viridis_c(na.value = "grey75",
+                                    option = viridis_color_map,
+                                    direction = viridis_direction)
+  })
+
+  if (legend.position != "none"){
+    p <- modify_continuous_legend(p = p,
+                                  legend.title = expression(bold(paste("-", log["10"], "(p.adjust)"))),
+                                  legend.aes = "fill",
+                                  legend.type = legend.type,
+                                  legend.position = legend.position,
+                                  legend.length = legend.length,
+                                  legend.width = legend.width,
+                                  legend.framecolor = legend.framecolor,
+                                  legend.tickcolor = legend.tickcolor,
+                                  legend.framewidth = legend.framewidth,
+                                  legend.tickwidth = legend.tickwidth)
+  }
+
+  p <- p +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab) +
+    ggplot2::labs(title = plot.title,
+                  subtitle = plot.subtitle,
+                  caption = plot.caption) +
+    ggplot2::guides(size = ggplot2::guide_legend(title = "Gene count",
+                                                 title.position = "top",
+                                                 title.hjust = 0.5,
+                                                 override.aes = list(color = "black",
+                                                                     fill = "black"))) +
+    ggplot2::theme_minimal(base_size = font.size) +
+    ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
+                                                      face = "bold"),
+                   panel.grid.major.y = if (isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                   panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                   axis.line.x = if (isFALSE(flip)) {ggplot2::element_line(color = "black")} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                   axis.line.y = if (isTRUE(flip)) {ggplot2::element_line(color = "black")} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                   axis.text.x = ggplot2::element_text(color = "black",
+                                                       face = "bold",
+                                                       angle = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["angle"]],
+                                                       hjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["hjust"]],
+                                                       vjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["vjust"]]),
+                   axis.text.y = ggplot2::element_text(color = "black", face = "bold"),
+                   axis.ticks = ggplot2::element_line(color = "black"),
+                   plot.title.position = "plot",
+                   plot.title = ggplot2::element_text(face = "bold", hjust = 0),
+                   plot.subtitle = ggplot2::element_text(hjust = 0),
+                   plot.caption = ggplot2::element_text(hjust = 1),
+                   panel.grid = ggplot2::element_blank(),
+                   text = ggplot2::element_text(family = font.type),
+                   plot.caption.position = "plot",
+                   legend.text = ggplot2::element_text(face = "bold"),
+                   legend.position = legend.position,
+                   legend.title = ggplot2::element_text(face = "bold"),
+                   legend.justification = "center",
+                   plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
+                   plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   legend.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   strip.text =ggplot2::element_text(color = "black", face = "bold"))
+
+  return(p)
+}
+
+do_EnrichedTermTreePlot <- function(result,
+                                    legend.type = "colorbar",
+                                    legend.position = "bottom",
+                                    legend.framewidth = 1.5,
+                                    legend.tickwidth = 1.5,
+                                    legend.length = 20,
+                                    legend.width = 1,
+                                    legend.framecolor = "grey50",
+                                    legend.tickcolor = "white",
+                                    viridis_color_map = "G",
+                                    viridis_direction = -1,
+                                    font.size = 4,
+                                    font.type = "sans",
+                                    plot.title = NULL,
+                                    plot.subtitle = NULL,
+                                    plot.caption = NULL,
+                                    showCategory = 30,
+                                    nWords = 4,
+                                    nCluster = 5){
+  `%>%` <- magrittr::`%>%`
+  result <- result %>%
+            dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " ")))
+  result2 <- enrichplot::pairwise_termsim(result)
+  result2 <- result2 %>%
+             dplyr::mutate("Description" = stringr::str_to_sentence(stringr::str_replace_all(.data$Description, "_", " ")))
+  p <- enrichplot::treeplot(x = result2,
+                            showCategory = showCategory,
+                            nWords = nWords,
+                            nCluster = nCluster,
+                            font.size = font.size)
+  # Transform p.values to -log10(p.adjust)
+  p$data$color <- -log10(p$data$color)
+
+  # Make dendogram black.
+  p$layers[[1]]$aes_params$colour_new_new = "black"
+  p$layers[[2]]$aes_params$colour_new_new = "black"
+
+  # This controls the clusters.
+  ## Font size
+  p$layers[[3]]$aes_params$fontface <- "bold"
+
+  # Control the color of the vertical lines
+  p$layers[[4]]$aes_params$colour_new = "black"
+
+  # Remove color palette from blacked dendograms.
+  p$scales$scales[[3]] <- NULL
+
+  # Remove current color gradient for p-value
+  p$scales$scales[[5]] <- NULL
+
+  # Change the type of dot to bordered dot.
+
+  p.build <- ggplot2::ggplot_build(p)
+  data.use <- p.build$data[[6]]
+  names.use <- p.build$data[[7]][c("label", "node")]
+  data.use <- dplyr::left_join(x = data.use,
+                               y = names.use,
+                               by = "node")
+  values.use <- p$data[c("label", "count")]
+
+  data.use <- dplyr::left_join(x = data.use,
+                               y = values.use,
+                               by = "label")
+
+  p$layers[[6]] <- NULL
+
+  p$scales$scales <- NULL
+  p$layers[[5]] <- NULL
+
+  p <- p +
+    ggplot2::geom_point(data = data.use,
+                        shape = 21,
+                        mapping = ggplot2::aes(x = .data$x,
+                                               y = .data$y,
+                                               size = .data$count,
+                                               fill = .data$size))
+
+  # Add viridis color scale.
+  p <- p +
+    ggplot2::scale_fill_viridis_c(option = viridis_color_map,
+                                  direction = viridis_direction)
+
+  if (legend.position != "none"){
+    p <- modify_continuous_legend(p = p,
+                                  legend.title = expression(bold(paste("-", log["10"], "(p.adjust)"))),
+                                  legend.aes = "fill",
+                                  legend.type = legend.type,
+                                  legend.position = legend.position,
+                                  legend.length = legend.length,
+                                  legend.width = legend.width,
+                                  legend.framecolor = legend.framecolor,
+                                  legend.tickcolor = legend.tickcolor,
+                                  legend.framewidth = legend.framewidth,
+                                  legend.tickwidth = legend.tickwidth)
+  }
+
+  p <- p +
+    ggplot2::labs(title = plot.title,
+                  subtitle = plot.subtitle,
+                  caption = plot.caption) +
+    ggplot2::guides(size = ggplot2::guide_legend(title = "Gene count",
+                                                 title.position = "top",
+                                                 title.hjust = 0.5,
+                                                 override.aes = list(color = "black",
+                                                                     fill = "black"))) +
+    ggplot2::theme_minimal(base_size = font.size) +
+    ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
+                                                      face = "bold"),
+                   panel.grid.major.y = ggplot2::element_blank(),
+                   panel.grid.major.x = ggplot2::element_blank(),
+                   axis.line.x = ggplot2::element_blank(),
+                   axis.line.y = ggplot2::element_blank(),
+                   axis.text.x = ggplot2::element_blank(),
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.ticks = ggplot2::element_blank(),
+                   plot.title.position = "plot",
+                   plot.title = ggplot2::element_text(face = "bold", hjust = 0),
+                   plot.subtitle = ggplot2::element_text(hjust = 0),
+                   plot.caption = ggplot2::element_text(hjust = 1),
+                   panel.grid = ggplot2::element_blank(),
+                   text = ggplot2::element_text(family = font.type),
+                   plot.caption.position = "plot",
+                   legend.text = ggplot2::element_text(face = "bold"),
+                   legend.position = legend.position,
+                   legend.title = ggplot2::element_text(face = "bold"),
+                   legend.justification = "center",
+                   plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
+                   plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   legend.background = ggplot2::element_rect(fill = "white", color = "white"),
+                   strip.text =ggplot2::element_text(color = "black", face = "bold"))
+  return(p)
+
+}

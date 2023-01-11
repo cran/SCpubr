@@ -7,7 +7,6 @@
 #' @param line_width \strong{\code{\link[base]{numeric}}} | Width of the lines drawn in the plot. Defaults to 1.
 #' @param boxplot_width \strong{\code{\link[base]{numeric}}} | Width of the boxplots. Defaults to 0.2.
 #' @param share.y.lims \strong{\code{\link[base]{logical}}} | When querying multiple features, force the Y axis of all of them to be on the same range of values (this being the max and min of all features combined).
-#' @param legend.ncol \strong{\code{\link[base]{numeric}}} | Number of columns in the legend.
 
 
 #' @return A ggplot2 object containing a Violin Plot.
@@ -22,7 +21,7 @@ do_ViolinPlot <- function(sample,
                           split.by = NULL,
                           colors.use = NULL,
                           pt.size = 0,
-                          line_width = 1,
+                          line_width = 0.5,
                           y_cut = rep(NA, length(features)),
                           plot_boxplot = TRUE,
                           boxplot_width = 0.2,
@@ -42,7 +41,9 @@ do_ViolinPlot <- function(sample,
                           ncol = NULL,
                           share.y.lims = FALSE,
                           legend.title = NULL,
-                          legend.ncol = NULL){
+                          legend.ncol = NULL,
+                          legend.nrow = NULL,
+                          legend.byrow = FALSE){
   check_suggests(function_name = "do_ViolinPlot")
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
@@ -57,7 +58,8 @@ do_ViolinPlot <- function(sample,
   logical_list <- list("plot_boxplot" = plot_boxplot,
                        "plot.grid" = plot.grid,
                        "flip" = flip,
-                       "share.y.lims" = share.y.lims)
+                       "share.y.lims" = share.y.lims,
+                       "legend.byrow" = legend.byrow)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -67,7 +69,8 @@ do_ViolinPlot <- function(sample,
                        "boxplot_width" = boxplot_width,
                        "rotate_x_axis_labels" = rotate_x_axis_labels,
                        "ncol" = ncol,
-                       "legend.ncol" = legend.ncol)
+                       "legend.ncol" = legend.ncol,
+                       "legend.nrow" = legend.nrow)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("legend.position" = legend.position,
@@ -150,36 +153,61 @@ do_ViolinPlot <- function(sample,
 
   for (feature in features){
     counter <- counter + 1
-    p <- get_data_column_in_context(sample = sample,
-                                    feature = feature,
-                                    assay = assay,
-                                    slot = slot,
-                                    group.by = group.by,
-                                    split.by = split.by) %>%
-         ggplot2::ggplot(mapping = ggplot2::aes(x = .data$group.by,
-                                                y = .data$feature,
-                                                fill = if (!is.null(split.by)){.data$split.by} else {.data$group.by})) +
+    data <- get_data_column_in_context(sample = sample,
+                                       feature = feature,
+                                       assay = assay,
+                                       slot = slot,
+                                       group.by = group.by,
+                                       split.by = split.by)
+
+    if (!is.null(split.by)){
+      p <- data %>%
+           ggplot2::ggplot(mapping = ggplot2::aes(x = .data$group.by,
+                                                  y = .data$feature,
+                                                  fill = .data$split.by))
+    } else {
+      p <- data %>%
+           ggplot2::ggplot(mapping = ggplot2::aes(x = .data$group.by,
+                                                  y = .data$feature,
+                                                  fill = .data$group.by))
+    }
+    p <- p +
          ggplot2::geom_violin(color = "black",
-                              lwd = line_width)
+                              linewidth = line_width)
     if (isTRUE(plot_boxplot)){
       assertthat::assert_that(is.null(split.by),
-                              msg = "Boxplots are not implemented when split.by is set.")
+                              msg = "Boxplots are not implemented when split.by is set. Set plot_boxplots parameter to FALSE. ")
       p <- p +
            ggplot2::geom_boxplot(fill = "white",
                                  color = "black",
-                                 lwd = line_width,
+                                 linewidth = line_width,
                                  width = boxplot_width,
                                  outlier.shape = NA,
-                                 fatten = 1)
+                                 fatten = 1) +
+           ggplot2::scale_fill_manual(values = colors.use)
     }
+    if (is.na(xlab[counter])){
+      xlab.use <- "Groups"
+    } else {
+      xlab.use <- xlab[counter]
+    }
+
+    if (is.na(ylab[counter])){
+      ylab.use <- feature
+    } else {
+      ylab.use <- ylab[counter]
+    }
+
     p <- p +
-         ggplot2::xlab(if (!is.na(xlab[counter])) {xlab[counter]} else {"Groups"}) +
-         ggplot2::ylab(if (!is.na(ylab[counter])) {ylab[counter]} else {feature}) +
+         ggplot2::xlab(xlab.use) +
+         ggplot2::ylab(ylab.use) +
          ggplot2::labs(title = plot.title,
                        subtitle = plot.subtitle,
                        caption = plot.caption) +
          ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title,
                                                       ncol = legend.ncol,
+                                                      nrow = legend.nrow,
+                                                      byrow = legend.byrow,
                                                       title.position = "top")) +
          ggplot2::theme_minimal(base_size = font.size) +
          ggplot2::theme(axis.text.x = ggplot2::element_text(color = "black",
@@ -222,7 +250,7 @@ do_ViolinPlot <- function(sample,
            ggplot2::geom_hline(yintercept = y_cut[counter],
                                linetype = "longdash",
                                colour = "black",
-                               size = 1,
+                               linewidth = 1,
                                na.rm = TRUE)
     }
 

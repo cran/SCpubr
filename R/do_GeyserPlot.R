@@ -37,8 +37,8 @@ do_GeyserPlot <- function(sample,
                           legend.position = "bottom",
                           legend.width = 1,
                           legend.length = 20,
-                          legend.framewidth = 1.5,
-                          legend.tickwidth = 1.5,
+                          legend.framewidth = 0.5,
+                          legend.tickwidth = 0.5,
                           legend.framecolor = "grey50",
                           legend.tickcolor = "white",
                           legend.type = "colorbar",
@@ -249,13 +249,6 @@ do_GeyserPlot <- function(sample,
     if (!is.null(min.cutoff) & !is.null(max.cutoff)){
       assertthat::assert_that(min.cutoff < max.cutoff,
                               msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
-
-      assertthat::assert_that(max.cutoff > min.cutoff,
-                              msg = paste0("The value provided for max.cutoff (", max.cutoff, ") has to be higher than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
-      assertthat::assert_that(max.cutoff != min.cutoff,
-                              msg = paste0("The value provided for max.cutoff (", max.cutoff, ") can not be the same than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
     }
 
     if (!is.null(min.cutoff)){
@@ -272,10 +265,18 @@ do_GeyserPlot <- function(sample,
 
 
     # Plot.
-    p <- ggplot2::ggplot(data = data,
-                         mapping = ggplot2::aes(x = .data[["group.by"]],
-                                                y = .data[["values"]],
-                                                color = if (scale_type == "categorical"){.data[["group.by"]]} else {.data[["values"]]}))
+    if (scale_type == "categorical"){
+      p <- ggplot2::ggplot(data = data,
+                           mapping = ggplot2::aes(x = .data[["group.by"]],
+                                                  y = .data[["values"]],
+                                                  color = .data[["group.by"]]))
+    } else if (scale_type == "continuous"){
+      p <- ggplot2::ggplot(data = data,
+                           mapping = ggplot2::aes(x = .data[["group.by"]],
+                                                  y = .data[["values"]],
+                                                  color = .data[["values"]]))
+    }
+
 
     if (isTRUE(plot_cell_borders)){
       p <- p +
@@ -321,7 +322,13 @@ do_GeyserPlot <- function(sample,
       end_value <- max(abs(limits))
       if (is.null(colors.use)){
         values <- data %>% dplyr::pull(.data[["group.by"]])
-        names.use <- if (is.factor(values)){levels(values)} else {sort(unique(values))}
+        if (is.factor(values)){
+          names.use <- levels(values)
+        } else {
+          # nocov start
+          sort(unique(values))
+          # nocov end
+        }
         colors.use <- generate_color_scale(names_use = names.use)
       } else {
         check_colors(colors.use)

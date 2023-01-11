@@ -1,3 +1,70 @@
+# SCpubr v1.0.4.9000
+
+## General
+-   Increased the cell size of all heatmap-based functions from 5 to 8.
+-   Decreased the thickness of frame and ticks of all ggplot2-based continuous legends to retrieve a similar behavior as in previous versions of ggplot2, as with the new update, the overall thickness of the frame and ticks increased, probably due to the changes related to `element_line`,
+-   Added five new functions: `do_AlluvialPlot()`, `do_AzimuthAnalysisPlot()`, `do_ExpressionHeatmap()`, `do_GroupedGOTermPlot()` and `do_FunctionalAnnotationPlot()`.
+-   Added `legend.ncol`, `legend.nrow`, `legend.title` and `legend.byrow` to as many functions as possible to further customize legend appearance.
+
+## `SCpubr::do_BeeSwarmPlot()`
+-   Added `min.cutoff` and `max.cutoff` parameter.
+-   Added ticks to the plot, that were missing.
+-   Added missing axes titles.
+-   Added `viridis_direction` parameter to control how the continuous color scale is formed.
+-   Added `return_object` parameter to return the Seurat object with the enrichment scores computed.
+-   Added BoxPlots, BeeSwarmPlots and ViolinPlots to the possible outputs the user can choose from.
+-   Make `legend.position` conditional of whether `continuous_feature` is set to TRUE. If it is false, legend is not displayed unless the user specifies otherwise.
+
+## `SCpubr::do_BarPlot()`
+-   Fixed a bug in which axes titles were not displaying correctly under certain combinations of `flip` and `split.by`.
+-   Fixed a bug in which `x_lab` and `y_lab` would not rotate accordingly when using `flip = TRUE`. 
+
+## `SCpubr::do_BeeSwarmPlot()`
+-   Adapted the code to the new 0.7.1 version of the package, thus deprecating the `groupOnX` parameter of `geom_quarirandom`. This will likely affect users with a lower version.
+-   A warning has been placed for the users in lower versions of the need to upgrade to 0.7.1. 
+-   This changes are subject to the new behaviors/deprecations of ggplot2 and ggplot2.
+
+## `SCpubr::do_BoxPlot()`
+-   Set `assay` to NULL and will default to the default assay in the seurat object.
+
+## `SCpubr::do_CellularStatesPlot()`
+-   Fixed a bug that prevented FeaturePlots to have symmetrical axes with respect to the main plot.
+
+## `SCpubr::do_CorrelationPlot()`
+-   Added `viridis_direction` parameter. 
+
+## `SCpubr::do_DimPlot()`
+-   Fixed a bug in which the legend title will not show up in regular basic plots even though the parameter `legend.title` was used.
+-   Completely reformatted the way `split.by` works, so that now only one legend is displayed for the whole group and cells have border.
+-   Added `label.size` and `label.box` parameters for further customize the appearance of the plot when using `label = TRUE`. 
+-   Changed `repel` to `FALSE` by default. 
+
+## `SCpubr::do_EnrichmentHeatmap()`
+-   Fixed a bug in the code that prevented the feature plots and the geyser plots to be computed if the input gene list was not a named list of genes.
+-   Added `flavor = "AUCell"`, that lets the user compute AUCell scoring of the gene sets. 
+-   Added the option to query multiple `group.by` parameters at the same time. 
+-   Fixed a bug in the code that prevented multiple outputs with different values of `group.by` to be returned properly, leading to the last value of `group.by` replacing all the rest.
+
+## `SCpubr::do_FeaturePlot()`
+-   Added `label`, `label.size` and `label.color` parameter to reproduce the same behavior as in `Seurat::FeaturePlot()`. 
+
+## `SCpubr::do_GroupwiseDEPlot()`
+-   Set `assay` to NULL and will default to the default assay in the seurat object.
+
+## `SCpubr::do_LigandReceptorPlot()`
+-   Added `arrange_interactions_by` to control how output interactions are arranged (either by aggregate_rank, specificity, magnitude or a combination of magnitude and specificity).
+-   Added `sort_interactions_alphabetically` to control whether the output dotplot has the interactions ordered alphabetically or as they come in the original matrix (meaning, they follow the arrangement specified in `arrange_interactions_by`). (([liana's issue  #72](https://github.com/saezlab/liana/issues/72)))
+
+## `do_PathwayActivityPlot()`
+-   Added a fix in which when `enforce_symmetry` is set to `FALSE`, then the color scale turns into a viridis-based one instead of a two-color gradient scale.
+
+## `do_TFActivityPlot()`
+-   Added a fix in which when `enforce_symmetry` is set to `FALSE`, then the color scale turns into a viridis-based one instead of a two-color gradient scale.
+
+## `SCpubr::do_ViolinPlot()`
+-   Fixed a bug in the code in which no different colors could be passed to `colors.use`. 
+-   Reduced default line width from 1 to 0.5.
+
 # SCpubr v1.0.4
 -   Hotfix for v1.0.3 in which `do_GeyserPlot` with categorical variables had a bug that mapped the legend to the continuous axis.
 
@@ -20,7 +87,7 @@
 -   Implemented a bug fix for internal checks in the function.
 -   Added `plot_FeaturePlots` and `plot_GeyserPlots` to also report the enrichment scores in a gene set-based manner.
 -   Added `flavor` parameter, that accepts `Seurat` and `UCell` to allow for different enrichment scoring methods. It requires `R 4.2.0` to run.
--   Renamed `symmetrical_scale` to `enforce_symmetry` to have a greater coherence accross functions.
+-   Renamed `symmetrical_scale` to `enforce_symmetry` to have a greater coherence across functions.
 
 ## `SCpubr::do_FeaturePlot()`
 -   Implemented a new feature to add density line contours using `plot_density_contour`.
@@ -37,6 +104,7 @@
 ## `SCpubr::do_ViolinPlot()`
 -   Corrected a bug in which legend title when using `split.by` was an actual line of code.
 -   Added `legend.title` parameter to control the title of the legend.
+
 
 
 ### SCpubr v.1.0.3-dev-stable

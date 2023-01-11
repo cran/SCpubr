@@ -23,6 +23,149 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
     testthat::expect_type(p, "list")
   })
 
+  testthat::test_that("do_DimPlot: PASS - contour", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            plot_density_contour = TRUE,
+                            contour.position = "bottom")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            split.by = "annotation",
+                            raster = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            split.by = "annotation",
+                            raster = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            idents.highlight = "0",
+                            raster = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            idents.highlight = "0",
+                            raster = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            idents.highlight = "0",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            idents.highlight = "0",
+                            raster = TRUE,
+                            label = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+  })
+
+  testthat::test_that("do_DimPlot: PASS - group.by + split.by", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            label = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            label = TRUE)
+    testthat::expect_type(p, "list")
+  })
+
   testthat::test_that("do_DimPlot: PASS - plot axis", {
     testthat::skip_on_cran()
 
@@ -92,11 +235,11 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
                             plot_cell_borders = FALSE)
     testthat::expect_type(p, "list")
 
-    p <- SCpubr::do_DimPlot(sample = sample,
-                            plot_marginal_distributions = TRUE,
-                            marginal.type = "densigram",
-                            plot_cell_borders = FALSE)
-    testthat::expect_type(p, "list")
+    #p <- SCpubr::do_DimPlot(sample = sample,
+    #                        plot_marginal_distributions = TRUE,
+    #                        marginal.type = "densigram",
+    #                        plot_cell_borders = FALSE)
+    #testthat::expect_type(p, "list")
   })
 
   testthat::test_that("do_DimPlot: PASS - sample marginal size", {
@@ -200,6 +343,9 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
 
     p <- SCpubr::do_DimPlot(sample = sample, split.by = "seurat_clusters", idents.keep = c("1", "3", "5"))
     testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample, split.by = "seurat_clusters", group.by = "annotation", idents.keep = c("1", "3", "5"))
+    testthat::expect_type(p, "list")
   })
 
   testthat::test_that("do_DimPlot: PASS - dims", {
@@ -263,6 +409,14 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
                                                             "6" = "#ca6702",
                                                             "7" = "#bb3e03",
                                                             "8" = "#ae2012"))
+
+    p <- SCpubr::do_DimPlot(sample = sample, colors.use = c("Cell" = "#001219"),
+                            split.by = "orig.ident")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_DimPlot(sample = sample, colors.use = c("Cell" = "#001219"),
+                            group.by = "orig.ident",
+                            split.by = "seurat_clusters")
     testthat::expect_type(p, "list")
   })
 

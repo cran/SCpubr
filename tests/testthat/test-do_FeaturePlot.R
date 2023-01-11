@@ -20,6 +20,144 @@ if (isFALSE(dep_check[["do_FeaturePlot"]])){
     testthat::expect_type(p, "list")
   })
 
+  testthat::test_that("do_FeaturePlot: PASS - cutoffs", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                features = "nCount_RNA",
+                                min.cutoff = 19500,
+                                max.cutoff = 20000)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                features = "nCount_RNA",
+                                split.by = "seurat_clusters",
+                                min.cutoff = 19500,
+                                max.cutoff = 20000)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                features = c("nCount_RNA", "EPC1"),
+                                min.cutoff = c(19500, 1),
+                                max.cutoff = c(20000, 2))
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                split.by = "annotation",
+                                features = c("nCount_RNA", "EPC1"),
+                                min.cutoff = c(19500, 1),
+                                max.cutoff = c(20000, 2))
+    testthat::expect_type(p, "list")
+  })
+
+  testthat::test_that("do_FeaturePlot: PASS - contour", {
+    testthat::skip_on_cran()
+
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                            plot_density_contour = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                            plot_density_contour = TRUE,
+                            contour.position = "bottom")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                plot_density_contour = TRUE,
+                                contour.position = "bottom",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                plot_density_contour = TRUE,
+                                contour.position = "top",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                            split.by = "annotation",
+                            raster = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                split.by = "annotation",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "bottom")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                split.by = "annotation",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "top",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                split.by = "annotation",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "bottom",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                            idents.highlight = "0",
+                            raster = TRUE,
+                            plot_density_contour = TRUE,
+                            contour.position = "top")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                idents.highlight = "0",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "bottom")
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                idents.highlight = "0",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "top",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                feature = "nCount_RNA",
+                                idents.highlight = "0",
+                                raster = TRUE,
+                                plot_density_contour = TRUE,
+                                contour.position = "bottom",
+                                enforce_symmetry = TRUE)
+    testthat::expect_type(p, "list")
+
+  })
+
+
   testthat::test_that("do_FeaturePlot: PASS - legend.title", {
     testthat::skip_on_cran()
 

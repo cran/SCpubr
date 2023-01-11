@@ -27,7 +27,7 @@ do_PathwayActivityPlot <- function(sample,
                                    cluster_rows = TRUE,
                                    row_names_rot = 0,
                                    column_names_rot = 45,
-                                   cell_size = 5,
+                                   cell_size = 8,
                                    pt.size = 1,
                                    plot_cell_borders = TRUE,
                                    border.size = 2,
@@ -38,8 +38,8 @@ do_PathwayActivityPlot <- function(sample,
                                    heatmap.legend.framecolor = "black",
                                    legend.width = 1,
                                    legend.length = 20,
-                                   legend.framewidth = 1.5,
-                                   legend.tickwidth = 1.5,
+                                   legend.framewidth = 0.5,
+                                   legend.tickwidth = 0.5,
                                    legend.framecolor = "grey50",
                                    legend.tickcolor = "white",
                                    legend.type = "colorbar",
@@ -255,13 +255,6 @@ do_PathwayActivityPlot <- function(sample,
       if (!is.null(min.cutoff) & !is.null(max.cutoff)){
         assertthat::assert_that(min.cutoff < max.cutoff,
                                 msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
-
-        assertthat::assert_that(max.cutoff > min.cutoff,
-                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") has to be higher than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
-        assertthat::assert_that(max.cutoff != min.cutoff,
-                                msg = paste0("The value provided for max.cutoff (", max.cutoff, ") can not be the same than the value provided to min.cutoff (", min.cutoff, "). Please select another value."))
-
       }
 
       if (!is.null(min.cutoff)){
@@ -292,7 +285,10 @@ do_PathwayActivityPlot <- function(sample,
                            legend.length = heatmap.legend.length,
                            legend.width = heatmap.legend.width,
                            legend.framecolor = heatmap.legend.framecolor,
-                           symmetrical_scale = enforce_symmetry)
+                           symmetrical_scale = enforce_symmetry,
+                           use_viridis = if (isFALSE(enforce_symmetry)) {TRUE} else {FALSE},
+                           viridis_color_map = viridis_color_map,
+                           viridis_direction = viridis_direction)
       h <- out[["heatmap"]]
       h_legend <- out[["legend"]]
       ComplexHeatmap::ht_opt("HEATMAP_LEGEND_PADDING" = ggplot2::unit(8, "mm"))
@@ -386,7 +382,10 @@ do_PathwayActivityPlot <- function(sample,
                              legend.length = heatmap.legend.length,
                              legend.width = heatmap.legend.width,
                              legend.framecolor = heatmap.legend.framecolor,
-                             symmetrical_scale = enforce_symmetry)
+                             symmetrical_scale = enforce_symmetry,
+                             use_viridis = if (isFALSE(enforce_symmetry)) {TRUE} else {FALSE},
+                             viridis_color_map = viridis_color_map,
+                             viridis_direction = viridis_direction)
         h <- out[["heatmap"]]
         h_legend <- out[["legend"]]
         list.heatmaps[[split.value]] <- h

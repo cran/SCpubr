@@ -17,7 +17,8 @@ do_CorrelationPlot(
   row_names_rot = 0,
   column_names_rot = 0,
   viridis_color_map = "G",
-  cell_size = 5,
+  viridis_direction = 1,
+  cell_size = 8,
   na.value = "grey75",
   legend.position = "bottom",
   legend.length = 75,
@@ -38,7 +39,9 @@ do_CorrelationPlot(
 
 \item{row_title}{\strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.}
 
-\item{cluster_cols, cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
+
+\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
 
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
 
@@ -47,6 +50,8 @@ do_CorrelationPlot(
 \item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
 
 \item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+
+\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
 
 \item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
 
