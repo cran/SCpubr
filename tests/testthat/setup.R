@@ -3,9 +3,7 @@ if (requireNamespace("Seurat", quietly = TRUE)) {
  suppressMessages(library("Seurat"))
 }
 
-if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
-  suppressMessages(library("org.Hs.eg.db"))
-}
+
 
 if (requireNamespace("magrittr", quietly = TRUE)) {
  suppressMessages(library("magrittr"))
@@ -17,6 +15,8 @@ if (requireNamespace("dplyr", quietly = TRUE)) {
                                    "avg_diff" = "avg_log2FC")
 }
 
+
+
 sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
 metacell_mapping <- readRDS(system.file("extdata/metacell_mapping_example.rds", package = "SCpubr"))
 infercnv_object <- readRDS(system.file("extdata/infercnv_object_example.rds", package = "SCpubr"))
@@ -25,7 +25,6 @@ human_chr_locations <- SCpubr::human_chr_locations
 progeny_activities <- readRDS(system.file("extdata/progeny_activities_example.rds", package = "SCpubr"))
 dorothea_activities <- readRDS(system.file("extdata/dorothea_activities_example.rds", package = "SCpubr"))
 enriched_terms <- readRDS(system.file("extdata/enriched_terms_example.rds", package = "SCpubr"))
-org.db <- AnnotationDbi::loadDb(system.file("./extdata/org.Hs.eg.sqlite", package = "org.Hs.eg.db"))
 
 
 # Get packages.
@@ -59,6 +58,16 @@ for (func in names(dependencies)){
   dep_check[[func]] <- value
 }
 
+if (isFALSE(dep_check[["do_GroupedGOTermPlot"]]) | isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
+  if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+    suppressMessages(library("org.Hs.eg.db"))
+  }
+
+  if (requireNamespace("AnnotationDbi", quietly = TRUE)) {
+    suppressMessages(library("AnnotationDbi"))
+    org.db <- AnnotationDbi::loadDb(system.file("./extdata/org.Hs.eg.sqlite", package = "org.Hs.eg.db"))
+  }
+}
 
 # Remove this for publication in CRAN.
 #if (isFALSE(dep_check[["do_LigandReceptorPlot"]])){

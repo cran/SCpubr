@@ -1,4 +1,10 @@
-# SCpubr v1.0.4.9000
+# SCpubr v1.1.1.9000
+Current development release.
+
+# SCpubr v1.1.1
+Hotfixes in unit tests to comply with CRAN checks.
+
+# SCpubr v1.1.0
 
 ## General
 -   Increased the cell size of all heatmap-based functions from 5 to 8.

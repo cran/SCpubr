@@ -1,6 +1,6 @@
-8f0dc1ccd16d124aa9ac3e948556edb5 *DESCRIPTION
+f5534cfd1b839de4e36e5fa7ca73557f *DESCRIPTION
 330e824b9b181814f3b50824844cd77d *NAMESPACE
-b7829454a5621a0872cd93b96568ae62 *NEWS.md
+1916c2e169cd98cec6293dd3d80acee5 *NEWS.md
 0389521335dbbc9db460e2db5dc59b45 *R/data.R
 fcaec39b2685076a30864ed66d1b4316 *R/do_AlluvialPlot.R
 b3067f02c5b5c239e697bbbbe15ef59a *R/do_AzimuthAnalysisPlot.R
@@ -29,9 +29,9 @@ cd7ab5f4fc1cbf3a68448cfb6c33071a *R/do_TermEnrichmentPlot.R
 87f1308dad2df1b4a51284667effa2aa *R/do_ViolinPlot.R
 6a90fa1adf22c4fff5d9b4670648c4f5 *R/do_VolcanoPlot.R
 26f539452e3f6bfd5b61a94f2f371317 *R/globals.R
-a10c58b3c6ef3c6f22347263e5da142c *R/utils.R
+cbd3b5293bcc32ad98ff829434e5b59f *R/utils.R
 d3e847f415989372bdafc306dd3dadf9 *R/zzz.R
-57b2371a492a5f09c12d2d1522db0a0a *README.md
+06b59935f55c31a8bbeabaefe35971fc *README.md
 1961639f6f4f7f9efffa91b624b3d060 *build/partial.rdb
 44845ce27ac9318c60efd17c56c2ecb1 *build/vignette.rds
 203d0f90b46a88058108474c78ada938 *data/human_chr_locations.rda
@@ -107,7 +107,7 @@ cac18f410142fa6b5f9a75725715e267 *man/named_list.Rd
 23ecdc63ee897e893ffba481d5e747ca *man/named_vector.Rd
 1ce3d2c7d064fad5742c2a16b958e57c *man/state_dependencies.Rd
 7f4b0ad7db8525ec6dcffc398d3aa497 *tests/testthat.R
-cff8edab641373e814a23385754a4fb2 *tests/testthat/setup.R
+f7f740f362c0980a02188068565a1235 *tests/testthat/setup.R
 c4774f79bab908adcdc8fb5d46204d96 *tests/testthat/test-do_AlluvialPlot.R
 ccb46fd855e34a6fdbbd787237ba0891 *tests/testthat/test-do_AzimuthAnalysisPlot.R
 1b6078e8396f24a09400d7a4bdbc225f *tests/testthat/test-do_BarPlot.R
@@ -120,7 +120,7 @@ a0d4d85e12c156e4deabe638db60305c *tests/testthat/test-do_CopyNumberVariantPlot.R
 099d003d829a8dc29f0df6ecdc9bdc6e *tests/testthat/test-do_CorrelationPlot.R
 6549d7823880e43de687071c75e11a58 *tests/testthat/test-do_DimPlot.R
 ee45a30e2326ce9d8df027eb896a691e *tests/testthat/test-do_DotPlot.R
-ed9f61a1b8760621ec551e383031993d *tests/testthat/test-do_EnrichmentHeatmap.R
+833ed4776f2dee30db6488db3a00fb59 *tests/testthat/test-do_EnrichmentHeatmap.R
 36652b550fae91e7a102be424a74c383 *tests/testthat/test-do_ExpressionHeatmap.R
 138b40909d508ea1406efdcc95c038fc *tests/testthat/test-do_FeaturePlot.R
 ab4ff8dd45d7146449a83ddf27107eae *tests/testthat/test-do_FunctionalAnnotationPlot.R
