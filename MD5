@@ -1,6 +1,6 @@
-f5534cfd1b839de4e36e5fa7ca73557f *DESCRIPTION
+d2a6ef851e86985ba93533c29af70fcb *DESCRIPTION
 330e824b9b181814f3b50824844cd77d *NAMESPACE
-1916c2e169cd98cec6293dd3d80acee5 *NEWS.md
+ac0a5349a2fac8eecd3aa069936ec4bf *NEWS.md
 0389521335dbbc9db460e2db5dc59b45 *R/data.R
 fcaec39b2685076a30864ed66d1b4316 *R/do_AlluvialPlot.R
 b3067f02c5b5c239e697bbbbe15ef59a *R/do_AzimuthAnalysisPlot.R
@@ -29,9 +29,9 @@ cd7ab5f4fc1cbf3a68448cfb6c33071a *R/do_TermEnrichmentPlot.R
 87f1308dad2df1b4a51284667effa2aa *R/do_ViolinPlot.R
 6a90fa1adf22c4fff5d9b4670648c4f5 *R/do_VolcanoPlot.R
 26f539452e3f6bfd5b61a94f2f371317 *R/globals.R
-cbd3b5293bcc32ad98ff829434e5b59f *R/utils.R
+78fa92ab6e866c61e8772ac1aefe43be *R/utils.R
 d3e847f415989372bdafc306dd3dadf9 *R/zzz.R
-06b59935f55c31a8bbeabaefe35971fc *README.md
+2b7e4ef0067d45d9764f888881a55c67 *README.md
 1961639f6f4f7f9efffa91b624b3d060 *build/partial.rdb
 44845ce27ac9318c60efd17c56c2ecb1 *build/vignette.rds
 203d0f90b46a88058108474c78ada938 *data/human_chr_locations.rda
@@ -107,7 +107,7 @@ cac18f410142fa6b5f9a75725715e267 *man/named_list.Rd
 23ecdc63ee897e893ffba481d5e747ca *man/named_vector.Rd
 1ce3d2c7d064fad5742c2a16b958e57c *man/state_dependencies.Rd
 7f4b0ad7db8525ec6dcffc398d3aa497 *tests/testthat.R
-f7f740f362c0980a02188068565a1235 *tests/testthat/setup.R
+ee86312db220312c0cf2f3d5368b05bc *tests/testthat/setup.R
 c4774f79bab908adcdc8fb5d46204d96 *tests/testthat/test-do_AlluvialPlot.R
 ccb46fd855e34a6fdbbd787237ba0891 *tests/testthat/test-do_AzimuthAnalysisPlot.R
 1b6078e8396f24a09400d7a4bdbc225f *tests/testthat/test-do_BarPlot.R
@@ -134,5 +134,5 @@ f1cf7eda32fb45c3775a1edbc9c060f6 *tests/testthat/test-do_NebulosaPlot.R
 45f0b30fbe4adfdec3a86a2cefa5f356 *tests/testthat/test-do_TermEnrichmentPlot.R
 056638e364d04ac643a59d57f2fccae8 *tests/testthat/test-do_ViolinPlot.R
 b748f1926495b1c6b72f6a2d055e7598 *tests/testthat/test-do_VolcanoPlot.R
-a5b653fcb766c8d606e5a531a1b2d0dd *tests/testthat/test-utils.R
+dbd209137a38c019ebcc872757ed1f62 *tests/testthat/test-utils.R
 5bfb50a7155eb3310bfe711b16123c6c *vignettes/reference_manual.Rmd
