@@ -1,4 +1,4 @@
-if (isFALSE(dep_check[["do_DimPlot"]])){
+if (base::isFALSE(dep_check[["do_DimPlot"]])){
 
   testthat::test_that("do_DimPlot: CRAN essentials", {
     p <- SCpubr::do_DimPlot(sample = sample)
@@ -10,7 +10,7 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
     p <- SCpubr::do_DimPlot(sample = sample, split.by = "seurat_clusters")
     testthat::expect_type(p, "list")
 
-    sample$orig.ident <- sample(c("A", "B"), ncol(sample), replace = T)
+    sample$orig.ident <- sample(c("A", "B"), ncol(sample), replace = TRUE)
     p <- SCpubr::do_DimPlot(sample = sample, group.by = "seurat_clusters", split.by = "orig.ident")
     testthat::expect_type(p, "list")
   })
@@ -291,7 +291,7 @@ if (isFALSE(dep_check[["do_DimPlot"]])){
     testthat::expect_error({SCpubr::do_DimPlot(sample = sample,
                                                plot_marginal_distributions = TRUE,
                                                plot_cell_borders = FALSE,
-                                               idents.highlight =  c("1"))})
+                                               idents.highlight =  "1")})
   })
 
   testthat::test_that("do_DimPlot: PASS - title", {

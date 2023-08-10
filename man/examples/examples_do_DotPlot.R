@@ -18,7 +18,7 @@
     # Inverting the axes.
     p <- SCpubr::do_DotPlot(sample = sample,
                             features = genes,
-                            cluster.idents = TRUE,
+                            cluster = TRUE,
                             plot.title = "Clustered",
                             flip = TRUE)
 
@@ -46,9 +46,9 @@
     # Clustering the identities.
     p <- SCpubr::do_DotPlot(sample = sample,
                             features = genes,
-                            cluster.idents = TRUE,
+                            cluster = TRUE,
                             plot.title = "Clustered")
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

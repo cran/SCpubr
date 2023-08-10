@@ -63,10 +63,24 @@ do_CellularStatesPlot <- function(sample,
                                   raster.dpi = 1024,
                                   plot_features = FALSE,
                                   features = NULL,
-                                  viridis_color_map = "G",
-                                  viridis_direction = 1,
+                                  use_viridis = TRUE,
+                                  viridis.palette = "G",
+                                  viridis.direction = 1,
+                                  sequential.palette = "YlGnBu",
+                                  sequential.direction = -1,
                                   nbin = 24,
-                                  ctrl = 100){
+                                  ctrl = 100,
+                                  number.breaks = 5,
+                                  plot.title.face = "bold",
+                                  plot.subtitle.face = "plain",
+                                  plot.caption.face = "italic",
+                                  axis.title.face = "bold",
+                                  axis.text.face = "plain",
+                                  legend.title.face = "bold",
+                                  legend.text.face = "plain"){
+    # Add lengthy error messages.
+    withr::local_options(.new = list("warning.length" = 8170))
+  
     check_suggests(function_name = "do_CellularStatesPlot")
     # Check if the sample provided is a Seurat object.
     check_Seurat(sample = sample)
@@ -82,7 +96,8 @@ do_CellularStatesPlot <- function(sample,
                          "plot_cell_borders" = plot_cell_borders,
                          "raster" = raster,
                          "plot_features" = plot_features,
-                         "plot_enrichment_scores" = plot_enrichment_scores)
+                         "plot_enrichment_scores" = plot_enrichment_scores,
+                         "use_viridis" = use_viridis)
     check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
     # Check numeric parameters.
     numeric_list <- list("font.size" = font.size,
@@ -93,9 +108,11 @@ do_CellularStatesPlot <- function(sample,
                          "pt.size" = pt.size,
                          "border.size" = border.size,
                          "raster.dpi" = raster.dpi,
-                         "viridis_direction" = viridis_direction,
+                         "viridis.direction" = viridis.direction,
                          "nbin" = nbin,
-                         "ctrl" = ctrl)
+                         "ctrl" = ctrl,
+                         "number.breaks" = number.breaks,
+                         "sequential.direction" = sequential.direction)
     check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
     # Check character parameters.
     character_list <- list("input_gene_list" = input_gene_list,
@@ -114,7 +131,15 @@ do_CellularStatesPlot <- function(sample,
                            "marginal.type" = marginal.type,
                            "border.color" = border.color,
                            "features" = features,
-                           "viridis_color_map" = viridis_color_map)
+                           "viridis.palette" = viridis.palette,
+                           "sequential.palette" = sequential.palette,
+                           "plot.title.face" = plot.title.face,
+                           "plot.subtitle.face" = plot.subtitle.face,
+                           "plot.caption.face" = plot.caption.face,
+                           "axis.title.face" = axis.title.face,
+                           "axis.text.face" = axis.text.face,
+                           "legend.title.face" = legend.title.face,
+                           "legend.text.face" = legend.text.face)
     check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
     # Define pipe operator internally.
@@ -141,22 +166,27 @@ do_CellularStatesPlot <- function(sample,
     }
     # Check border color.
     check_colors(border.color, parameter_name = "border.color")
-
-    # Check group.by
-    if (is.null(group.by)){
-      assertthat::assert_that(!("Groups" %in% colnames(sample@meta.data)),
-                              msg = "Please make sure you provide a value for group.by or do not have a metadata column named `Groups`.")
-
-      sample@meta.data[, "Groups"] <- sample@active.ident
-      group.by <- "Groups"
-    }
-
+    
+    # Check group.by.
+    out <- check_group_by(sample = sample,
+                          group.by = group.by,
+                          is.heatmap = FALSE)
+    sample <- out[["sample"]]
+    group.by <- out[["group.by"]]
+    
     check_parameters(parameter = font.type, parameter_name = "font.type")
     check_parameters(parameter = legend.position, parameter_name = "legend.position")
     check_parameters(parameter = marginal.type, parameter_name = "marginal.type")
-    check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
-    check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
-
+    check_parameters(parameter = viridis.palette, parameter_name = "viridis.palette")
+    check_parameters(plot.title.face, parameter_name = "plot.title.face")
+    check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+    check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+    check_parameters(axis.title.face, parameter_name = "axis.title.face")
+    check_parameters(axis.text.face, parameter_name = "axis.text.face")
+    check_parameters(legend.title.face, parameter_name = "legend.title.face")
+    check_parameters(legend.text.face, parameter_name = "legend.text.face")
+    check_parameters(viridis.direction, parameter_name = "viridis.direction")
+    check_parameters(sequential.direction, parameter_name = "sequential.direction")
 
     # Compute the enrichment scores.
     sample <- compute_enrichment_scores(sample = sample, input_gene_list = input_gene_list, verbose = verbose, nbin = nbin, ctrl = ctrl)
@@ -165,13 +195,25 @@ do_CellularStatesPlot <- function(sample,
     if (is.null(y2) & is.null(x2)){
       # Check that the names provided are not repeated.
       assertthat::assert_that(sum(duplicated(c(x1, y1))) == 0,
-                              msg = "The names of the lists to plot can not be the same.")
+                              msg = paste0(add_cross(), crayon_body("The "),
+                                           crayon_key("names"),
+                                           crayon_body(" of the lists can not be "),
+                                           crayon_key("duplicated"),
+                                           crayon_body(".")))
       # Check that the names provided match the marker genes.
       assertthat::assert_that(x1 %in% names(input_gene_list),
-                              msg = paste0(x1, " is not a name of a list of genes provided to input_gene_list."))
+                              msg = paste0(add_cross(), crayon_body("The name "),
+                                           crayon_key(x1),
+                                           crayon_body(" is not a name of the lists of genes provided to "),
+                                           crayon_key("input_gene_list"),
+                                           crayon_body(".")))
 
       assertthat::assert_that(y1 %in% names(input_gene_list),
-                              msg = paste0(y1, " is not a name of a list of genes provided to input_gene_list."))
+                              msg = paste0(add_cross(), crayon_body("The name "),
+                                           crayon_key(y1),
+                                           crayon_body(" is not a name of the lists of genes provided to "),
+                                           crayon_key("input_gene_list"),
+                                           crayon_body(".")))
 
       # Retrieve metadata variables.
       variables_to_retrieve <- c(x1, y1, group.by)
@@ -202,7 +244,7 @@ do_CellularStatesPlot <- function(sample,
                                                   y = .data[["set_y"]],
                                                   color = .data[["group.by"]]))
 
-      if (isFALSE(raster)){
+      if (base::isFALSE(raster)){
         p <- p +
              ggplot2::geom_point(size = pt.size)
       } else if (isTRUE(raster)){
@@ -236,16 +278,32 @@ do_CellularStatesPlot <- function(sample,
     } else if (is.null(y2) & !(is.null(x2))){
         # Check that the names provided are not repeated.
         assertthat::assert_that(sum(duplicated(c(x1, y1, x2))) == 0,
-                                msg = "The names of the lists to plot can not be the same.")
+                                msg = paste0(add_cross(), crayon_body("The "),
+                                             crayon_key("names"),
+                                             crayon_body(" of the lists can not be "),
+                                             crayon_key("duplicated"),
+                                             crayon_body(".")))
         # Check that the names provided match the marker genes.
         assertthat::assert_that(x1 %in% names(input_gene_list),
-                                msg = paste0(x1, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(x1),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         assertthat::assert_that(x2 %in% names(input_gene_list),
-                                msg = paste0(x2, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(x1),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         assertthat::assert_that(y1 %in% names(input_gene_list),
-                                msg = paste0(y1, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(y1),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         # Retrieve metadata variables.
         variables_to_retrieve <- c(x1, x2, y1, group.by)
@@ -256,21 +314,23 @@ do_CellularStatesPlot <- function(sample,
         scores <- tidyr::tibble(scores)
 
         # Compute the scores for the X axis.
-        x <- unlist(sapply(seq_len(nrow(scores)), function(x) {
+        x <- vapply(seq_len(nrow(scores)), function(x) {
           score_1 <- scores[x, x1] + stats::runif(1, min=0, max=0.15)
           score_2 <- scores[x, x2] + stats::runif(1, min=0, max=0.15)
-          d <- max(score_1, score_2)
-          ifelse(score_1 > score_2, d, -d)
-        }))
+          d <- max(score_1, score_2, na.rm = TRUE)
+          output <- ifelse(score_1 > score_2, d, -d)
+          return(output)
+        }, FUN.VALUE = numeric(1))
+        
 
         # Compute the scores for the Y axis.
-        y <- unlist(sapply(seq_len(nrow(scores)), function(x) {
+        y <- vapply(seq_len(nrow(scores)), function(x) {
           score_1 <- scores[x, x1] + stats::runif(1, min=0, max=0.15)
           score_2 <- scores[x, x2] + stats::runif(1, min=0, max=0.15)
-          d <- max(score_1, score_2)
-          y <- scores[x, y1] - d
-          y
-        }))
+          d <- max(score_1, score_2, na.rm = TRUE)
+          output <- as.data.frame(scores)[x, y1] - d
+          return(output)
+        }, FUN.VALUE = numeric(1))
 
         names(x) <- scores[["cell"]]
         names(y) <- scores[["cell"]]
@@ -287,7 +347,7 @@ do_CellularStatesPlot <- function(sample,
                                                         y = .data[["set_y"]],
                                                         color = .data[["group.by"]]))
 
-        if (isFALSE(raster)){
+        if (base::isFALSE(raster)){
           p <- p +
                ggplot2::geom_point(size = pt.size)
         } else if (isTRUE(raster)){
@@ -322,19 +382,39 @@ do_CellularStatesPlot <- function(sample,
     } else if (!is.null(y2) & !(is.null(x2))){
         # Check that the names provided are not repeated.
         assertthat::assert_that(sum(duplicated(c(x1, y1, x2, y2))) == 0,
-                                msg = "The names of the lists to plot can not be the same.")
+                                msg = paste0(add_cross(), crayon_body("The "),
+                                             crayon_key("names"),
+                                             crayon_body(" of the lists can not be "),
+                                             crayon_key("duplicated"),
+                                             crayon_body(".")))
         # Check that the names provided match the marker genes.
         assertthat::assert_that(x1 %in% names(input_gene_list),
-                                msg = paste0(x1, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(x1),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         assertthat::assert_that(x2 %in% names(input_gene_list),
-                                msg = paste0(x2, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(x2),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         assertthat::assert_that(y1 %in% names(input_gene_list),
-                                msg = paste0(y1, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(y1),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
         assertthat::assert_that(y2 %in% names(input_gene_list),
-                                msg = paste0(y2, " is not a name of a list of genes provided to input_gene_list."))
+                                msg = paste0(add_cross(), crayon_body("The name "),
+                                             crayon_key(y2),
+                                             crayon_body(" is not a name of the lists of genes provided to "),
+                                             crayon_key("input_gene_list"),
+                                             crayon_body(".")))
 
 
         # Retrieve metadata variables to plot.
@@ -347,7 +427,7 @@ do_CellularStatesPlot <- function(sample,
         d <- apply(scores, 1, function(x){max(x[c(x1, x2)]) - max(x[c(y1, y2)])})
 
         # Compute X axis values.
-        x <- sapply(seq_along(d), function(x) {
+        x <- vapply(seq_along(d), function(x) {
           if (d[x] > 0) {
             d <- log2(abs(scores[x, x1] - scores[x, x2]) + 1)
             ifelse(scores[x, x1] < scores[x, x2], d, -d)
@@ -355,7 +435,7 @@ do_CellularStatesPlot <- function(sample,
             d <- log2(abs(scores[x, y1] - scores[x, y2]) + 1)
             ifelse(scores[x, y1] < scores[x, y2], d, -d)
           }
-        })
+        }, FUN.VALUE = numeric(1))
 
         names(x) <- rownames(scores)
 
@@ -375,7 +455,7 @@ do_CellularStatesPlot <- function(sample,
                                                         y = .data[["set_y"]],
                                                         color = .data[["group.by"]]))
 
-        if (isFALSE(raster)){
+        if (base::isFALSE(raster)){
           p <- p +
                ggplot2::geom_point(size = pt.size)
         } else if (isTRUE(raster)){
@@ -421,26 +501,26 @@ do_CellularStatesPlot <- function(sample,
     # Overall formatting for the plot.
     p <- p &
          ggplot2::theme_minimal(base_size = font.size) &
-         ggplot2::theme(axis.title = ggplot2::element_text(face = "bold"),
+         ggplot2::theme(axis.title = ggplot2::element_text(face = axis.title.face),
                         axis.line.y.right = ggplot2::element_line(color = "black"),
                         axis.ticks.y.right = ggplot2::element_line(color = "black"),
                         axis.line.x.top = ggplot2::element_line(color = "black"),
                         axis.ticks.x.top = ggplot2::element_line(color = "black"),
-                        axis.text.x.top = ggplot2::element_text(face = "bold", color = "black"),
-                        axis.text.y.right = ggplot2::element_text(face = "bold", color = "black"),
-                        axis.title.x.top = ggplot2::element_text(face = "bold", color = "black"),
-                        axis.title.y.right = ggplot2::element_text(face = "bold", color = "black"),
+                        axis.text.x.top = ggplot2::element_text(face = axis.text.face, color = "black"),
+                        axis.text.y.right = ggplot2::element_text(face = axis.text.face, color = "black"),
+                        axis.title.x.top = ggplot2::element_text(face = axis.title.face, color = "black"),
+                        axis.title.y.right = ggplot2::element_text(face = axis.title.face, color = "black"),
                         axis.text = ggplot2::element_text(face = "bold", color = "black"),
-                        plot.title = ggplot2::element_text(face = "bold", hjust = 0, vjust = 0),
-                        plot.subtitle = ggplot2::element_text(hjust = 0),
-                        plot.caption = ggplot2::element_text(hjust = 1),
+                        plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                        plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                        plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
                         plot.title.position = "plot",
                         panel.grid = ggplot2::element_blank(),
                         text = ggplot2::element_text(family = font.type),
                         plot.caption.position = "plot",
-                        legend.text = ggplot2::element_text(face = "bold"),
+                        legend.text = ggplot2::element_text(face = legend.text.face),
                         legend.position = legend.position,
-                        legend.title = ggplot2::element_text(face = "bold"),
+                        legend.title = ggplot2::element_text(face = legend.title.face),
                         legend.justification = "center",
                         plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
                         axis.ticks = ggplot2::element_line(color = "black"),
@@ -456,7 +536,7 @@ do_CellularStatesPlot <- function(sample,
 
     # Add cell borders.
     if (isTRUE(plot_cell_borders)){
-      if (isFALSE(raster)){
+      if (base::isFALSE(raster)){
         base_layer <-  ggplot2::geom_point(data = df,
                                            mapping = ggplot2::aes(x = .data[["set_x"]],
                                                                   y = .data[["set_y"]]),
@@ -480,7 +560,9 @@ do_CellularStatesPlot <- function(sample,
     if (isTRUE(plot_features) | isTRUE(plot_enrichment_scores)){
       if (isTRUE(plot_features)){
         assertthat::assert_that(!is.null(features),
-                                msg = "Please provide features to plot.")
+                                msg = paste0(add_cross(), crayon_body("Please provide a value to "),
+                                             crayon_key("features"),
+                                             crayon_body(" .")))
       }
 
       output_list <- list()
@@ -492,25 +574,29 @@ do_CellularStatesPlot <- function(sample,
 
       if (isTRUE(plot_features) & isTRUE(plot_enrichment_scores)){
         features <- c(features, names(input_gene_list))
-      } else if (isFALSE(plot_features) & isTRUE(plot_enrichment_scores)){
+      } else if (base::isFALSE(plot_features) & isTRUE(plot_enrichment_scores)){
         features <- names(input_gene_list)
       }
 
       for (feature in features){
-        p.feature <- SCpubr::do_FeaturePlot(sample = sample,
-                                            features = feature,
-                                            reduction = "test",
-                                            plot_cell_borders = plot_cell_borders,
-                                            pt.size = pt.size,
-                                            legend.position = legend.position,
-                                            border.size = border.size,
-                                            border.color = border.color,
-                                            raster = raster,
-                                            raster.dpi = raster.dpi,
-                                            font.type = font.type,
-                                            font.size = font.size,
-                                            viridis_color_map = viridis_color_map,
-                                            viridis_direction = viridis_direction)
+        p.feature <- do_FeaturePlot(sample = sample,
+                                    features = feature,
+                                    reduction = "test",
+                                    plot_cell_borders = plot_cell_borders,
+                                    pt.size = pt.size,
+                                    legend.position = legend.position,
+                                    border.size = border.size,
+                                    border.color = border.color,
+                                    raster = raster,
+                                    raster.dpi = raster.dpi,
+                                    font.type = font.type,
+                                    font.size = font.size,
+                                    viridis.palette = viridis.palette,
+                                    viridis.direction = viridis.direction,
+                                    number.breaks = number.breaks,
+                                    use_viridis = use_viridis,
+                                    sequential.palette = sequential.palette,
+                                    sequential.direction = sequential.direction)
 
         # Add back the missing aesthetics.
         if (is.null(y2) & is.null(x2)){
@@ -557,18 +643,18 @@ do_CellularStatesPlot <- function(sample,
         }
         p.feature <- p.feature +
                      ggplot2::theme_minimal(base_size = font.size) &
-                     ggplot2::theme(axis.title = ggplot2::element_text(face = "bold"),
-                                    axis.text = ggplot2::element_text(face = "bold", color = "black"),
-                                    plot.title = ggplot2::element_text(face = "bold", hjust = 0, vjust = 0),
-                                    plot.subtitle = ggplot2::element_text(hjust = 0),
-                                    plot.caption = ggplot2::element_text(hjust = 1),
+                     ggplot2::theme(axis.title = ggplot2::element_text(face = axis.title.face),
+                                    axis.text = ggplot2::element_text(face = axis.text.face, color = "black"),
+                                    plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                                    plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                                    plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
                                     plot.title.position = "plot",
                                     panel.grid = ggplot2::element_blank(),
                                     text = ggplot2::element_text(family = font.type),
                                     plot.caption.position = "plot",
-                                    legend.text = ggplot2::element_text(face = "bold"),
+                                    legend.text = ggplot2::element_text(face = legend.text.face),
                                     legend.position = legend.position,
-                                    legend.title = ggplot2::element_text(face = "bold"),
+                                    legend.title = ggplot2::element_text(face = legend.title.face),
                                     legend.justification = "center",
                                     plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
                                     axis.ticks = ggplot2::element_line(color = "black"),
@@ -621,9 +707,10 @@ do_CellularStatesPlot <- function(sample,
     if (isTRUE(plot_features) | isTRUE(plot_enrichment_scores)){
       output_list[["main"]] <- p
       return_object <- output_list
-    } else if (isFALSE(plot_features) & isFALSE(plot_enrichment_scores)){
+    } else if (base::isFALSE(plot_features) & base::isFALSE(plot_enrichment_scores)){
       return_object <- p
     }
+    
 
     return(return_object)
 

@@ -1,10 +1,12 @@
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/SCpubr)](https://CRAN.R-project.org/package=SCpubr)
 [![R-CMD-check](https://github.com/enblacar/SCpubr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/enblacar/SCpubr/actions/workflows/R-CMD-check.yaml)
 [![Code Coverage](https://codecov.io/gh/enblacar/SCpubr/branch/main/graph/badge.svg?token=HK7JB08VFD)](https://app.codecov.io/gh/enblacar/SCpubr/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![CRAN status](https://www.r-pkg.org/badges/version/SCpubr)](https://CRAN.R-project.org/package=SCpubr)
+[![CodeFactor](https://www.codefactor.io/repository/github/enblacar/scpubr/badge/main)](https://www.codefactor.io/repository/github/enblacar/scpubr/overview/main)
 [![metacran downloads](https://cranlogs.r-pkg.org/badges/grand-total/SCpubr)](https://cran.r-project.org/package=SCpubr)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
+
   
 # SCpubr
 <span class="border-0"><img src="man/figures/logo.png" class="mx-auto d-block" alt="" style="box-shadow: none; width: 100%"/></span>
@@ -26,7 +28,7 @@ if(!requireNamespace("devtools", quietly = TRUE)){
   install.packages("devtools") # If not installed.
 }
 
-devtools::install_github("enblacar/SCpubr", ref = "v1.1.1-dev-stable")
+devtools::install_github("enblacar/SCpubr", ref = "v1.1.2-dev-stable")
 ```
 
 # Updates

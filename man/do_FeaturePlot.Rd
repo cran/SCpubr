@@ -11,8 +11,15 @@ do_FeaturePlot(
   reduction = NULL,
   slot = NULL,
   order = FALSE,
+  group.by = NULL,
+  group.by.colors.use = NULL,
+  group.by.legend = NULL,
+  group.by.show.dots = TRUE,
+  group.by.dot.size = 8,
+  group.by.cell_borders = FALSE,
+  group.by.cell_borders.alpha = 0.1,
   split.by = NULL,
-  split.by.idents = NULL,
+  idents.keep = NULL,
   cells.highlight = NULL,
   idents.highlight = NULL,
   dims = c(1, 2),
@@ -29,6 +36,9 @@ do_FeaturePlot(
   legend.width = 1,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
+  legend.ncol = NULL,
+  legend.nrow = NULL,
+  legend.byrow = FALSE,
   plot.title = NULL,
   plot.subtitle = NULL,
   plot.caption = NULL,
@@ -36,13 +46,15 @@ do_FeaturePlot(
   individual.subtitles = NULL,
   individual.captions = NULL,
   ncol = NULL,
-  viridis_color_map = "G",
-  viridis_direction = 1,
+  use_viridis = FALSE,
+  viridis.palette = "G",
+  viridis.direction = 1,
   raster = FALSE,
   raster.dpi = 1024,
   plot_cell_borders = TRUE,
   border.size = 2,
   border.color = "black",
+  border.density = 1,
   na.value = "grey75",
   verbose = TRUE,
   plot.axes = FALSE,
@@ -56,7 +68,19 @@ do_FeaturePlot(
   contour_expand_axes = 0.25,
   label = FALSE,
   label.color = "black",
-  label.size = 4
+  label.size = 4,
+  number.breaks = 5,
+  diverging.palette = "RdBu",
+  diverging.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = 1,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -72,9 +96,23 @@ do_FeaturePlot(
 
 \item{order}{\strong{\code{\link[base]{logical}}} | Whether to order the cells based on expression.}
 
+\item{group.by}{\strong{\code{\link[base]{character}}} | Metadata variable based on which cells are grouped. This will effectively introduce a big dot in the center of each cluster, colored using a categorical color scale or with the values provided by the user in \strong{\code{group.by.colors.use}}. It will also displays a legend.}
+
+\item{group.by.colors.use}{\strong{\code{\link[base]{character}}} | Colors to use for the group dots.}
+
+\item{group.by.legend}{\strong{\code{\link[base]{character}}} | Title for the legend when \strong{\code{group.by}} is used. Use \strong{\code{NA}} to disable it and \strong{\code{NULL}} to use the default column title provided in \strong{\code{group.by}}.}
+
+\item{group.by.show.dots}{\strong{\code{\link[base]{logical}}} | Controls whether to place in the middle of the groups.}
+
+\item{group.by.dot.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots placed in the middle of the groups.}
+
+\item{group.by.cell_borders}{\strong{\code{\link[base]{logical}}} | Plots another border around the cells displaying the same color code of the dots displayed with \strong{\code{group.by}}. Legend is shown always with alpha = 1 regardless of the alpha settings.}
+
+\item{group.by.cell_borders.alpha}{\strong{\code{\link[base]{numeric}}} | Controls the transparency of the new borders drawn by \strong{\code{group.by.cell_borders}}.}
+
 \item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
 
-\item{split.by.idents}{\strong{\code{\link[base]{character}}} | Vector of identities to plot. The gradient scale will also be subset to only the values of such identities.}
+\item{idents.keep}{\strong{\code{\link[base]{character}}} | Vector of identities to plot. The gradient scale will also be subset to only the values of such identities.}
 
 \item{cells.highlight, idents.highlight}{\strong{\code{\link[base]{character}}} | Vector of cells/identities to focus into. The identities have to much those in \code{Seurat::Idents(sample)} The rest of the cells will be grayed out. Both parameters can be used at the same time.}
 
@@ -99,7 +137,6 @@ do_FeaturePlot(
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
@@ -119,15 +156,23 @@ do_FeaturePlot(
 
 \item{legend.tickcolor}{\strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.}
 
+\item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of rows in the legend.}
+
+\item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
+
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
 
 \item{individual.titles, individual.subtitles, individual.captions}{\strong{\code{\link[base]{character}}} | Titles or subtitles. for each feature if needed. Either NULL or a vector of equal length of features.}
 
 \item{ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns used in the arrangement of the output plot using "split.by" parameter.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
 
 \item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
 
@@ -137,7 +182,9 @@ do_FeaturePlot(
 
 \item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
-\item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{border.density}{\strong{\code{\link[base]{numeric}}} | Controls the number of cells used when \strong{\code{plot_cell_borders = TRUE}}. Value between 0 and 1. It computes a 2D kernel density and based on this cells that have a density below the specified quantile will be used to generate the cluster contour. The lower this number, the less cells will be selected, thus reducing the overall size of the plot but also potentially preventing all the contours to be properly drawn.}
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
@@ -164,6 +211,24 @@ do_FeaturePlot(
 \item{label.color}{\strong{\code{\link[base]{character}}} | Color of the labels in the plot.}
 
 \item{label.size}{\strong{\code{\link[base]{numeric}}} | Size of the labels in the plot.}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{diverging.palette}{\strong{\code{\link[base]{character}}} | Type of symmetrical color palette to use. Out of the diverging palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{diverging.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Direction of the divering palette. This basically flips the two ends.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A ggplot2 object containing a Feature Plot.
@@ -199,7 +264,7 @@ Wrapper for \link[Seurat]{FeaturePlot}.
                                 features = "EPC1",
                                 split.by = "seurat_clusters")
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

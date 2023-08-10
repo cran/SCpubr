@@ -7,8 +7,14 @@
 do_BarPlot(
   sample,
   group.by,
-  order = TRUE,
+  order = FALSE,
+  add.n = FALSE,
+  add.n.face = "bold",
+  add.n.expand = c(0, 1.15),
+  add.n.size = 4,
+  order.by = NULL,
   split.by = NULL,
+  facet.by = NULL,
   position = "stack",
   font.size = 14,
   font.type = "sans",
@@ -17,7 +23,7 @@ do_BarPlot(
   legend.ncol = NULL,
   legend.nrow = NULL,
   legend.byrow = FALSE,
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   xlab = NULL,
   ylab = NULL,
   colors.use = NULL,
@@ -25,9 +31,18 @@ do_BarPlot(
   plot.title = NULL,
   plot.subtitle = NULL,
   plot.caption = NULL,
-  plot.grid = TRUE,
+  plot.grid = FALSE,
   grid.color = "grey75",
-  grid.type = "dashed"
+  grid.type = "dashed",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain",
+  strip.text.face = "bold",
+  return_data = FALSE
 )
 }
 \arguments{
@@ -37,13 +52,25 @@ do_BarPlot(
 
 \item{order}{\strong{\code{\link[base]{logical}}} | Whether to order the results in descending order of counts.}
 
-\item{split.by}{\strong{\code{\link[base]{character}}} | Metadata column to split the values of group.by by. If not used, defaults to the active idents.}
+\item{add.n}{\strong{\code{\link[base]{logical}}} | Whether to add the total counts on top of each bar.}
 
-\item{position}{\strong{\code{\link[base]{character}}} | Position function from \pkg{ggplot2}. One of:
+\item{add.n.face}{\strong{\code{\link[base]{character}}} | Font face of the labels added by \strong{\code{add.n}}.}
+
+\item{add.n.expand}{\strong{\code{\link[base]{numeric}}} | Vector of two numerics representing the start and end of the scale. Minimum should be 0 and max should be above 1. This basically expands the Y axis so that the labels fit when \strong{\code{flip = TRUE}}.
 \itemize{
 \item \emph{\code{stack}}: Set the bars side by side, displaying the total number of counts. Uses \link[ggplot2]{position_stack}.
 \item \emph{\code{fill}}: Set the bars on top of each other, displaying the proportion of counts from the total that each group represents. Uses \link[ggplot2]{position_fill}.
 }}
+
+\item{add.n.size}{\strong{\code{\link[base]{numeric}}} | Size of the labels}
+
+\item{order.by}{\strong{\code{\link[base]{character}}} | When \strong{\code{split.by}} is used, value of \strong{\code{group.by}} to reorder the columns based on its value.}
+
+\item{split.by}{\strong{\code{\link[base]{character}}} | Metadata column to split the values of group.by by. If not used, defaults to the active idents.}
+
+\item{facet.by}{\strong{\code{\link[base]{character}}} | Metadata column to gather the columns by. This is useful if you have other overarching metadata.}
+
+\item{position}{\strong{\code{\link[base]{character}}} | Position function from \pkg{ggplot2}. Either stack or fill.}
 
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 
@@ -71,7 +98,7 @@ do_BarPlot(
 
 \item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
 
@@ -83,7 +110,7 @@ do_BarPlot(
 
 \item{plot.grid}{\strong{\code{\link[base]{logical}}} | Whether to plot grid lines.}
 
-\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the panels.}
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
 
 \item{grid.type}{\strong{\code{\link[base]{character}}} | One of the possible linetype options:
 \itemize{
@@ -95,6 +122,24 @@ do_BarPlot(
 \item \emph{\code{longdash}}.
 \item \emph{\code{twodash}}.
 }}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
+
+\item{strip.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the strip text.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
+
+\item{return_data}{\strong{\code{\link[base]{logical}}} | Returns a data.frame with the count and proportions displayed in the plot.}
 }
 \value{
 A ggplot2 object containing a Bar plot.
@@ -132,7 +177,7 @@ Create Bar Plots.
                             position = "stack")
 
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

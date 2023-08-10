@@ -11,7 +11,6 @@ do_CopyNumberVariantPlot(
   group.by = NULL,
   using_metacells = FALSE,
   metacell_mapping = NULL,
-  chromosome_focus = NULL,
   legend.type = "colorbar",
   legend.position = "bottom",
   legend.length = 20,
@@ -23,18 +22,32 @@ do_CopyNumberVariantPlot(
   font.size = 14,
   pt.size = 1,
   font.type = "sans",
-  border.size = 2,
-  border.color = "black",
-  rotate_x_axis_labels = 45,
-  plot_cell_borders = TRUE,
+  axis.text.x.angle = 45,
   enforce_symmetry = TRUE,
   legend.title = NULL,
   na.value = "grey75",
-  viridis_color_map = "G",
-  viridis_direction = 1,
+  viridis.palette = "G",
+  viridis.direction = 1,
   verbose = FALSE,
-  min.cutoff = NULL,
-  max.cutoff = NULL
+  min.cutoff = NA,
+  max.cutoff = NA,
+  number.breaks = 5,
+  diverging.palette = "RdBu",
+  diverging.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = -1,
+  use_viridis = TRUE,
+  return_object = FALSE,
+  grid.color = "white",
+  border.color = "black",
+  flip = FALSE,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -42,7 +55,7 @@ do_CopyNumberVariantPlot(
 
 \item{infercnv_object}{\strong{\code{\link[infercnv]{infercnv}}} | Output inferCNV object run on the same Seurat object.}
 
-\item{chromosome_locations}{\strong{\code{\link[tibble]{tibble}}} | Tibble containing the chromosome regions to use. Can be obtained using \code{utils::data("human_chr_locations", package = "SCpubr")}.}
+\item{chromosome_locations}{\strong{\code{\link[tibble]{tibble}}} | Tibble containing the chromosome regions to use. Can be obtained using \strong{\code{utils::data("human_chr_locations", package = "SCpubr")}}.}
 
 \item{group.by}{\strong{\code{\link[base]{character}}} | Metadata variable to group the output by. Has to be a character of factor column.}
 
@@ -50,13 +63,10 @@ do_CopyNumberVariantPlot(
 
 \item{metacell_mapping}{\strong{\code{\link[SCpubr]{named_vector}}} | Vector or cell - metacell mapping.}
 
-\item{chromosome_focus}{\strong{\code{\link[base]{character}}} | Region stating which chromosome to plot. Eg: 1p, 19q. NULL will plot all regions.}
-
 \item{legend.type}{\strong{\code{\link[base]{character}}} | Type of legend to display. One of:
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
@@ -87,13 +97,7 @@ do_CopyNumberVariantPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
-
-\item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
-
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
-
-\item{plot_cell_borders}{\strong{\code{\link[base]{logical}}} | Whether to plot border around cells.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{enforce_symmetry}{\strong{\code{\link[base]{logical}}} | Return a symmetrical plot axes-wise or continuous color scale-wise, when applicable.}
 
@@ -101,13 +105,41 @@ do_CopyNumberVariantPlot(
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
 
 \item{verbose}{\strong{\code{\link[base]{logical}}} | Whether to show extra comments, warnings,etc.}
 
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{diverging.palette}{\strong{\code{\link[base]{character}}} | Type of symmetrical color palette to use. Out of the diverging palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{diverging.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Direction of the divering palette. This basically flips the two ends.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
+
+\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
+
+\item{return_object}{\strong{\code{\link[base]{logical}}} | Returns the Seurat object with the modifications performed in the function. Nomally, this contains a new assay with the data that can then be used for any other visualization desired.}
+
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
+
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A list containing Feature Plots for different chromosome regions and corresponding dot plots by groups..
@@ -137,18 +169,13 @@ Display CNV scores from inferCNV as Feature Plots.
     # Get human chromosome locations.
     chromosome_locations = SCpubr::human_chr_locations
 
-    # Compute for a single chromosome.
-    out <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
-                                            infercnv_object = infercnv_object,
-                                            using_metacells = FALSE,
-                                            chromosome_locations = chromosome_locations,
-                                            chromosome_focus = "1")
-    # Retrieve the UMAP for 1p region.
-    out$`1p_umap`
-    # Retrieve the dot plot for 1p region.
-    out$`1p_dotplot`
+    # Compute for a all chromosomes.
+    p <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
+                                          infercnv_object = infercnv_object,
+                                          using_metacells = FALSE,
+                                          chromosome_locations = chromosome_locations)
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

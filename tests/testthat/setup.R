@@ -1,9 +1,8 @@
 de_genes <- readRDS(system.file("extdata/de_genes_example.rds", package = "SCpubr"))
+# nolint start
 if (requireNamespace("Seurat", quietly = TRUE)) {
  suppressMessages(library("Seurat"))
 }
-
-
 
 if (requireNamespace("magrittr", quietly = TRUE)) {
  suppressMessages(library("magrittr"))
@@ -14,10 +13,14 @@ if (requireNamespace("dplyr", quietly = TRUE)) {
   de_genes_scaled <- dplyr::rename(.data = de_genes,
                                    "avg_diff" = "avg_log2FC")
 }
-
-
+# nolint end
 
 sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
+
+if (isTRUE(getOption("SCpubr.v5"))){
+  suppressWarnings(sample[["SCT"]] <- as(object = sample[["SCT"]], Class = "Assay5"))
+}
+
 metacell_mapping <- readRDS(system.file("extdata/metacell_mapping_example.rds", package = "SCpubr"))
 infercnv_object <- readRDS(system.file("extdata/infercnv_object_example.rds", package = "SCpubr"))
 infercnv_object_metacells <- readRDS(system.file("extdata/infercnv_object_metacells_example.rds", package = "SCpubr"))
@@ -28,7 +31,7 @@ enriched_terms <- readRDS(system.file("extdata/enriched_terms_example.rds", pack
 
 
 # Get packages.
-dependencies <- SCpubr::state_dependencies(return_dependencies = TRUE)
+dependencies <- SCpubr::check_dependencies(return_dependencies = TRUE)
 
 dependencies[["utils"]] <- c("Seurat",
                              "rlang",
@@ -48,8 +51,8 @@ dependencies[["utils"]] <- c("Seurat",
 # Check them.
 dep_check <- list()
 for (func in names(dependencies)){
-  packages <- dependencies[[func]]
-  value = FALSE
+  packages <- c(dependencies[[func]], dependencies[["Essentials"]])
+  value <- FALSE
   for (pkg in packages){
     if (!requireNamespace(pkg, quietly = TRUE)) {
         value <- TRUE
@@ -58,7 +61,8 @@ for (func in names(dependencies)){
   dep_check[[func]] <- value
 }
 
-if (isFALSE(dep_check[["do_GroupedGOTermPlot"]]) | isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
+# nolint start
+if (base::isFALSE(dep_check[["do_GroupedGOTermPlot"]]) | base::isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
   if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
     suppressMessages(library("org.Hs.eg.db"))
   }
@@ -68,24 +72,29 @@ if (isFALSE(dep_check[["do_GroupedGOTermPlot"]]) | isFALSE(dep_check[["do_Functi
     org.db <- AnnotationDbi::loadDb(system.file("./extdata/org.Hs.eg.sqlite", package = "org.Hs.eg.db"))
   }
 }
+# nolint end
 
 # Remove this for publication in CRAN.
-if (isFALSE(dep_check[["do_LigandReceptorPlot"]])){
-  liana_output <- readRDS(system.file("extdata/liana_output_example.rds", package = "SCpubr"))
-}
-
-if (isFALSE(dep_check[["do_DimPlot"]]) &
-    isFALSE(dep_check[["do_CorrelationPlot"]]) &
-    isFALSE(dep_check[["do_ChordDiagramPlot"]]) &
-    isTRUE(requireNamespace(pkg, quietly = TRUE)) &
-    isFALSE(dep_check[["save_Plot"]])){
-  p <- SCpubr::do_DimPlot(sample)
-  p.heatmap <- SCpubr::do_CorrelationPlot(sample)
-  data <- p.heatmap@ht_list$`Pearson coef.`@matrix
-  p.pheatmap <- pheatmap::pheatmap(data)
-  p.chord <- SCpubr::do_ChordDiagramPlot(sample = sample, from = "seurat_clusters", to = "orig.ident")
-  figure_path <- getwd()
-}
+# if (base::isFALSE(dep_check[["do_LigandReceptorPlot"]])){
+#   liana_output <- readRDS(system.file("extdata/liana_output_example.rds", package = "SCpubr"))
+# }
+# 
+# if (base::isFALSE(dep_check[["do_DimPlot"]]) &
+#     base::isFALSE(dep_check[["do_CorrelationPlot"]]) &
+#     base::isFALSE(dep_check[["do_ChordDiagramPlot"]]) &
+#     isTRUE(requireNamespace(pkg, quietly = TRUE)) &
+#     base::isFALSE(dep_check[["save_Plot"]])){
+#   p <- SCpubr::do_DimPlot(sample)
+#   data <- data.frame("A" = stats::runif(n = 10),
+#                      "B" = stats::runif(n = 10),
+#                      "C" = stats::runif(n = 10),
+#                      "D" = stats::runif(n = 10))
+#   data <- as.matrix(data)
+#   p.pheatmap <- pheatmap::pheatmap(data, cluster_rows = FALSE, cluster_cols = FALSE)
+#   p.heatmap <- ComplexHeatmap::Heatmap(data, cluster_rows = FALSE, cluster_columns = FALSE)
+#   p.chord <- SCpubr::do_ChordDiagramPlot(sample = sample, from = "seurat_clusters", to = "orig.ident")
+#   figure_path <- getwd()
+# }
 
 
 #monocle_sample <- sample

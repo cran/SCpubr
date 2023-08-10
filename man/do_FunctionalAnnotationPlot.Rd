@@ -10,47 +10,38 @@ do_FunctionalAnnotationPlot(
   organism = "hsa",
   database = "GO",
   GO_ontology = "BP",
-  min.overlap = if (length(genes) <= 4) {
-     1
- } else {
-     3
- },
+  min.overlap = NULL,
   p.adjust.cutoff = 0.05,
   pAdjustMethod = "BH",
   minGSSize = 10,
   maxGSSize = 500,
-  cluster_cols = TRUE,
-  cluster_rows = TRUE,
-  cell_size = 8,
-  heatmap_gap = 0.5,
   font.size = 10,
   font.type = "sans",
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   xlab = NULL,
   ylab = NULL,
   plot.title = NULL,
   plot.subtitle = NULL,
   plot.caption = NULL,
-  plot.grid = TRUE,
-  grid.color = "grey75",
-  grid.type = "dashed",
-  flip = TRUE,
   legend.type = "colorbar",
   legend.position = "bottom",
   legend.framewidth = 0.5,
   legend.tickwidth = 0.5,
-  legend.length = 20,
+  legend.length = 10,
   legend.width = 1,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
-  heatmap.legend.length = 75,
-  heatmap.legend.width = 5,
-  heatmap.legend.framecolor = "black",
-  viridis_color_map = "G",
-  viridis_direction = -1,
-  showCategory = 30,
-  nWords = 4,
-  nCluster = 5
+  number.breaks = 5,
+  return_matrix = FALSE,
+  grid.color = "white",
+  border.color = "black",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -93,14 +84,6 @@ do_FunctionalAnnotationPlot(
 
 \item{maxGSSize}{\strong{\code{\link[base]{numeric}}} | Maximal size of genes annotated for testing.}
 
-\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
-
-\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
-
-\item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
-
-\item{heatmap_gap}{\strong{\code{\link[base]{numeric}}} | Gap in cm between heatmaps.}
-
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 
 \item{font.type}{\strong{\code{\link[base]{character}}} | Base font family for the plot. One of:
@@ -110,34 +93,16 @@ do_FunctionalAnnotationPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
 
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
 
-\item{plot.grid}{\strong{\code{\link[base]{logical}}} | Whether to plot grid lines.}
-
-\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the panels.}
-
-\item{grid.type}{\strong{\code{\link[base]{character}}} | One of the possible linetype options:
-\itemize{
-\item \emph{\code{blank}}.
-\item \emph{\code{solid}}.
-\item \emph{\code{dashed}}.
-\item \emph{\code{dotted}}.
-\item \emph{\code{dotdash}}.
-\item \emph{\code{longdash}}.
-\item \emph{\code{twodash}}.
-}}
-
-\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
-
 \item{legend.type}{\strong{\code{\link[base]{character}}} | Type of legend to display. One of:
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
@@ -157,19 +122,21 @@ do_FunctionalAnnotationPlot(
 
 \item{legend.tickcolor}{\strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.}
 
-\item{heatmap.legend.length, heatmap.legend.width}{\strong{\code{\link[base]{numeric}}} | Width and length of the legend in the heatmap.}
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
 
-\item{heatmap.legend.framecolor}{\strong{\code{\link[base]{character}}} | Color of the edges and ticks of the legend in the heatmap.}
+\item{return_matrix}{\strong{\code{\link[base]{logical}}} | Returns the matrices with the enriched Terms for further use.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
 
-\item{showCategory}{\strong{\code{\link[base]{numeric}}} | Number of enriched terms to display in the output tree plot.}
-
-\item{nWords}{\strong{\code{\link[base]{numeric}}} | The number of words in the cluster tags in the tree plot.}
-
-\item{nCluster}{\strong{\code{\link[base]{numeric}}} | The number of clusters to group the resulting terms in the tree plot. Suggested value is above 2, as two can lead to some errors.}
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A list containing a heatmap of the presence/absence of the genes in the enriched term, as well as a bar plot, dot plot and tree plot of the enriched terms.
@@ -198,7 +165,7 @@ Compute functional annotation plots using GO or KEGG ontologies
     out <- SCpubr::do_FunctionalAnnotationPlot(genes = genes.use,
                                                org.db = org.Hs.eg.db)
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

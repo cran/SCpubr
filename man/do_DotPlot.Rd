@@ -10,7 +10,8 @@ do_DotPlot(
   features,
   assay = NULL,
   group.by = NULL,
-  split.by = NULL,
+  scale = FALSE,
+  legend.title = NULL,
   legend.type = "colorbar",
   legend.position = "bottom",
   legend.framewidth = 0.5,
@@ -19,8 +20,8 @@ do_DotPlot(
   legend.width = 1,
   legend.framecolor = "grey50",
   legend.tickcolor = "white",
+  colors.use = NULL,
   dot.scale = 6,
-  colors.use = c("#1BFFFF25", "#2E3192"),
   plot.title = NULL,
   plot.subtitle = NULL,
   plot.caption = NULL,
@@ -28,18 +29,28 @@ do_DotPlot(
   ylab = NULL,
   font.size = 14,
   font.type = "sans",
-  cluster.idents = FALSE,
+  cluster = FALSE,
   flip = FALSE,
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   scale.by = "size",
   use_viridis = FALSE,
-  viridis_color_map = "G",
-  viridis_direction = -1,
+  viridis.palette = "G",
+  viridis.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = 1,
   na.value = "grey75",
   dot_border = TRUE,
   plot.grid = TRUE,
   grid.color = "grey75",
-  grid.type = "dashed"
+  grid.type = "dashed",
+  number.breaks = 5,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -51,13 +62,14 @@ do_DotPlot(
 
 \item{group.by}{\strong{\code{\link[base]{character}}} | Metadata variable to group the output by. Has to be a character of factor column.}
 
-\item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
+\item{scale}{\strong{\code{\link[base]{logical}}} | Whether the data should be scaled or not. Non-scaled data allows for comparison across genes. Scaled data allows for an easier comparison along the same gene.}
+
+\item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
 
 \item{legend.type}{\strong{\code{\link[base]{character}}} | Type of legend to display. One of:
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
@@ -77,9 +89,9 @@ do_DotPlot(
 
 \item{legend.tickcolor}{\strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.}
 
-\item{dot.scale}{\strong{\code{\link[base]{numeric}}} | Scale the size of the dots.}
+\item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
 
-\item{colors.use}{\strong{\code{\link[base]{character}}} | Two colors if split.by is not set, which will define a gradient. As many numbers as unique values in split.by, if set, which each own will define its own gradient. Defaults to predefined color scales if not provided.}
+\item{dot.scale}{\strong{\code{\link[base]{numeric}}} | Scale the size of the dots.}
 
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
 
@@ -94,11 +106,11 @@ do_DotPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{cluster.idents}{\strong{\code{\link[base]{logical}}} | Whether to cluster the identities based on the expression of the features.}
+\item{cluster}{\strong{\code{\link[base]{logical}}} | Whether to cluster the identities based on the expression of the features.}
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{scale.by}{\strong{\code{\link[base]{character}}} | How to scale the size of the dots. One of:
 \itemize{
@@ -108,9 +120,13 @@ do_DotPlot(
 
 \item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
@@ -118,7 +134,7 @@ do_DotPlot(
 
 \item{plot.grid}{\strong{\code{\link[base]{logical}}} | Whether to plot grid lines.}
 
-\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the panels.}
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
 
 \item{grid.type}{\strong{\code{\link[base]{character}}} | One of the possible linetype options:
 \itemize{
@@ -129,6 +145,16 @@ do_DotPlot(
 \item \emph{\code{dotdash}}.
 \item \emph{\code{longdash}}.
 \item \emph{\code{twodash}}.
+}}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
 }}
 }
 \value{
@@ -159,7 +185,7 @@ You can
     # Inverting the axes.
     p <- SCpubr::do_DotPlot(sample = sample,
                             features = genes,
-                            cluster.idents = TRUE,
+                            cluster = TRUE,
                             plot.title = "Clustered",
                             flip = TRUE)
 
@@ -187,9 +213,9 @@ You can
     # Clustering the identities.
     p <- SCpubr::do_DotPlot(sample = sample,
                             features = genes,
-                            cluster.idents = TRUE,
+                            cluster = TRUE,
                             plot.title = "Clustered")
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

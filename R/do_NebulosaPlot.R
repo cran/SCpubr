@@ -36,11 +36,26 @@ do_NebulosaPlot <- function(sample,
                             plot_cell_borders = TRUE,
                             border.size = 2,
                             border.color = "black",
-                            viridis_color_map = "G",
-                            viridis_direction = 1,
+                            viridis.palette = "G",
+                            viridis.direction = 1,
                             verbose = TRUE,
                             na.value = "grey75",
-                            plot.axes = FALSE){
+                            plot.axes = FALSE,
+                            number.breaks = 5,
+                            use_viridis = FALSE,
+                            sequential.palette = "YlGnBu",
+                            sequential.direction = 1,
+                            plot.title.face = "bold",
+                            plot.subtitle.face = "plain",
+                            plot.caption.face = "italic",
+                            axis.title.face = "bold",
+                            axis.text.face = "plain",
+                            legend.title.face = "bold",
+                            legend.text.face = "plain"){
+  # Add lengthy error messages.
+  withr::local_options(.new = list("warning.length" = 8170))
+  
+  `%>%` <- magrittr::`%>%`
   check_suggests(function_name = "do_NebulosaPlot")
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
@@ -48,13 +63,14 @@ do_NebulosaPlot <- function(sample,
   # Check the reduction.
   reduction <- check_and_set_reduction(sample = sample, reduction = reduction)
   # Check the dimensions.
-  dimensions <- check_and_set_dimensions(sample = sample, reduction = reduction, dims = dims)
+  dims <- check_and_set_dimensions(sample = sample, reduction = reduction, dims = dims)
   # Check logical parameters.
   logical_list <- list("combine" = combine,
                        "joint" = joint,
                        "return_only_joint" = return_only_joint,
                        "plot_cell_borders" = plot_cell_borders,
-                       "plot.axes" = plot.axes)
+                       "plot.axes" = plot.axes,
+                       "use_viridis" = use_viridis)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -64,11 +80,17 @@ do_NebulosaPlot <- function(sample,
                        "legend.width" = legend.width,
                        "dims" = dims,
                        "border.size" = border.size,
-                       "viridis_direction" = viridis_direction)
+                       "viridis.direction" = viridis.direction,
+                       "number.breaks" = number.breaks,
+                       "sequential.direction" = sequential.direction)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   if (is.list(features)){
-    warning("Features provided as a list. Unlisting the list. Please use a character vector next time.", call. = FALSE)
+    warning(paste0(add_warning(), crayon_key("Features"),
+                   crayon_body(" provided as a "),
+                   crayon_key("list"),
+                   crayon_body(". Unlisting it. Please use a "),
+                   crayon_key("character vector")), call. = FALSE)
     features <- unique(unlist(features))
   }
   character_list <- list("legend.position" = legend.position,
@@ -83,7 +105,15 @@ do_NebulosaPlot <- function(sample,
                          "legend.type" = legend.type,
                          "font.type" = font.type,
                          "border.color" = border.color,
-                         "na.value" = na.value)
+                         "na.value" = na.value,
+                         "sequential.palette" = sequential.palette,
+                         "plot.title.face" = plot.title.face,
+                         "plot.subtitle.face" = plot.subtitle.face,
+                         "plot.caption.face" = plot.caption.face,
+                         "axis.title.face" = axis.title.face,
+                         "axis.text.face" = axis.text.face,
+                         "legend.title.face" = legend.title.face,
+                         "legend.text.face" = legend.text.face)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
   # Check slot.
   slot <- check_and_set_slot(slot = slot)
@@ -101,18 +131,23 @@ do_NebulosaPlot <- function(sample,
   check_parameters(parameter = font.type, parameter_name = "font.type")
   check_parameters(parameter = legend.type, parameter_name = "legend.type")
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
-  check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
-  check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
-
-  # Define legend parameters.
-  if (legend.position %in% c("top", "bottom")){
-    legend.barwidth <- legend.length
-    legend.barheight <- legend.width
-  } else if (legend.position %in% c("left", "right")){
-    legend.barwidth <- legend.width
-    legend.barheight <- legend.length
-  }
-
+  check_parameters(parameter = viridis.palette, parameter_name = "viridis.palette")
+  check_parameters(parameter = number.breaks, parameter_name = "number.breaks")
+  check_parameters(plot.title.face, parameter_name = "plot.title.face")
+  check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+  check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+  check_parameters(axis.title.face, parameter_name = "axis.title.face")
+  check_parameters(axis.text.face, parameter_name = "axis.text.face")
+  check_parameters(legend.title.face, parameter_name = "legend.title.face")
+  check_parameters(legend.text.face, parameter_name = "legend.text.face")
+  check_parameters(viridis.direction, parameter_name = "viridis.direction")
+  check_parameters(sequential.direction, parameter_name = "sequential.direction")
+  
+  colors.gradient <- compute_continuous_palette(name = ifelse(isTRUE(use_viridis), viridis.palette, sequential.palette),
+                                                use_viridis = use_viridis,
+                                                direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
+                                                enforce_symmetry = FALSE)
+  
   # Plot a density plot using Nebulosa package.
     p <- Nebulosa::plot_density(object = sample,
                                 features = features,
@@ -120,18 +155,18 @@ do_NebulosaPlot <- function(sample,
                                 reduction = reduction,
                                 dims = dims) &
          ggplot2::theme_minimal(base_size = font.size) &
-         ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0),
-                        plot.subtitle = ggplot2::element_text(hjust = 0),
-                        plot.caption = ggplot2::element_text(hjust = 1),
+         ggplot2::theme(plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                        plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                        plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                        legend.text = ggplot2::element_text(face = legend.text.face),
+                        legend.title = ggplot2::element_text(face = legend.title.face),
                         plot.title.position = "plot",
                         panel.grid = ggplot2::element_blank(),
                         text = ggplot2::element_text(family = font.type),
                         plot.caption.position = "plot",
-                        legend.text = ggplot2::element_text(face = "bold"),
                         legend.position = legend.position,
-                        legend.title = ggplot2::element_text(face = "bold"),
                         legend.justification = "center",
-                        plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
+                        plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0),
                         panel.grid.major = ggplot2::element_blank(),
                         plot.background = ggplot2::element_rect(fill = "white", color = "white"),
                         panel.background = ggplot2::element_rect(fill = "white", color = "white"),
@@ -143,16 +178,67 @@ do_NebulosaPlot <- function(sample,
     } else {
       num_plots <- length(features)
     }
-    p <- add_scale(p = p,
-                   num_plots = num_plots,
-                   scale = "color",
-                   function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                 option = viridis_color_map,
-                                                                 direction = viridis_direction))
+    for (counter in seq_len(num_plots)){
+      if (counter > length(features)){
+        name.use <-  "Joint Density"
+      } else {
+        name.use <- "Density"
+      }
+      if (num_plots == 1){
+        limits <- c(p$data[, "feature", drop = FALSE] %>% dplyr::arrange(.data$feature) %>% utils::head(1) %>% dplyr::pull(.data$feature),
+                    p$data[, "feature", drop = FALSE] %>% dplyr::arrange(.data$feature) %>% utils::tail(1) %>% dplyr::pull(.data$feature))
 
-    for (plot_num in seq(1:num_plots)){
+        scale.setup <- compute_scales(sample = sample,
+                                      feature = features,
+                                      assay = NULL,
+                                      reduction = NULL,
+                                      slot = slot,
+                                      number.breaks = number.breaks,
+                                      min.cutoff = NA,
+                                      max.cutoff = NA,
+                                      flavor = "Seurat",
+                                      enforce_symmetry = FALSE,
+                                      from_data = TRUE,
+                                      limits.use = limits)
+
+        p <- add_scale(p = p,
+                       function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                     na.value = na.value,
+                                                                     name = name.use,
+                                                                     breaks = scale.setup$breaks,
+                                                                     labels = scale.setup$labels,
+                                                                     limits = scale.setup$limits),
+                       scale = "color")
+
+      } else {
+        limits <- c(p[[counter]]$data[, "feature", drop = FALSE] %>% dplyr::arrange(.data$feature) %>% utils::head(1) %>% dplyr::pull(.data$feature),
+                    p[[counter]]$data[, "feature", drop = FALSE] %>% dplyr::arrange(.data$feature) %>% utils::tail(1) %>% dplyr::pull(.data$feature))
+
+        scale.setup <- compute_scales(sample = sample,
+                                      feature = features,
+                                      assay = NULL,
+                                      reduction = NULL,
+                                      slot = slot,
+                                      number.breaks = number.breaks,
+                                      min.cutoff = NA,
+                                      max.cutoff = NA,
+                                      flavor = "Seurat",
+                                      enforce_symmetry = FALSE,
+                                      from_data = TRUE,
+                                      limits.use = limits)
+        p[[counter]] <- add_scale(p =  p[[counter]],
+                                  function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                                na.value = na.value,
+                                                                                name = name.use,
+                                                                                breaks = scale.setup$breaks,
+                                                                                labels = scale.setup$labels,
+                                                                                limits = scale.setup$limits),
+                                  scale = "color")
+      }
+
+
       # Set size of dots.
-      p[[plot_num]]$layers[[1]]$aes_params$size <- pt.size
+      p[[counter]]$layers[[1]]$aes_params$size <- pt.size
 
       if (legend.position != "none"){
         if (num_plots == 1){
@@ -167,7 +253,7 @@ do_NebulosaPlot <- function(sample,
                                         legend.framewidth = legend.framewidth,
                                         legend.tickwidth = legend.tickwidth)
         } else {
-          p[[plot_num]] <- modify_continuous_legend(p = p[[plot_num]],
+          p[[counter]] <- modify_continuous_legend(p = p[[counter]],
                                                     legend.aes = "color",
                                                     legend.type = legend.type,
                                                     legend.position = legend.position,
@@ -181,39 +267,23 @@ do_NebulosaPlot <- function(sample,
       }
     }
 
-    # For embeddings that are umap of tsne, we remove all axes..
-    if (reduction %in% c("umap", "tsne")){
-      # if dims is first and then second.
-      if (sum(dims == c(1, 2)) == 2){
-        p <- p &
-          ggplot2::theme(axis.title = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black", face = "bold", hjust = 0.5)},
-                         axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                         axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                         axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")})
-      } else {
-        labels <- colnames(sample@reductions[[reduction]][[]])[dims]
-        p <- p &
-          ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                         axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                         axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                         axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black")) &
-          ggplot2::xlab(labels[1]) &
-          ggplot2::ylab(labels[2])
-      }
-      # For diffusion maps, we do want to keep at least the axis titles so that we know which DC are we plotting.
-    } else {
-      labels <- colnames(sample@reductions[[reduction]][[]])[dims]
+
+    if (base::isFALSE(plot.axes)){
       p <- p &
-        ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                       axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black")) &
-        ggplot2::xlab(labels[1]) &
-        ggplot2::ylab(labels[2])
+           ggplot2::theme(axis.title = ggplot2::element_blank(),
+                          axis.text = ggplot2::element_blank(),
+                          axis.ticks = ggplot2::element_blank(),
+                          axis.line = ggplot2::element_blank())
+    } else {
+      p <- p &
+           ggplot2::theme(axis.title = ggplot2::element_text(face = axis.title.face),
+                          axis.text = ggplot2::element_text(face = axis.text.face),
+                          axis.ticks = ggplot2::element_line(color = "black"),
+                          axis.line = ggplot2::element_line(color = "black"))
     }
 
     # Further patch for diffusion maps.
-    if (reduction == "diffusion"){
+    if (stringr::str_starts(reduction, "diff|DIFF")){
       labels <- colnames(sample@reductions[["diffusion"]][[]])[dims]
       # Fix the axis scale so that the highest and lowest values are in the range of the DCs (previously was around +-1.5, while DCs might range to +-0.004 or so).
       p <-  suppressMessages({
@@ -221,12 +291,7 @@ do_NebulosaPlot <- function(sample,
           ggplot2::xlim(c(min(sample@reductions$diffusion[[]][, labels[1]]),
                           max(sample@reductions$diffusion[[]][, labels[1]]))) &
           ggplot2::ylim(c(min(sample@reductions$diffusion[[]][, labels[2]]),
-                          max(sample@reductions$diffusion[[]][, labels[2]]))) &
-          # Remove axis elements so that the axis title is the only thing left.
-          ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                         axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                         axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                         axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black"))
+                          max(sample@reductions$diffusion[[]][, labels[2]])))
       })
 
     }

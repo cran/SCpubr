@@ -24,7 +24,14 @@ do_VolcanoPlot(
   order_tags_by = "both",
   n_genes = 5,
   use_labels = FALSE,
-  colors.use = "steelblue"
+  colors.use = "steelblue",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -40,7 +47,7 @@ do_VolcanoPlot(
 
 \item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
-\item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
 
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 
@@ -68,6 +75,14 @@ do_VolcanoPlot(
 \item{use_labels}{\strong{\code{\link[base]{logical}}} | Whether to use labels instead of text for the tags.}
 
 \item{colors.use}{\strong{\code{\link[base]{character}}} | Color to generate a tetradic color scale with.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A volcano plot as a ggplot2 object.
@@ -94,7 +109,7 @@ Compute a Volcano plot out of DE genes.
                                 de_genes = de_genes)
     p
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

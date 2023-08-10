@@ -2,9 +2,9 @@
 #' You can
 #'
 #' @inheritParams doc_function
-#' @param colors.use \strong{\code{\link[base]{character}}} | Two colors if split.by is not set, which will define a gradient. As many numbers as unique values in split.by, if set, which each own will define its own gradient. Defaults to predefined color scales if not provided.
 #' @param dot.scale \strong{\code{\link[base]{numeric}}} | Scale the size of the dots.
-#' @param cluster.idents \strong{\code{\link[base]{logical}}} | Whether to cluster the identities based on the expression of the features.
+#' @param cluster \strong{\code{\link[base]{logical}}} | Whether to cluster the identities based on the expression of the features.
+#' @param scale \strong{\code{\link[base]{logical}}} | Whether the data should be scaled or not. Non-scaled data allows for comparison across genes. Scaled data allows for an easier comparison along the same gene.
 #' @param scale.by \strong{\code{\link[base]{character}}} | How to scale the size of the dots. One of:
 #' \itemize{
 #'   \item \emph{\code{radius}}: use radius aesthetic.
@@ -20,7 +20,8 @@ do_DotPlot <- function(sample,
                        features,
                        assay = NULL,
                        group.by = NULL,
-                       split.by = NULL,
+                       scale = FALSE,
+                       legend.title = NULL,
                        legend.type = "colorbar",
                        legend.position = "bottom",
                        legend.framewidth = 0.5,
@@ -29,8 +30,8 @@ do_DotPlot <- function(sample,
                        legend.width = 1,
                        legend.framecolor = "grey50",
                        legend.tickcolor = "white",
+                       colors.use = NULL,
                        dot.scale = 6,
-                       colors.use = c("#1BFFFF25", "#2E3192"),
                        plot.title = NULL,
                        plot.subtitle = NULL,
                        plot.caption = NULL,
@@ -38,18 +39,31 @@ do_DotPlot <- function(sample,
                        ylab = NULL,
                        font.size = 14,
                        font.type = "sans",
-                       cluster.idents = FALSE,
+                       cluster = FALSE,
                        flip = FALSE,
-                       rotate_x_axis_labels = 45,
+                       axis.text.x.angle = 45,
                        scale.by = "size",
                        use_viridis = FALSE,
-                       viridis_color_map = "G",
-                       viridis_direction = -1,
+                       viridis.palette = "G",
+                       viridis.direction = -1,
+                       sequential.palette = "YlGnBu",
+                       sequential.direction = 1,
                        na.value = "grey75",
                        dot_border = TRUE,
                        plot.grid = TRUE,
                        grid.color = "grey75",
-                       grid.type = "dashed"){
+                       grid.type = "dashed",
+                       number.breaks = 5,
+                       plot.title.face = "bold",
+                       plot.subtitle.face = "plain",
+                       plot.caption.face = "italic",
+                       axis.title.face = "bold",
+                       axis.text.face = "plain",
+                       legend.title.face = "bold",
+                       legend.text.face = "plain"){
+    # Add lengthy error messages.
+    withr::local_options(.new = list("warning.length" = 8170))
+  
     check_suggests(function_name = "do_DotPlot")
     check_Seurat(sample = sample)
     # Check the assay.
@@ -59,10 +73,11 @@ do_DotPlot <- function(sample,
 
     # Check logical parameters.
     logical_list <- list("flip" = flip,
-                         "cluster.idents" = cluster.idents,
+                         "cluster" = cluster,
                          "use_viridis" = use_viridis,
                          "dot_border" = dot_border,
-                         "plot.grid" = plot.grid)
+                         "plot.grid" = plot.grid,
+                         "scale" = scale)
     check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
     # Check numeric parameters.
     numeric_list <- list("dot.scale" = dot.scale,
@@ -71,8 +86,10 @@ do_DotPlot <- function(sample,
                          "legend.tickwidth" = legend.tickwidth,
                          "legend.length" = legend.length,
                          "legend.width" = legend.width,
-                         "viridis_direction" = viridis_direction,
-                         "rotate_x_axis_labels" = rotate_x_axis_labels)
+                         "viridis.direction" = viridis.direction,
+                         "axis.text.x.angle" = axis.text.x.angle,
+                         "number.breaks" = number.breaks,
+                         "sequential.direction" = sequential.direction)
     check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
     # Check character parameters.
     character_list <- list("legend.position" = legend.position,
@@ -80,118 +97,116 @@ do_DotPlot <- function(sample,
                            "features" = unlist(features),
                            "xlab" = xlab,
                            "ylab" = ylab,
-                           "colors.use" = colors.use,
                            "group.by" = group.by,
-                           "split.by" = split.by,
                            "scale.by" = scale.by,
                            "legend.framecolor" = legend.framecolor,
                            "legend.tickcolor" = legend.tickcolor,
                            "legend.type" = legend.type,
                            "font.type" = font.type,
-                           "viridis_color_map" = viridis_color_map,
+                           "viridis.palette" = viridis.palette,
                            "grid.color" = grid.color,
-                           "grid.type" = grid.type)
+                           "grid.type" = grid.type,
+                           "sequential.palette" = sequential.palette,
+                           "plot.title.face" = plot.title.face,
+                           "plot.subtitle.face" = plot.subtitle.face,
+                           "plot.caption.face" = plot.caption.face,
+                           "axis.title.face" = axis.title.face,
+                           "axis.text.face" = axis.text.face,
+                           "legend.title.face" = legend.title.face,
+                           "legend.text.face" = legend.text.face,
+                           "legend.title" = legend.title)
     check_type(parameters = character_list, required_type = "character", test_function = is.character)
-
+    
+    `%>%` <- magrittr::`%>%`
+    
     # Check the features.
     features <- check_feature(sample = sample, features = features, permissive = TRUE)
     features <- remove_duplicated_features(features = features)
 
-    # Check that flip is not set to TRUE and features is not a named list.
-    if (isTRUE(flip)){
-      assertthat::assert_that(!is.list(features),
-                              msg = "Please provide the genes as a simple character vector or set flip to FALSE.")
-    }
-
-    if (is.list(features)){
-      assertthat::assert_that(isFALSE(flip),
-                              msg = "Please provide the genes as a simple character vector or set flip to FALSE.")
+    if (!is.null(colors.use)){
+      check_colors(colors.use)
     }
 
     # Check that split.by is set and the user has not provided a correct vector of colors.
-    if (!(is.null(split.by))){
-      if (length(colors.use) != length(as.character(unique(Seurat::FetchData(sample, vars = split.by)[, 1])))){
-        names.use <- if (is.factor(unique(Seurat::FetchData(sample, vars = split.by)[, 1]))){
-          levels(unique(Seurat::FetchData(sample, vars = split.by)[, 1]))
-        } else {
-          as.character(unique(Seurat::FetchData(sample, vars = split.by)[, 1]))
-        }
-        colors.use <- generate_color_scale(names.use)
-      }
-    }
     check_parameters(parameter = font.type, parameter_name = "font.type")
     check_parameters(parameter = legend.type, parameter_name = "legend.type")
     check_parameters(parameter = legend.position, parameter_name = "legend.position")
-    check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
-    check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
+    check_parameters(parameter = viridis.palette, parameter_name = "viridis.palette")
     check_parameters(parameter = grid.type, parameter_name = "grid.type")
-    check_parameters(parameter = rotate_x_axis_labels, parameter_name = "rotate_x_axis_labels")
-
-    # Check colors.
-    check_colors(colors.use)
+    check_parameters(parameter = axis.text.x.angle, parameter_name = "axis.text.x.angle")
+    check_parameters(parameter = number.breaks, parameter_name = "number.breaks")
+    check_parameters(plot.title.face, parameter_name = "plot.title.face")
+    check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+    check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+    check_parameters(axis.title.face, parameter_name = "axis.title.face")
+    check_parameters(axis.text.face, parameter_name = "axis.text.face")
+    check_parameters(legend.title.face, parameter_name = "legend.title.face")
+    check_parameters(legend.text.face, parameter_name = "legend.text.face")
+    check_parameters(viridis.direction, parameter_name = "viridis.direction")
+    check_parameters(sequential.direction, parameter_name = "sequential.direction")
 
     # Check the colors provided to legend.framecolor and legend.tickcolor.
     check_colors(legend.framecolor, parameter_name = "legend.framecolor")
     check_colors(legend.tickcolor, parameter_name = "legend.tickcolor")
     check_colors(na.value, parameter_name = "na.value")
     check_colors(grid.color, parameter_name = "grid.color")
-
-    # Define legend parameters.
-    if (legend.position %in% c("top", "bottom")){
-      legend.barwidth <- legend.length
-      legend.barheight <- legend.width
-    } else if (legend.position %in% c("left", "right")){
-      legend.barwidth <- legend.width
-      legend.barheight <- round(legend.length / 2, 0)
-    }
-
-
-    p <- Seurat::DotPlot(sample,
-                         features = features,
-                         cols = colors.use,
-                         group.by = group.by,
-                         split.by = split.by,
-                         dot.scale = dot.scale,
-                         cluster.idents = cluster.idents,
-                         scale.by = scale.by)
+    
+    colors.gradient <- compute_continuous_palette(name = ifelse(isTRUE(use_viridis), viridis.palette, sequential.palette),
+                                                  use_viridis = use_viridis,
+                                                  direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
+                                                  enforce_symmetry = FALSE)
+    
+    # Until they resolve ggplot2 deprecation.
+    p <- suppressWarnings({Seurat::DotPlot(sample,
+                                           features = features,
+                                           group.by = group.by,
+                                           dot.scale = dot.scale,
+                                           cluster.idents = cluster,
+                                           scale = scale,
+                                           scale.by = scale.by)})
+    # Retrieve original data and plot again to allow the use of flip parameter.
     if (isTRUE(dot_border)){
-      suppressMessages({
-        p <- p +
-          ggplot2::geom_point(mapping = ggplot2::aes(x = p[["data"]][["features.plot"]],
-                                                     y = p[["data"]][["id"]],
-                                                     fill = p[["data"]][["avg.exp.scaled"]],
-                                                     size = p[["data"]][["pct.exp"]]),
-                              shape = 21) +
-          ggplot2::scale_size_continuous(range = c(0, dot.scale))
-      })
+      p <- p$data %>%
+           ggplot2::ggplot(mapping = ggplot2::aes(x = if (base::isFALSE(flip)){.data$features.plot} else {.data$id},
+                                                  y = if (base::isFALSE(flip)){.data$id} else {.data$features.plot},
+                                                  fill = .data$avg.exp.scaled,
+                                                  size = .data$pct.exp)) + 
+           ggplot2::geom_point(color = "black", shape = 21) +
+           ggplot2::scale_size_continuous(range = c(0, dot.scale)) +
+           ggplot2::scale_fill_gradientn(colors = colors.gradient,
+                                         na.value = na.value,
+                                         name = if (is.null(legend.title)){"Avg. Expression"} else {legend.title},
+                                         breaks = scales::extended_breaks(n = number.breaks))
 
-      p[["layers"]][[1]] <- NULL
+    } else {
+      p <- p$data %>%
+           ggplot2::ggplot(mapping = ggplot2::aes(x = if (base::isFALSE(flip)){.data$features.plot} else {.data$id},
+                                                  y = if (base::isFALSE(flip)){.data$id} else {.data$features.plot},
+                                                  color = .data$avg.exp.scaled,
+                                                  size = .data$pct.exp)) + 
+           ggplot2::geom_point() +
+           ggplot2::scale_size_continuous(range = c(0, dot.scale)) +
+           ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                         na.value = na.value,
+                                         name = if (is.null(legend.title)){"Avg. Expression"} else {legend.title},
+                                         breaks = scales::extended_breaks(n = number.breaks))
     }
-    if (isTRUE(use_viridis)){
-      if (isFALSE(dot_border)){
-        p <- add_scale(p = p,
-                       function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                     option = viridis_color_map,
-                                                                     direction = viridis_direction),
-                       scale = "color")
-      } else if (isTRUE(dot_border)){
+    
+    # Facet grid.
+    if (isTRUE(is.list(features))){
+      if (base::isFALSE(flip)){
         p <- p +
-             ggplot2::scale_fill_viridis_c(na.value = na.value,
-                                           option = viridis_color_map,
-                                           direction = viridis_direction)
-      }
-    } else if (isFALSE(use_viridis)){
-      if (isFALSE(dot_border)){
-        p <- add_scale(p = p,
-                       function_use = ggplot2::scale_color_gradientn(na.value = na.value,
-                                                                     colors = colors.use),
-                       scale = "color")
-      } else if (isTRUE(dot_border)){
+             ggplot2::facet_grid(cols = ggplot2::vars(.data$feature.groups),
+                                 scales = "free",
+                                 space = "free")
+      } else {
         p <- p +
-             ggplot2::scale_fill_gradientn(na.value = na.value,
-                                           colors = colors.use)
+             ggplot2::facet_grid(rows = ggplot2::vars(.data$feature.groups),
+                                 scales = "free",
+                                 space = "free")
       }
     }
+     
     p <- p +
          ggplot2::xlab(xlab) +
          ggplot2::ylab(ylab) +
@@ -200,24 +215,24 @@ do_DotPlot <- function(sample,
                        caption = plot.caption) +
          ggplot2::theme_minimal(base_size = font.size) +
          ggplot2::theme(axis.text.x = ggplot2::element_text(color = "black",
-                                                            face = "bold",
-                                                            angle = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["angle"]],
-                                                            hjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["hjust"]],
-                                                            vjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["vjust"]]),
-                        axis.text.y = ggplot2::element_text(face = "bold", color = "black"),
+                                                            face = axis.text.face,
+                                                            angle = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["angle"]],
+                                                            hjust = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["hjust"]],
+                                                            vjust = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["vjust"]]),
+                        axis.text.y = ggplot2::element_text(face = axis.text.face, color = "black"),
                         axis.ticks = ggplot2::element_line(color = "black"),
                         axis.line = ggplot2::element_line(color = "black"),
-                        axis.title = ggplot2::element_text(face = "bold"),
-                        plot.title = ggplot2::element_text(face = "bold", hjust = 0),
-                        plot.subtitle = ggplot2::element_text(hjust = 0),
-                        plot.caption = ggplot2::element_text(hjust = 1),
+                        axis.title = ggplot2::element_text(face = axis.title.face),
+                        plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                        plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                        plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
                         plot.title.position = "plot",
                         panel.grid = if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()},
                         text = ggplot2::element_text(family = font.type),
                         plot.caption.position = "plot",
-                        legend.text = ggplot2::element_text(face = "bold"),
+                        legend.text = ggplot2::element_text(face = legend.text.face),
                         legend.position = legend.position,
-                        legend.title = ggplot2::element_text(face = "bold"),
+                        legend.title = ggplot2::element_text(face = legend.title.face),
                         legend.justification = "center",
                         plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
                         panel.grid.major = ggplot2::element_blank(),
@@ -226,7 +241,9 @@ do_DotPlot <- function(sample,
                         legend.background = ggplot2::element_rect(fill = "white", color = "white"))
     # Add leyend modifiers.
     p <- modify_continuous_legend(p = p,
-                                  legend.title = "Avg. Expression",
+                                  # nocov start
+                                  legend.title = if (is.null(legend.title)){"Avg. Expression"} else {legend.title},
+                                  # nocov end
                                   legend.aes = if (isTRUE(dot_border)) {"fill"} else {"color"},
                                   legend.type = legend.type,
                                   legend.position = legend.position,
@@ -252,12 +269,13 @@ do_DotPlot <- function(sample,
     }
 
     if (is.list(features)){
-      p <- p + ggplot2::theme(strip.background = ggplot2::element_rect(color = 'black', fill = 'white'),
-                                    strip.text = ggplot2::element_text(face = "bold", color = "black"))
-    }
-    if (flip == TRUE){
-        p <- p + ggplot2::coord_flip()
+      if (base::isFALSE(flip)){
+        p <- p + ggplot2::theme(strip.background = ggplot2::element_blank(),
+                                strip.text.x = ggplot2::element_text(face = "bold", color = "black", angle = 0))
+      } else {
+        p <- p + ggplot2::theme(strip.background = ggplot2::element_blank(),
+                                strip.text.y = ggplot2::element_text(face = "bold", color = "black", angle = 0, hjust = 0))
+      } 
     }
     return(p)
-
 }

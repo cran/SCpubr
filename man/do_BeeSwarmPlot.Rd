@@ -12,6 +12,7 @@ do_BeeSwarmPlot(
   reduction = NULL,
   slot = NULL,
   continuous_feature = FALSE,
+  order = FALSE,
   colors.use = NULL,
   legend.title = NULL,
   legend.type = "colorbar",
@@ -39,8 +40,11 @@ do_BeeSwarmPlot(
   remove_x_axis = FALSE,
   remove_y_axis = FALSE,
   flip = FALSE,
-  viridis_color_map = "G",
-  viridis_direction = 1,
+  use_viridis = TRUE,
+  viridis.palette = "G",
+  viridis.direction = 1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = -1,
   verbose = TRUE,
   raster = FALSE,
   raster.dpi = 300,
@@ -48,8 +52,17 @@ do_BeeSwarmPlot(
   border.size = 1.5,
   border.color = "black",
   pt.size = 2,
-  min.cutoff = NULL,
-  max.cutoff = NULL
+  min.cutoff = NA,
+  max.cutoff = NA,
+  na.value = "grey75",
+  number.breaks = 5,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -67,6 +80,8 @@ do_BeeSwarmPlot(
 
 \item{continuous_feature}{\strong{\code{\link[base]{logical}}} | Is the feature to rank and color for continuous? I.e: an enrichment score.}
 
+\item{order}{\strong{\code{\link[base]{logical}}} | Whether to reorder the groups based on the median of the ranking.}
+
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
 
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
@@ -75,7 +90,6 @@ do_BeeSwarmPlot(
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
@@ -116,9 +130,15 @@ do_BeeSwarmPlot(
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
 
 \item{verbose}{\strong{\code{\link[base]{logical}}} | Whether to show extra comments, warnings,etc.}
 
@@ -130,11 +150,23 @@ do_BeeSwarmPlot(
 
 \item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
-\item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
 
 \item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots.}
 
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
+
+\item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A ggplot2 object containing a Bee Swarm plot.
@@ -166,7 +198,7 @@ BeeSwarm plot.
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE)
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

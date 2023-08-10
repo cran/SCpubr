@@ -26,7 +26,7 @@ do_BoxPlot <- function(sample,
                        slot = "data",
                        font.size = 14,
                        font.type = "sans",
-                       rotate_x_axis_labels = 45,
+                       axis.text.x.angle = 45,
                        colors.use = NULL,
                        na.value = "grey75",
                        plot.title = NULL,
@@ -34,13 +34,13 @@ do_BoxPlot <- function(sample,
                        plot.caption = NULL,
                        xlab = NULL,
                        ylab = NULL,
-                       legend.title = if (is.null(split.by)){if (is.null(group.by)) {"Groups"} else {group.by}} else {split.by},
+                       legend.title = NULL,
                        legend.title.position = "top",
-                       legend.position = if (is.null(split.by)) {"none"} else {"bottom"},
+                       legend.position = NULL,
                        boxplot.line.color = "black",
                        outlier.color = "black",
                        outlier.alpha = 0.5,
-                       boxplot.linewidth = 1,
+                       boxplot.linewidth = 0.5,
                        boxplot.width = NULL,
                        plot.grid = TRUE,
                        grid.color = "grey75",
@@ -51,7 +51,16 @@ do_BoxPlot <- function(sample,
                        use_test = FALSE,
                        comparisons = NULL,
                        test = "wilcox.test",
-                       map_signif_level = TRUE){
+                       map_signif_level = TRUE,
+                       plot.title.face = "bold",
+                       plot.subtitle.face = "plain",
+                       plot.caption.face = "italic",
+                       axis.title.face = "bold",
+                       axis.text.face = "plain",
+                       legend.title.face = "bold",
+                       legend.text.face = "plain"){
+  # Add lengthy error messages.
+  withr::local_options(.new = list("warning.length" = 8170))
 
   check_suggests(function_name = "do_BoxPlot")
   # Check if the sample provided is a Seurat object.
@@ -75,7 +84,7 @@ do_BoxPlot <- function(sample,
                        "outlier.alpha" = outlier.alpha,
                        "boxplot.linewidth" = boxplot.linewidth,
                        "boxplot.width" = boxplot.width,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels)
+                       "axis.text.x.angle" = axis.text.x.angle)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("feature" = feature,
@@ -98,14 +107,28 @@ do_BoxPlot <- function(sample,
                          "grid.color" = grid.color,
                          "grid.type" = grid.type,
                          "comparisons" = comparisons,
-                         "test" = test)
+                         "test" = test,
+                         "plot.title.face" = plot.title.face,
+                         "plot.subtitle.face" = plot.subtitle.face,
+                         "plot.caption.face" = plot.caption.face,
+                         "axis.title.face" = axis.title.face,
+                         "axis.text.face" = axis.text.face,
+                         "legend.title.face" = legend.title.face,
+                         "legend.text.face" = legend.text.face)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
   # Check the feature.
   feature <- check_feature(sample = sample, features = feature, permissive = TRUE)
 
   `%>%` <- magrittr::`%>%`
-
+  
+  if (is.null(legend.position)){
+    if (is.null(split.by)) {
+      legend.position <- "none"
+    } else {
+      legend.position <- "bottom"
+    }
+  }
 
   check_colors(na.value, parameter_name = "na.value")
   check_colors(boxplot.line.color, parameter_name = "boxplot.line.color")
@@ -115,16 +138,34 @@ do_BoxPlot <- function(sample,
   check_parameters(parameter = font.type, parameter_name = "font.type")
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
   check_parameters(parameter = grid.type, parameter_name = "grid.type")
-  check_parameters(parameter = rotate_x_axis_labels, parameter_name = "rotate_x_axis_labels")
-
-  if (is.null(group.by)){
-    sample[["group.by"]] <- Seurat::Idents(sample)
-    group.by <- "group.by"
-  } else {
-    sample[["group.by"]] <- sample@meta.data[, group.by]
-    group.by <- "group.by"
+  check_parameters(parameter = axis.text.x.angle, parameter_name = "axis.text.x.angle")
+  check_parameters(plot.title.face, parameter_name = "plot.title.face")
+  check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+  check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+  check_parameters(axis.title.face, parameter_name = "axis.title.face")
+  check_parameters(axis.text.face, parameter_name = "axis.text.face")
+  check_parameters(legend.title.face, parameter_name = "legend.title.face")
+  check_parameters(legend.text.face, parameter_name = "legend.text.face")
+  
+  if (is.null(legend.title)){
+    if (is.null(split.by)){
+      if (is.null(group.by)) {
+        legend.title <- "Groups"
+      } else {
+        legend.title <- group.by
+      }
+    } else {
+      legend.title <- split.by
+    }
   }
-
+  
+  # Check group.by.
+  out <- check_group_by(sample = sample,
+                        group.by = group.by,
+                        is.heatmap = FALSE)
+  sample <- out[["sample"]]
+  group.by <- out[["group.by"]]
+  
   if (is.null(colors.use)){
     if (is.null(split.by)){
       colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, group.by])) {
@@ -137,7 +178,7 @@ do_BoxPlot <- function(sample,
     }
   } else {
     check_colors(colors.use, parameter_name = "colors.use")
-    check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
+    check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = ifelse(!is.null(split.by), split.by, group.by))
   }
 
   data <- get_data_column_in_context(sample,
@@ -152,19 +193,27 @@ do_BoxPlot <- function(sample,
                                         levels = {data %>%
                                                   tibble::as_tibble() %>%
                                                   dplyr::group_by(.data[["group.by"]]) %>%
-                                                  dplyr::summarise("mean" = mean(.data[["feature"]])) %>%
-                                                  dplyr::arrange(if(isFALSE(flip)){dplyr::desc(.data[["mean"]])} else {.data[["mean"]]}) %>%
+                                                  dplyr::summarise("median" = stats::median(.data[["feature"]], na.rm = TRUE)) %>%
+                                                  dplyr::arrange(if(base::isFALSE(flip)){dplyr::desc(.data[["median"]])} else {.data[["median"]]}) %>%
                                                   dplyr::pull(.data[["group.by"]]) %>%
                                                   as.character()}))
   }
   if (isTRUE(order)){
     assertthat::assert_that(is.null(split.by),
-                            msg = "Parameter order can not be used alongside split.by.")
+                            msg = paste0(add_cross(), crayon_body("Parameter "),
+                                         crayon_key("split.by"),
+                                         crayon_body(" cannot be used alonside "),
+                                         crayon_key("order"),
+                                         crayon_body(".")))
   }
 
   if (!is.null(split.by)){
-    assertthat::assert_that(isFALSE(order),
-                            msg = "Parameter order can not be used alongside split.by.")
+    assertthat::assert_that(base::isFALSE(order),
+                            msg = paste0(add_cross(), crayon_body("Parameter "),
+                                         crayon_key("split.by"),
+                                         crayon_body(" cannot be used alonside "),
+                                         crayon_key("order"),
+                                         crayon_body(".")))
   }
 
   if (isTRUE(use_silhouette) & is.null(split.by)){
@@ -178,10 +227,11 @@ do_BoxPlot <- function(sample,
                                width = boxplot.width,
                                lwd = boxplot.linewidth,
                                fatten = 1,
-                               key_glyph = "rect")
+                               key_glyph = "rect",
+                               na.rm = TRUE)
   } else if (isTRUE(use_silhouette) & !is.null(split.by)){
-    stop("Parameter use_silhouetter can not be used alongside split.by.", call. = FALSE)
-  } else if (isFALSE(use_silhouette)){
+    stop(paste0(add_cross(), crayon_body("Parameter "), crayon_key("use_silhouette"),  crayon_body("can not be used alongside "), crayon_key("split.by"), crayon_body(".")), call. = FALSE)
+  } else if (base::isFALSE(use_silhouette)){
     if (is.null(split.by)){
       p <- data %>%
            ggplot2::ggplot(mapping = ggplot2::aes(x = .data[["group.by"]],
@@ -201,7 +251,8 @@ do_BoxPlot <- function(sample,
                                width = boxplot.width,
                                lwd = boxplot.linewidth,
                                fatten = 1,
-                               key_glyph = "rect")
+                               key_glyph = "rect",
+                               na.rm = TRUE)
   }
 
    p <- p +
@@ -215,29 +266,29 @@ do_BoxPlot <- function(sample,
                                                      title.hjust = 0.5)) +
         ggplot2::theme_minimal(base_size = font.size) +
         ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
-                                                          face = "bold"),
-                       axis.line.x = if (isFALSE(flip)) {ggplot2::element_line(color = "black")} else if (isTRUE(flip)) {ggplot2::element_blank()},
-                       axis.line.y = if (isTRUE(flip)) {ggplot2::element_line(color = "black")} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                                                          face = axis.title.face),
+                       axis.line.x = if (base::isFALSE(flip)) {ggplot2::element_line(color = "black")} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                       axis.line.y = if (isTRUE(flip)) {ggplot2::element_line(color = "black")} else if (base::isFALSE(flip)) {ggplot2::element_blank()},
                        axis.text.x = ggplot2::element_text(color = "black",
-                                                           face = "bold",
-                                                           angle = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["angle"]],
-                                                           hjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["hjust"]],
-                                                           vjust = get_axis_parameters(angle = rotate_x_axis_labels, flip = flip)[["vjust"]]),
-                       axis.text.y = ggplot2::element_text(color = "black", face = "bold"),
+                                                           face = axis.text.face,
+                                                           angle = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["angle"]],
+                                                           hjust = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["hjust"]],
+                                                           vjust = get_axis_parameters(angle = axis.text.x.angle, flip = flip)[["vjust"]]),
+                       axis.text.y = ggplot2::element_text(color = "black", face = axis.text.face),
                        axis.ticks = ggplot2::element_line(color = "black"),
                        panel.grid.major = ggplot2::element_blank(),
-                       panel.grid.major.y = if (isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
-                       panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isFALSE(flip)) {ggplot2::element_blank()},
+                       panel.grid.major.y = if (base::isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                       panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (base::isFALSE(flip)) {ggplot2::element_blank()},
                        plot.title.position = "plot",
-                       plot.title = ggplot2::element_text(face = "bold", hjust = 0),
-                       plot.subtitle = ggplot2::element_text(hjust = 0),
-                       plot.caption = ggplot2::element_text(hjust = 1),
+                       plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                       plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                       plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                       legend.text = ggplot2::element_text(face = legend.text.face),
+                       legend.title = ggplot2::element_text(face = legend.title.face),
                        panel.grid = ggplot2::element_blank(),
                        text = ggplot2::element_text(family = font.type),
                        plot.caption.position = "plot",
-                       legend.text = ggplot2::element_text(face = "bold"),
                        legend.position = legend.position,
-                       legend.title = ggplot2::element_text(face = "bold"),
                        legend.justification = "center",
                        plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
                        plot.background = ggplot2::element_rect(fill = "white", color = "white"),
@@ -261,10 +312,12 @@ do_BoxPlot <- function(sample,
                                  family = font.type,
                                  fontface = "bold")
     } else {
-      stop("Please provide the pair of groups to test.", call. = FALSE)
+      stop(paste0(add_cross(), crayon_body("Please provide the pair of groups to test.")), call. = FALSE)
     }
   } else if (isTRUE(use_test) & !is.null(split.by)){
-    stop("Tests can not be made if split.by is set.", call. = FALSE)
+    stop(paste0(add_cross(), crayon_body("Tests can not be made if "), crayon_key("split.by"),  crayon_body(" is set.")), call. = FALSE)
   }
+   
+
   return(p)
 }

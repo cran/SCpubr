@@ -1,9 +1,16 @@
 #' Wrapper for \link[Seurat]{FeaturePlot}.
 #'
 #' @inheritParams doc_function
-#' @param split.by.idents \strong{\code{\link[base]{character}}} | Vector of identities to plot. The gradient scale will also be subset to only the values of such identities.
+#' @param idents.keep \strong{\code{\link[base]{character}}} | Vector of identities to plot. The gradient scale will also be subset to only the values of such identities.
 #' @param individual.titles,individual.subtitles,individual.captions \strong{\code{\link[base]{character}}} | Titles or subtitles. for each feature if needed. Either NULL or a vector of equal length of features.
 #' @param order \strong{\code{\link[base]{logical}}} | Whether to order the cells based on expression.
+#' @param group.by \strong{\code{\link[base]{character}}} | Metadata variable based on which cells are grouped. This will effectively introduce a big dot in the center of each cluster, colored using a categorical color scale or with the values provided by the user in \strong{\code{group.by.colors.use}}. It will also displays a legend.
+#' @param group.by.legend \strong{\code{\link[base]{character}}} | Title for the legend when \strong{\code{group.by}} is used. Use \strong{\code{NA}} to disable it and \strong{\code{NULL}} to use the default column title provided in \strong{\code{group.by}}.
+#' @param group.by.dot.size \strong{\code{\link[base]{numeric}}} | Size of the dots placed in the middle of the groups.
+#' @param group.by.cell_borders \strong{\code{\link[base]{logical}}} | Plots another border around the cells displaying the same color code of the dots displayed with \strong{\code{group.by}}. Legend is shown always with alpha = 1 regardless of the alpha settings.
+#' @param group.by.colors.use \strong{\code{\link[base]{character}}} | Colors to use for the group dots.
+#' @param group.by.show.dots \strong{\code{\link[base]{logical}}} | Controls whether to place in the middle of the groups.
+#' @param group.by.cell_borders.alpha \strong{\code{\link[base]{numeric}}} | Controls the transparency of the new borders drawn by \strong{\code{group.by.cell_borders}}.
 #' @return  A ggplot2 object containing a Feature Plot.
 #' @export
 #'
@@ -14,8 +21,15 @@ do_FeaturePlot <- function(sample,
                            reduction = NULL,
                            slot = NULL,
                            order = FALSE,
+                           group.by = NULL,
+                           group.by.colors.use = NULL,
+                           group.by.legend = NULL,
+                           group.by.show.dots = TRUE,
+                           group.by.dot.size = 8,
+                           group.by.cell_borders = FALSE,
+                           group.by.cell_borders.alpha = 0.1,
                            split.by = NULL,
-                           split.by.idents = NULL,
+                           idents.keep = NULL,
                            cells.highlight = NULL,
                            idents.highlight = NULL,
                            dims = c(1, 2),
@@ -32,6 +46,9 @@ do_FeaturePlot <- function(sample,
                            legend.width = 1,
                            legend.framecolor = "grey50",
                            legend.tickcolor = "white",
+                           legend.ncol = NULL,
+                           legend.nrow = NULL,
+                           legend.byrow = FALSE,
                            plot.title = NULL,
                            plot.subtitle = NULL,
                            plot.caption = NULL,
@@ -39,13 +56,15 @@ do_FeaturePlot <- function(sample,
                            individual.subtitles = NULL,
                            individual.captions = NULL,
                            ncol = NULL,
-                           viridis_color_map = "G",
-                           viridis_direction = 1,
+                           use_viridis = FALSE,
+                           viridis.palette = "G",
+                           viridis.direction = 1,
                            raster = FALSE,
                            raster.dpi = 1024,
                            plot_cell_borders = TRUE,
                            border.size = 2,
                            border.color = "black",
+                           border.density = 1,
                            na.value = "grey75",
                            verbose = TRUE,
                            plot.axes = FALSE,
@@ -59,8 +78,22 @@ do_FeaturePlot <- function(sample,
                            contour_expand_axes = 0.25,
                            label = FALSE,
                            label.color = "black",
-                           label.size = 4){
-
+                           label.size = 4,
+                           number.breaks = 5,
+                           diverging.palette = "RdBu",
+                           diverging.direction = -1,
+                           sequential.palette = "YlGnBu",
+                           sequential.direction = 1,
+                           plot.title.face = "bold",
+                           plot.subtitle.face = "plain",
+                           plot.caption.face = "italic",
+                           axis.title.face = "bold",
+                           axis.text.face = "plain",
+                           legend.title.face = "bold",
+                           legend.text.face = "plain"){
+  # Add lengthy error messages.
+  withr::local_options(.new = list("warning.length" = 8170))
+  
   check_suggests(function_name = "do_FeaturePlot")
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
@@ -68,10 +101,13 @@ do_FeaturePlot <- function(sample,
   out <- check_and_set_assay(sample = sample, assay = assay)
   sample <- out[["sample"]]
   assay <- out[["assay"]]
+  
+  sample <- check_Assay5(sample, assay = assay)
+  
   # Check the reduction.
   reduction <- check_and_set_reduction(sample = sample, reduction = reduction)
   # Check the dimensions.
-  dimensions <- check_and_set_dimensions(sample = sample, reduction = reduction, dims = dims)
+  dims <- check_and_set_dimensions(sample = sample, reduction = reduction, dims = dims)
   # Check logical parameters.
   logical_list <- list("verbose" = verbose,
                        "raster" = raster,
@@ -80,7 +116,11 @@ do_FeaturePlot <- function(sample,
                        "enforce_symmetry" = enforce_symmetry,
                        "plot.axes" = plot.axes,
                        "plot_density_contour" = plot_density_contour,
-                       "label" = label)
+                       "label" = label,
+                       "legend.byrow" = legend.byrow,
+                       "group.by.cell_borders" = group.by.cell_borders,
+                       "group.by.show.dots" = group.by.show.dots,
+                       "use_viridis" = use_viridis)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -92,16 +132,24 @@ do_FeaturePlot <- function(sample,
                        "legend.length" = legend.length,
                        "legend.width" = legend.width,
                        "border.size" = border.size,
-                       "viridis_direction" = viridis_direction,
+                       "viridis.direction" = viridis.direction,
                        "min.cutoff" = min.cutoff,
                        "max.cutoff" = max.cutoff,
                        "contour_expand_axes" = contour_expand_axes,
-                       "label.size" = label.size)
+                       "label.size" = label.size,
+                       "number.breaks" = number.breaks,
+                       "border.density" = border.density,
+                       "legend.nrow" = legend.nrow,
+                       "legend.ncol" = legend.ncol,
+                       "group.by.dot.size" = group.by.dot.size,
+                       "group.by.cell_borders.alpha" = group.by.cell_borders.alpha,
+                       "sequential.direction" = sequential.direction,
+                       "diverging.direction" = diverging.direction)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   # Workaround for features.
   if (is.list(features)){
-    warning("Features provided as a list. Unlisting the list. Please use a character vector next time.", call. = FALSE)
+    warning(paste0(add_warning(), crayon_body("Features provided as a list. Unlisting the list. Please use a character vector next time."), call. = FALSE))
     features <- unique(unlist(features))
   }
   character_list <- list("legend.position" = legend.position,
@@ -109,12 +157,13 @@ do_FeaturePlot <- function(sample,
                          "cells.highlight" = cells.highlight,
                          "idents.highlight" = idents.highlight,
                          "slot" = slot,
+                         "group.by" = group.by,
                          "split.by" = split.by,
                          "plot.title" = plot.title,
                          "plot.subtitle" = plot.subtitle,
                          "plot.caption" = plot.caption,
-                         "split.by.idents" = split.by.idents,
-                         "viridis_color_map" = viridis_color_map,
+                         "idents.keep" = idents.keep,
+                         "viridis.palette" = viridis.palette,
                          "individual.titles" = individual.titles,
                          "individual.subtitles" = individual.subtitles,
                          "individual.captions" = individual.captions,
@@ -129,7 +178,17 @@ do_FeaturePlot <- function(sample,
                          "contour.color" = contour.color,
                          "contour.lineend" = contour.lineend,
                          "contour.linejoin" = contour.linejoin,
-                         "label.color" = label.color)
+                         "label.color" = label.color,
+                         "group.by.colors.use" = group.by.colors.use,
+                         "diverging.palette" = diverging.palette,
+                         "sequential.palette" = sequential.palette,
+                         "plot.title.face" = plot.title.face,
+                         "plot.subtitle.face" = plot.subtitle.face,
+                         "plot.caption.face" = plot.caption.face,
+                         "axis.title.face" = axis.title.face,
+                         "axis.text.face" = axis.text.face,
+                         "legend.title.face" = legend.title.face,
+                         "legend.text.face" = legend.text.face)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
   # Check slot.
@@ -141,25 +200,45 @@ do_FeaturePlot <- function(sample,
   # Check individual titles.
   if (length(features) > 1 & !is.null(individual.titles)){
     assertthat::assert_that(length(features) == length(individual.titles),
-                            msg = 'Total number of individual titles does not match the number of features provided.')
+                            msg = paste0(add_cross(), crayon_body("The total number of "),
+                                         crayon_key("individual titles"),
+                                         crayon_body(" does not match the number of "),
+                                         crayon_key("features"),
+                                         crayon_body(" provided.")))
   }
 
   if (length(features) > 1 & !is.null(individual.subtitles)){
     assertthat::assert_that(length(features) == length(individual.subtitles),
-                            msg = 'Total number of individual subtitles does not match the number of features provided.')
+                            msg = paste0(add_cross(), crayon_body("The total number of "),
+                                         crayon_key("individual subtitles"),
+                                         crayon_body(" does not match the number of "),
+                                         crayon_key("features"),
+                                         crayon_body(" provided.")))
   }
 
   if (length(features) > 1 & !is.null(individual.captions)){
     assertthat::assert_that(length(features) == length(individual.captions),
-                            msg = 'Total number of individual captions does not match the number of features provided.')
+                            msg = paste0(add_cross(), crayon_body("The total number of "),
+                                         crayon_key("individual captions"),
+                                         crayon_body(" does not match the number of "),
+                                         crayon_key("features"),
+                                         crayon_body(" provided.")))
   }
 
   ## Check that the contour_expand_axes is between 0 and 1.
   assertthat::assert_that(contour_expand_axes <= 1,
-                          msg = "Please provide a value to contour_expand_axes lower or equal than 1.")
+                          msg = paste0(add_cross(), crayon_body("Please provide a value to "),
+                                       crayon_key("countour_expand_axes"),
+                                       crayon_body(" lower or equal than "),
+                                       crayon_key("1"),
+                                       crayon_body(".")))
 
   assertthat::assert_that(contour_expand_axes >= 0,
-                          msg = "Please provide a value to contour_expand_axes higher or equal than 1.")
+                          msg = paste0(add_cross(), crayon_body("Please provide a value to "),
+                                       crayon_key("countour_expand_axes"),
+                                       crayon_body(" higher or equal than "),
+                                       crayon_key("0"),
+                                       crayon_body(".")))
 
 
   check_colors(border.color, parameter_name = "border.color")
@@ -168,59 +247,99 @@ do_FeaturePlot <- function(sample,
   check_colors(legend.tickcolor, parameter_name = "legend.tickcolor")
   check_colors(contour.color, parameter_name = "contour.color")
   check_colors(label.color, parameter_name = "label.color")
+  if (!is.null(group.by)){
+    if (!is.null(group.by.colors.use)){
+      check_colors(group.by.colors.use, parameter_name = "group.by.colors.use")
+      check_consistency_colors_and_names(sample = sample,
+                                         colors = group.by.colors.use,
+                                         grouping_variable = group.by)
+    } else {
+      data.use <- sample@meta.data[, group.by, drop = FALSE]
+      # If the variable is a factor, use the levels as order. If not, order the values alphabetically.
+      names.use <- if (is.factor(data.use[, 1])){levels(data.use[, 1])} else {sort(unique(data.use[, 1]))}
+      # Generate the color scale to be used based on the unique values of group.by.
+      group.by.colors.use <- generate_color_scale(names.use)
+    }
+  }
+
+
 
   check_parameters(parameter = font.type, parameter_name = "font.type")
   check_parameters(parameter = legend.type, parameter_name = "legend.type")
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
-  check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
-  check_parameters(parameter = viridis_color_map, parameter_name = "viridis_color_map")
+  check_parameters(parameter = viridis.palette, parameter_name = "viridis.palette")
   check_parameters(parameter = contour.lineend, parameter_name = "contour.lineend")
   check_parameters(parameter = contour.linejoin, parameter_name = "contour.linejoin")
   check_parameters(parameter = contour.position, parameter_name = "contour.position")
+  check_parameters(parameter = number.breaks, parameter_name = "number.breaks")
+  check_parameters(parameter = border.density, parameter_name = "border.density")
+  check_parameters(parameter = diverging.palette, parameter_name = "diverging.palette")
+  check_parameters(parameter = sequential.palette, parameter_name = "sequential.palette")
+  check_parameters(plot.title.face, parameter_name = "plot.title.face")
+  check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+  check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+  check_parameters(axis.title.face, parameter_name = "axis.title.face")
+  check_parameters(axis.text.face, parameter_name = "axis.text.face")
+  check_parameters(legend.title.face, parameter_name = "legend.title.face")
+  check_parameters(legend.text.face, parameter_name = "legend.text.face")
+  check_parameters(viridis.direction, parameter_name = "viridis.direction")
+  check_parameters(sequential.direction, parameter_name = "sequential.direction")
+  check_parameters(diverging.direction, parameter_name = "diverging.direction")
 
-  # Define legend parameters. Width and height values will change depending on the legend orientation.
-  if (legend.position %in% c("top", "bottom")){
-    legend.barwidth <- legend.length
-    legend.barheight <- legend.width
-  } else if (legend.position %in% c("left", "right")){
-    legend.barwidth <- legend.width
-    legend.barheight <- legend.length
+  if (length(min.cutoff) != length(features)){
+    warning(paste0(add_warning(), crayon_body("Please provide as many values to "),
+                   crayon_key("min.cutoff"),
+                   crayon_body(" as "),
+                   crayon_key("features"),
+                   crayon_body(" provided. The values will be used in order and, when outside of the range, no cutoffs will be applied.")), call. = FALSE)
   }
-
-  # Check for raster and pt.size.
-  if (isTRUE(raster) & pt.size < 1){
-    warning("Setting raster = TRUE and pt.size < 1 will result in the cells being ploted as a cross. This behaviour can not be modified, but setting pt.size to 1 or higher solves it. For Feature plots, optimized values would be pt.size = 3 and raster.dpi = 2048.", call. = FALSE)
+  
+  if (length(max.cutoff) != length(features)){
+    warning(paste0(add_warning(), crayon_body("Please provide as many values to "),
+                   crayon_key("max.cutoff"),
+                   crayon_body(" as "),
+                   crayon_key("features"),
+                   crayon_body(" provided. The values will be used in order and, when outside of the range, no cutoffs will be applied.")), call. = FALSE)
   }
-
-  # Check for min.cutoff and max.cutoff.
-  assertthat::assert_that(length(min.cutoff) == length(features),
-                          msg = "Please provide the same number of min.cutoffs as number of features. Use NA to skip for a given feature.")
-
-  assertthat::assert_that(length(max.cutoff) == length(features),
-                          msg = "Please provide the same number of max.cutoffs as number of features. Use NA to skip for a given feature.")
-
+  
+  # Generate the continuous color palette.
+  if (isTRUE(enforce_symmetry)){
+    colors.gradient <- compute_continuous_palette(name = diverging.palette,
+                                                  use_viridis = FALSE,
+                                                  direction = diverging.direction,
+                                                  enforce_symmetry = enforce_symmetry)
+  } else {
+    colors.gradient <- compute_continuous_palette(name = ifelse(isTRUE(use_viridis), viridis.palette, sequential.palette),
+                                                  use_viridis = use_viridis,
+                                                  direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
+                                                  enforce_symmetry = enforce_symmetry)
+  }
+  
+  
   # Generate base layer.
   if (isTRUE(plot_cell_borders)){
-    labels <- colnames(sample@reductions[[reduction]][[]])[dims]
-    df <- data.frame(x = Seurat::Embeddings(sample, reduction = reduction)[, labels[1]],
-                     y = Seurat::Embeddings(sample, reduction = reduction)[, labels[2]])
-
-    if (isFALSE(raster)){
-      base_layer <- ggplot2::geom_point(data = df, mapping = ggplot2::aes(x = .data$x,
-                                                                          y = .data$y),
-                                        colour = border.color,
-                                        size = pt.size * border.size,
-                                        show.legend = FALSE)
-    } else if (isTRUE(raster)){
-      base_layer <- scattermore::geom_scattermore(data = df,
-                                                  mapping = ggplot2::aes(x = .data$x,
-                                                                         y = .data$y),
-                                                  color = border.color,
-                                                  size = pt.size * border.size,
-                                                  stroke = pt.size / 2,
-                                                  show.legend = FALSE,
-                                                  pointsize = pt.size * border.size,
-                                                  pixels = c(raster.dpi, raster.dpi))
+    out <- compute_umap_layer(sample = sample,
+                              labels = colnames(sample@reductions[[reduction]][[]])[dims],
+                              pt.size = pt.size,
+                              dot.size = group.by.dot.size,
+                              border.density = border.density,
+                              border.size = border.size,
+                              border.color = border.color,
+                              raster = raster,
+                              raster.dpi = raster.dpi,
+                              reduction = reduction,
+                              group.by = group.by,
+                              split.by = split.by,
+                              na.value = na.value,
+                              alpha = group.by.cell_borders.alpha,
+                              n = 100)
+    base_layer <- out$base_layer
+    na_layer <- out$na_layer
+    if (!is.null(group.by)){
+      center_layers <- out$center_layers
+      center_layer_1 <- center_layers$center_layer_1
+      center_layer_2 <- center_layers$center_layer_2
+      color_layer <- out$color_layer
     }
   }
 
@@ -267,71 +386,60 @@ do_FeaturePlot <- function(sample,
                                label.size = label.size,
                                label.color = label.color)
     } # nocov end
-    p$layers[[length(p$layers)]]$aes_params$fontface = "bold"
+    p$layers[[length(p$layers)]]$aes_params$fontface <- "bold"
      p <- p &
-      # Remove Seurat::FeaturePlot() default plot title.
-      ggplot2::ggtitle("")
+          # Remove Seurat::FeaturePlot() default plot title.
+          ggplot2::ggtitle("")
 
     # Add color scales.
     num_plots <- length(features)
     for (counter in seq(1, num_plots)){
       if (num_plots == 1){
-        if (isFALSE(enforce_symmetry)){
-          p <- add_scale(p = p,
-                         function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                       option = viridis_color_map,
-                                                                       direction = viridis_direction),
-                         scale = "color")
-        } else if (isTRUE(enforce_symmetry)){
-          p.build <- ggplot2::ggplot_build(p)
-          feature.select <- gsub("-", ".", features)
-          scale.name <- feature.select
-          # nocov start
-          if (stringr::str_starts(feature.select, "[0-9]")){
-            feature.select <- paste0("x", feature.select)
-          }
-          # nocov end
-          limits <- c(min(p.build$plot$data[, feature.select]),
-                      max(p.build$plot$data[, feature.select]))
-          end_value <- max(abs(limits))
-          p <- add_scale(p = p,
-                         function_use = ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
-                                                                       limits = c(-end_value, end_value),
-                                                                       na.value = na.value,
-                                                                       name = scale.name),
-                         scale = "color")
-        }
+        scale.setup <- compute_scales(sample = sample,
+                                      feature = features,
+                                      assay = assay,
+                                      reduction = NULL,
+                                      slot = slot,
+                                      number.breaks = number.breaks,
+                                      min.cutoff = min.cutoff,
+                                      max.cutoff = max.cutoff,
+                                      flavor = "Seurat",
+                                      enforce_symmetry = enforce_symmetry)
+        p <- add_scale(p = p,
+                       function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                     na.value = na.value,
+                                                                     name = legend.title,
+                                                                     breaks = scale.setup$breaks,
+                                                                     labels = scale.setup$labels,
+                                                                     limits = scale.setup$limits),
+                       scale = "color")
       } else if (num_plots > 1){
-        if (isFALSE(enforce_symmetry)){
-          p[[counter]] <- add_scale(p = p[[counter]],
-                                    function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                                  option = viridis_color_map,
-                                                                                  direction = viridis_direction),
-                                    scale = "color")
-        } else if (isTRUE(enforce_symmetry)){
-          p.build <- ggplot2::ggplot_build(p[[counter]])
-          feature.select <- gsub("-", ".",  features[counter])
-          scale.name <- feature.select
-          # nocov start
-          if (stringr::str_starts(feature.select, "[0-9]")){
-            feature.select <- paste0("x", feature.select)
-          }
-          # nocov end
-          limits <- c(min(p.build$plot$data[, feature.select]),
-                      max(p.build$plot$data[, feature.select]))
-          end_value <- max(abs(limits))
-          p[[counter]] <- add_scale(p = p[[counter]],
-                                    function_use = ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
-                                                                                  limits = c(-end_value, end_value),
-                                                                                  na.value = na.value,
-                                                                                  name = scale.name),
-                                    scale = "color")
-        }
+        
+        feature.use <- features[counter]
+        scale.setup <- compute_scales(sample = sample,
+                                      feature = feature.use,
+                                      assay = assay,
+                                      reduction = NULL,
+                                      slot = slot,
+                                      number.breaks = number.breaks,
+                                      min.cutoff = min.cutoff[counter],
+                                      max.cutoff = max.cutoff[counter],
+                                      flavor = "Seurat",
+                                      enforce_symmetry = enforce_symmetry)
+
+        p[[counter]] <- add_scale(p = p[[counter]],
+                                  function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                                na.value = na.value,
+                                                                                name = legend.title,
+                                                                                breaks = scale.setup$breaks,
+                                                                                labels = scale.setup$labels,
+                                                                                limits = scale.setup$limits),
+                                  scale = "color")
       }
     }
 
     # Special patches for diffusion maps: Adding "DC" labels to the axis.
-    if (reduction == "diffusion"){
+    if (stringr::str_starts(reduction, "diff|DIFF")){
       p <- p &
         ggplot2::xlab(paste0("DC_", dims[1])) &
         ggplot2::ylab(paste0("DC_", dims[2]))
@@ -343,6 +451,33 @@ do_FeaturePlot <- function(sample,
       for (feature in features){
         counter <- counter + 1
         p[[counter]]$layers <- append(base_layer, p[[counter]]$layers)
+        if (!(is.null(group.by))){
+          if (isTRUE(group.by.show.dots)){
+            p[[counter]]$layers <- append(p[[counter]]$layers, c(center_layer_2, center_layer_1))
+          }
+          if (isTRUE(group.by.cell_borders)){
+            p[[counter]]$layers <- append(color_layer, p[[counter]]$layers)
+          }
+          if (is.null(group.by.legend)){
+            legend.name <- group.by
+          } else {
+            if (is.na(group.by.legend)){
+              legend.name <- ""
+            } else {
+              legend.name <- group.by.legend
+            }
+          }
+          p[[counter]] <- p[[counter]] +
+                          ggplot2::scale_fill_manual(values = group.by.colors.use,
+                                                     name = legend.name) +
+                          ggplot2::guides(fill = ggplot2::guide_legend(title = legend.name,
+                                                                       title.position = "top",
+                                                                       title.hjust = 0.5,
+                                                                       ncol = legend.ncol,
+                                                                       nrow = legend.nrow,
+                                                                       byrow = legend.byrow,
+                                                                       override.aes = list(alpha = 1)))
+        }
       }
     }
     if (isTRUE(plot_density_contour)){
@@ -410,17 +545,17 @@ do_FeaturePlot <- function(sample,
       # If split.by is used.
     } else if (!(is.null(split.by))){
       # No identities selected by the user.
-      if (is.null(split.by.idents)){
+      if (is.null(idents.keep)){
         cells.use <- colnames(sample)
         # Identitites selected by the user.
       } else {
         # Check if the identitites are duplicated. If so, remove them.
-        if (sum(duplicated(split.by.idents)) != 0){
-          message("Found and removed duplicated values in split.by.idents.")
-          split.by.idents <- split.by.idents[!duplicated(split.by.idents)]
+        if (sum(duplicated(idents.keep)) != 0){
+          message(paste0(add_info(), crayon_body("Found and removed duplicated values in idents.keep.")))
+          idents.keep <- idents.keep[!duplicated(idents.keep)]
         }
         # Get the names of the cells to plot.
-        cells.use <- names(Seurat::Idents(sample)[Seurat::Idents(sample) %in% split.by.idents])
+        cells.use <- names(Seurat::Idents(sample)[Seurat::Idents(sample) %in% idents.keep])
       }
     }
     # Plots are generated independently if more than one feature is provided.
@@ -440,7 +575,7 @@ do_FeaturePlot <- function(sample,
         sample$dummy <- sample@meta.data[, feature]
         ## Or is a gene in the object.
       } else if (feature %in% rownames(sample)){
-        sample$dummy <- Seurat::GetAssayData(object = sample, slot = slot)[feature, ]
+        sample$dummy <- .GetAssayData(sample = sample, slot = slot, assay = assay)[feature, ]
         ## Or is a dimensional reduction component.
       } else if (feature %in% dim_colnames){
         # Iterate over each dimensional reduction in the object.
@@ -458,8 +593,26 @@ do_FeaturePlot <- function(sample,
       if (is.null(split.by)){
         feature.use <- "dummy"
 
+        sample.use <- sample[, cells.use]
+
+        if (isTRUE(plot_cell_borders)){
+          out <- compute_umap_layer(sample = sample.use,
+                                    labels = colnames(sample.use@reductions[[reduction]][[]])[dims],
+                                    pt.size = pt.size,
+                                    border.density = border.density,
+                                    border.size = border.size,
+                                    border.color = border.color,
+                                    raster = raster,
+                                    raster.dpi = raster.dpi,
+                                    reduction = reduction,
+                                    group.by = group.by,
+                                    split.by = split.by,
+                                    n = 100)
+          base_layer_subset <- out$base_layer
+        }
+
         if (utils::packageVersion("Seurat") >= "4.1.0"){
-          p.loop <- Seurat::FeaturePlot(sample,
+          p.loop <- Seurat::FeaturePlot(sample.use,
                                         feature.use,
                                         reduction = reduction,
                                         slot = slot,
@@ -474,7 +627,7 @@ do_FeaturePlot <- function(sample,
                                         label.size = label.size,
                                         label.color = label.color)
         } else { # nocov start
-          p.loop <- Seurat::FeaturePlot(sample,
+          p.loop <- Seurat::FeaturePlot(sample.use,
                                         feature.use,
                                         reduction = reduction,
                                         slot = slot,
@@ -488,41 +641,75 @@ do_FeaturePlot <- function(sample,
                                         label.size = label.size,
                                         label.color = label.color)
         } # nocov end
-        p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface = "bold"
+        p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface <- "bold"
 
         # Add scale.
 
-        if (isFALSE(enforce_symmetry)){
-          p.loop <- add_scale(p = p.loop,
-                              function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                            option = viridis_color_map,
-                                                                            direction = viridis_direction),
-                              scale = "color")
-        } else if (isTRUE(enforce_symmetry)){
-          p.build <- ggplot2::ggplot_build(p.loop)
-          feature.select <- gsub("-", ".", feature.use)
-          scale.name <- feature.select
-          # nocov start
-          if (stringr::str_starts(feature.select, "[0-9]")){
-            feature.select <- paste0("x", feature.select)
-          }
-          # nocov end
-          limits <- c(min(p.build$plot$data[, feature.select], na.rm = TRUE),
-                      max(p.build$plot$data[, feature.select], na.rm = TRUE))
-          end_value <- max(abs(limits))
-          p.loop <- add_scale(p = p.loop,
-                              function_use = ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
-                                                                            limits = c(-end_value, end_value),
-                                                                            na.value = na.value,
-                                                                            name = scale.name),
-                              scale = "color")
-        }
+        scale.setup <- compute_scales(sample = sample,
+                                      feature = feature,
+                                      assay = assay,
+                                      reduction = NULL,
+                                      slot = slot,
+                                      number.breaks = number.breaks,
+                                      min.cutoff = min.cutoff.use,
+                                      max.cutoff = max.cutoff.use,
+                                      flavor = "Seurat",
+                                      enforce_symmetry = enforce_symmetry)
+
+        p.loop <- add_scale(p = p.loop,
+                            function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                          na.value = na.value,
+                                                                          name = legend.title,
+                                                                          breaks = scale.setup$breaks,
+                                                                          labels = scale.setup$labels,
+                                                                          limits = scale.setup$limits),
+                            scale = "color")
+        
         p.loop <- p.loop +
-          ggplot2::ggtitle("")
+                  ggplot2::ggtitle("")
 
         # Add cell borders.
         if (isTRUE(plot_cell_borders)){
+          p.loop$layers <- append(base_layer_subset, p.loop$layers)
+          p.loop$layers <- append(na_layer, p.loop$layers)
           p.loop$layers <- append(base_layer, p.loop$layers)
+          
+          suppressMessages({
+            p.loop <- p.loop + 
+              ggplot2::scale_x_continuous(limits = c(min(p.loop$layers[[1]]$data$x), 
+                                                     max(p.loop$layers[[1]]$data$x))) + 
+              ggplot2::scale_y_continuous(limits = c(min(p.loop$layers[[1]]$data$y), 
+                                                     max(p.loop$layers[[1]]$data$y)))
+          })
+          
+          if (!(is.null(group.by))){
+            if (isTRUE(group.by.show.dots)){
+              p.loop$layers <- append(p.loop$layers, c(center_layer_2, center_layer_1))
+            }
+
+            if (isTRUE(group.by.cell_borders)){
+              p.loop$layers <- append(color_layer, p.loop$layers)
+            }
+            if (is.null(group.by.legend)){
+              legend.name <- group.by
+            } else {
+              if (is.na(group.by.legend)){
+                legend.name <- ""
+              } else {
+                legend.name <- group.by.legend
+              }
+            }
+            p.loop <- p.loop +
+              ggplot2::scale_fill_manual(values = group.by.colors.use,
+                                         name = legend.name) +
+              ggplot2::guides(fill = ggplot2::guide_legend(title = legend.name,
+                                                           title.position = "top",
+                                                           title.hjust = 0.5,
+                                                           ncol = legend.ncol,
+                                                           nrow = legend.nrow,
+                                                           byrow = legend.byrow,
+                                                           override.aes = list(alpha = 1)))
+          }
         }
 
         if (isTRUE(plot_density_contour)){
@@ -559,10 +746,10 @@ do_FeaturePlot <- function(sample,
         # Retrieve the metadata column belonging to the split.by parameter.
         data.use <- data[, split.by, drop = FALSE]
         # Retrieve the plotting order, keep factor levels if the column is a factor.
-        if (is.null(split.by.idents)){
+        if (is.null(idents.keep)){
           plot_order <- if (is.factor(data.use[, 1])){levels(data.use[, 1])} else {sort(unique(data.use[, 1]))}
         } else {
-          plot_order <- sort(split.by.idents)
+          plot_order <- sort(idents.keep)
         }
         list.plots.split.by <- list()
         count_plot <- 0 # Will update for each unique value in split.by.
@@ -587,8 +774,29 @@ do_FeaturePlot <- function(sample,
           # Assign the cells that are not part of the iteration to NA.
           sample$dummy2[!(cells.iteration)] <- NA
 
+          sample.use <- sample[, cells.iteration]
+
+          if (isTRUE(plot_cell_borders)){
+            out <- compute_umap_layer(sample = sample.use,
+                                      labels = colnames(sample.use@reductions[[reduction]][[]])[dims],
+                                      pt.size = pt.size,
+                                      border.density = border.density,
+                                      border.size = border.size,
+                                      border.color = border.color,
+                                      raster = raster,
+                                      raster.dpi = raster.dpi,
+                                      reduction = reduction,
+                                      group.by = group.by,
+                                      split.by = split.by,
+                                      n = 100)
+            base_layer_subset <- out$base_layer
+          }
+
+
+
+
           if (utils::packageVersion("Seurat") >= "4.1.0"){
-            p.loop <- Seurat::FeaturePlot(sample,
+            p.loop <- Seurat::FeaturePlot(sample.use,
                                           feature.use,
                                           slot = slot,
                                           reduction = reduction,
@@ -603,7 +811,7 @@ do_FeaturePlot <- function(sample,
                                           label.size = label.size,
                                           label.color = label.color)
           } else { # nocov start
-            p.loop <- Seurat::FeaturePlot(sample,
+            p.loop <- Seurat::FeaturePlot(sample.use,
                                           feature.use,
                                           slot = slot,
                                           reduction = reduction,
@@ -617,25 +825,29 @@ do_FeaturePlot <- function(sample,
                                           label.size = label.size,
                                           label.color = label.color)
           } # nocov end
-          p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface = "bold"
+          p.loop$layers[[length(p.loop$layers)]]$aes_params$fontface <- "bold"
 
 
-          if (isFALSE(enforce_symmetry)){
-            p.loop <- add_scale(p = p.loop,
-                                function_use = ggplot2::scale_color_viridis_c(na.value = na.value,
-                                                                              option = viridis_color_map,
-                                                                              limits = limits,
-                                                                              direction = viridis_direction),
-                                scale = "color")
-          } else if (isTRUE(enforce_symmetry)){
-            end_value <- max(abs(limits))
-            p.loop <- add_scale(p = p.loop,
-                                function_use = ggplot2::scale_color_gradientn(colors = c("#033270", "#4091C9", "grey95", "#c94040", "#65010C"),
-                                                                              limits = c(-end_value, end_value),
-                                                                              na.value = na.value,
-                                                                              name = feature),
-                                scale = "color")
-          }
+          scale.setup <- compute_scales(sample = sample,
+                                        feature = feature,
+                                        assay = assay,
+                                        reduction = NULL,
+                                        slot = slot,
+                                        number.breaks = number.breaks,
+                                        min.cutoff = min.cutoff.use,
+                                        max.cutoff = max.cutoff.use,
+                                        flavor = "Seurat",
+                                        enforce_symmetry = enforce_symmetry)
+
+          p.loop <- add_scale(p = p.loop,
+                              function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
+                                                                            na.value = na.value,
+                                                                            name = legend.title,
+                                                                            breaks = scale.setup$breaks,
+                                                                            labels = scale.setup$labels,
+                                                                            limits = scale.setup$limits),
+                              scale = "color")
+
           p.loop <- p.loop +
                     ggplot2::ggtitle(iteration)
 
@@ -659,7 +871,45 @@ do_FeaturePlot <- function(sample,
 
           # Add cell borders.
           if (isTRUE(plot_cell_borders)){
+            p.loop$layers <- append(base_layer_subset, p.loop$layers)
+            p.loop$layers <- append(na_layer, p.loop$layers)
             p.loop$layers <- append(base_layer, p.loop$layers)
+    
+            suppressMessages({
+              p.loop <- p.loop + 
+                ggplot2::scale_x_continuous(limits = c(min(p.loop$layers[[1]]$data$x), 
+                                                       max(p.loop$layers[[1]]$data$x))) + 
+                ggplot2::scale_y_continuous(limits = c(min(p.loop$layers[[1]]$data$y), 
+                                                       max(p.loop$layers[[1]]$data$y)))
+            })
+            
+            if (!(is.null(group.by))){
+              if (isTRUE(group.by.show.dots)){
+                p.loop$layers <- append(p.loop$layers, c(center_layer_2, center_layer_1))
+              }
+              if (isTRUE(group.by.cell_borders)){
+                p.loop$layers <- append(color_layer, p.loop$layers)
+              }
+              if (is.null(group.by.legend)){
+                legend.name <- group.by
+              } else {
+                if (is.na(group.by.legend)){
+                  legend.name <- ""
+                } else {
+                  legend.name <- group.by.legend
+                }
+              }
+              p.loop <- p.loop +
+                ggplot2::scale_fill_manual(values = group.by.colors.use,
+                                           name = legend.name) +
+                ggplot2::guides(fill = ggplot2::guide_legend(title = legend.name,
+                                                             title.position = "top",
+                                                             title.hjust = 0.5,
+                                                             ncol = legend.ncol,
+                                                             nrow = legend.nrow,
+                                                             byrow = legend.byrow,
+                                                             override.aes = list(alpha = 1)))
+            }
           }
 
           if (isTRUE(plot_density_contour)){
@@ -702,7 +952,7 @@ do_FeaturePlot <- function(sample,
       }
 
       # Patch for diffusion maps.
-      if (reduction == "diffusion"){
+      if (stringr::str_starts(reduction, "diff|DIFF")){
         # Add "DC" labels.
         p.loop <- p.loop &
           ggplot2::xlab(paste0("DC_", dims[1])) &
@@ -723,23 +973,23 @@ do_FeaturePlot <- function(sample,
 
   # Fix the extra space and add theme parameters.
   p <- p &
-    ggplot2::theme_minimal(base_size = font.size) &
-    ggplot2::theme(plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
-                   plot.title = ggplot2::element_text(face = "bold",
-                                                      hjust = ifelse(!(is.null(split.by)), 0.5, 0)),
-                   plot.subtitle = ggplot2::element_text(hjust = 0),
-                   plot.caption = ggplot2::element_text(hjust = 1),
-                   panel.grid = ggplot2::element_blank(),
-                   plot.title.position = "plot",
-                   plot.caption.position = "plot",
-                   text = ggplot2::element_text(family = font.type),
-                   legend.text = ggplot2::element_text(face = "bold"),
-                   legend.position = legend.position,
-                   legend.title = ggplot2::element_text(face = "bold"),
-                   legend.justification = "center",
-                   plot.background = ggplot2::element_rect(fill = "white", color = "white"),
-                   panel.background = ggplot2::element_rect(fill = "white", color = "white"),
-                   legend.background = ggplot2::element_rect(fill = "white", color = "white"))
+       ggplot2::theme_minimal(base_size = font.size) &
+       ggplot2::theme(plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0),
+                      plot.title = ggplot2::element_text(face = plot.title.face,
+                                                         hjust = ifelse(!(is.null(split.by)), 0.5, 0)),
+                      plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                      plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                      panel.grid = ggplot2::element_blank(),
+                      plot.title.position = "plot",
+                      plot.caption.position = "plot",
+                      text = ggplot2::element_text(family = font.type),
+                      legend.position = legend.position,
+                      legend.text = ggplot2::element_text(face = legend.text.face),
+                      legend.title = ggplot2::element_text(face = legend.title.face),
+                      legend.justification = "center",
+                      plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                      panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                      legend.background = ggplot2::element_rect(fill = "white", color = "white"))
   if (is.null(split.by) & legend.position != "none"){
     counter <- 0
     for (feature in features){
@@ -794,7 +1044,7 @@ do_FeaturePlot <- function(sample,
 
   # Add individual titles.
   if (!is.null(individual.titles)){
-    for (counter in seq(1,length(features))){
+    for (counter in seq(1, length(features))){
       if (!(is.na(individual.titles[counter]))){
         if (is.null(split.by)){
           p[[counter]]$labels$title <- individual.titles[counter]
@@ -805,7 +1055,7 @@ do_FeaturePlot <- function(sample,
 
   # Add individual subtitles.
   if (!is.null(individual.subtitles)){
-    for (counter in seq(1,length(features))){
+    for (counter in seq(1, length(features))){
       if (!(is.na(individual.subtitles[counter]))){
         if (is.null(split.by)){
           p[[counter]]$labels$subtitle <- individual.subtitles[counter]
@@ -816,7 +1066,7 @@ do_FeaturePlot <- function(sample,
 
   # Add individual captions
   if (!is.null(individual.captions)){
-    for (counter in seq(1,length(features))){
+    for (counter in seq(1, length(features))){
       if (!(is.na(individual.captions[counter]))){
         if (is.null(split.by)){
           p[[counter]]$labels$caption <- individual.captions[counter]
@@ -825,52 +1075,30 @@ do_FeaturePlot <- function(sample,
     }
   }
 
-  # For embeddings that are umap of tsne, we remove all axes..
-  if (reduction %in% c("umap", "tsne")){
-    # if dims is first and then second.
-    if (sum(dims == c(1, 2)) == 2){
-      p <- p &
-        ggplot2::theme(axis.title = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black", face = "bold", hjust = 0.5)},
-                       axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                       axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.line =if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")})
-    } else {
-      labels <- colnames(sample@reductions[[reduction]][[]])[dims]
-      p <- p &
-        ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                       axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black")) &
-        ggplot2::xlab(labels[1]) &
-        ggplot2::ylab(labels[2])
-    }
-    # For diffusion maps, we do want to keep at least the axis titles so that we know which DC are we plotting.
-  } else {
-    labels <- colnames(sample@reductions[[reduction]][[]])[dims]
+  if (base::isFALSE(plot.axes)){
     p <- p &
-      ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                     axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                     axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                     axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black")) &
-      ggplot2::xlab(labels[1]) &
-      ggplot2::ylab(labels[2])
+         ggplot2::theme(axis.title = ggplot2::element_blank(),
+                        axis.text = ggplot2::element_blank(),
+                        axis.ticks = ggplot2::element_blank(),
+                        axis.line = ggplot2::element_blank())
+  } else {
+    p <- p &
+         ggplot2::theme(axis.title = ggplot2::element_text(face = axis.title.face),
+                        axis.text = ggplot2::element_text(face = axis.text.face),
+                        axis.ticks = ggplot2::element_line(color = "black"),
+                        axis.line = ggplot2::element_line(color = "black"))
   }
 
   # Further patch for diffusion maps.
-  if (reduction == "diffusion"){
-    labels <- colnames(sample@reductions[["diffusion"]][[]])[dims]
+  if (stringr::str_starts(reduction, "diff|DIFF")){
+    labels <- colnames(sample@reductions[[reduction]][[]])[dims]
     # Fix the axis scale so that the highest and lowest values are in the range of the DCs (previously was around +-1.5, while DCs might range to +-0.004 or so).
     p <-  suppressMessages({
       p &
-        ggplot2::xlim(c(min(sample@reductions$diffusion[[]][, labels[1]]),
-                        max(sample@reductions$diffusion[[]][, labels[1]]))) &
-        ggplot2::ylim(c(min(sample@reductions$diffusion[[]][, labels[2]]),
-                        max(sample@reductions$diffusion[[]][, labels[2]]))) &
-        # Remove axis elements so that the axis title is the only thing left.
-        ggplot2::theme(axis.text = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_text(color = "black")},
-                       axis.ticks = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.line = if (isFALSE(plot.axes)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                       axis.title = ggplot2::element_text(face = "bold", hjust = 0.5, color = "black"))
+        ggplot2::xlim(c(min(sample@reductions[[reduction]][[]][, labels[1]], na.rm = TRUE),
+                        max(sample@reductions[[reduction]][[]][, labels[1]], na.rm = TRUE))) &
+        ggplot2::ylim(c(min(sample@reductions[[reduction]][[]][, labels[2]], na.rm = TRUE),
+                        max(sample@reductions[[reduction]][[]][, labels[2]], na.rm = TRUE)))
     })
 
   }

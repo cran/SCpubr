@@ -31,14 +31,23 @@ do_AlluvialPlot(
   label.color = "black",
   curve_type = "sigmoid",
   use_viridis = FALSE,
-  viridis_color_map = "G",
-  viridis_direction = -1,
+  viridis.palette = "G",
+  viridis.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = 1,
   plot.grid = FALSE,
   grid.color = "grey75",
   grid.type = "dashed",
   na.value = "white",
   legend.position = "right",
-  legend.title = NULL
+  legend.title = NULL,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -98,13 +107,17 @@ do_AlluvialPlot(
 
 \item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
 
 \item{plot.grid}{\strong{\code{\link[base]{logical}}} | Whether to plot grid lines.}
 
-\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the panels.}
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
 
 \item{grid.type}{\strong{\code{\link[base]{character}}} | One of the possible linetype options:
 \itemize{
@@ -129,6 +142,14 @@ do_AlluvialPlot(
 }}
 
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A ggplot2 object.
@@ -140,22 +161,19 @@ This function is based on the \pkg{ggalluvial} package. It allows you to generat
 \donttest{
   # Check Suggests.
   value <- SCpubr:::check_suggests(function_name = "do_AlluvialPlot", passive = TRUE)
-
+  message(value)
   if (isTRUE(value)){
     # Consult the full documentation in https://enblacar.github.io/SCpubr-book/
 
     # Define your Seurat object.
     sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
 
-    # Generate a more fine-grained clustering.
-    sample$annotation <- ifelse(sample$seurat_clusters \%in\% c("0", "3"), "A", "B")
-
     # Compute basic sankey plot.
     p <- SCpubr::do_AlluvialPlot(sample = sample,
-                                 first_group = "annotation",
+                                 first_group = "orig.ident",
                                  last_group = "seurat_clusters")
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

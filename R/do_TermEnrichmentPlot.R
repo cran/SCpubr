@@ -34,8 +34,17 @@ do_TermEnrichmentPlot <- function(enriched_terms,
                                   legend.framewidth = 0.5,
                                   legend.tickwidth = 0.5,
                                   legend.framecolor = "grey50",
-                                  legend.tickcolor = "white"){
-
+                                  legend.tickcolor = "white",
+                                  plot.title.face = "bold",
+                                  plot.subtitle.face = "plain",
+                                  plot.caption.face = "italic",
+                                  axis.title.face = "bold",
+                                  axis.text.face = "plain",
+                                  legend.title.face = "bold",
+                                  legend.text.face = "plain"){
+    # Add lengthy error messages.
+    withr::local_options(.new = list("warning.length" = 8170))
+  
     check_suggests(function_name = "do_TermEnrichmentPlot")
     # Define pipe operator internally.
     `%>%` <- magrittr::`%>%`
@@ -61,7 +70,14 @@ do_TermEnrichmentPlot <- function(enriched_terms,
                            "font.type" = font.type,
                            "plot.title" = plot.title,
                            "plot.subtitle" = plot.subtitle,
-                           "plot.caption" = plot.caption)
+                           "plot.caption" = plot.caption,
+                           "plot.title.face" = plot.title.face,
+                           "plot.subtitle.face" = plot.subtitle.face,
+                           "plot.caption.face" = plot.caption.face,
+                           "axis.title.face" = axis.title.face,
+                           "axis.text.face" = axis.text.face,
+                           "legend.title.face" = legend.title.face,
+                           "legend.text.face" = legend.text.face)
     check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
     # Check colors.
@@ -76,15 +92,13 @@ do_TermEnrichmentPlot <- function(enriched_terms,
     check_parameters(parameter = font.type, parameter_name = "font.type")
     check_parameters(parameter = legend.type, parameter_name = "legend.type")
     check_parameters(parameter = legend.position, parameter_name = "legend.position")
-
-    # Define legend parameters. Width and height values will change depending on the legend orientation.
-    if (legend.position %in% c("top", "bottom")){
-      legend.barwidth <- legend.length
-      legend.barheight <- legend.width
-    } else if (legend.position %in% c("left", "right")){
-      legend.barwidth <- legend.width
-      legend.barheight <- legend.length
-    }
+    check_parameters(plot.title.face, parameter_name = "plot.title.face")
+    check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+    check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+    check_parameters(axis.title.face, parameter_name = "axis.title.face")
+    check_parameters(axis.text.face, parameter_name = "axis.text.face")
+    check_parameters(legend.title.face, parameter_name = "legend.title.face")
+    check_parameters(legend.text.face, parameter_name = "legend.text.face")
 
     # Check the colors provided to legend.framecolor and legend.tickcolor.
     check_colors(legend.framecolor, parameter_name = "legend.framecolor")
@@ -247,16 +261,16 @@ do_TermEnrichmentPlot <- function(enriched_terms,
                           axis.text = ggplot2::element_blank(),
                           panel.grid.major = ggplot2::element_blank(),
                           plot.title.position = "plot",
-                          plot.title = ggplot2::element_text(face = "bold",
+                          plot.title = ggplot2::element_text(face = plot.title.face,
                                                              hjust = ifelse(is.null(plot.title), 0.5, 0)),
-                          plot.subtitle = ggplot2::element_text(hjust = 0),
-                          plot.caption = ggplot2::element_text(hjust = 1),
+                          plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                          plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                          legend.text = ggplot2::element_text(face = legend.text.face),
+                          legend.title = ggplot2::element_text(face = legend.title.face),
                           panel.grid = ggplot2::element_blank(),
                           text = ggplot2::element_text(family = font.type),
                           plot.caption.position = "plot",
-                          legend.text = ggplot2::element_text(face = "bold"),
                           legend.position = legend.position,
-                          legend.title = ggplot2::element_text(face = "bold"),
                           legend.justification = "center",
                           plot.margin = ggplot2::margin(t = 10, r = 200, b = 10, l = 200),
                           plot.background = ggplot2::element_rect(fill = "white", color = "white"),

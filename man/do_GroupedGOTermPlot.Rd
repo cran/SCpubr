@@ -9,18 +9,28 @@ do_GroupedGOTermPlot(
   org.db,
   levels.use = NULL,
   GO_ontology = "BP",
-  min.overlap = NULL,
+  min.overlap = 3,
   flip = TRUE,
-  legend.position = "right",
-  heatmap_gap = 0.5,
-  cluster_rows = TRUE,
-  cluster_cols = TRUE,
-  cell_size = 8,
+  colors.use = c(Present = "#1e3d59", Absent = "#bccbcd"),
+  legend.position = "bottom",
   reverse.levels = TRUE,
-  colors.use = c("grey90", "#29353d"),
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   font.size = 10,
-  verbose = FALSE
+  font.type = "sans",
+  plot.title = paste0("GO | ", GO_ontology),
+  plot.subtitle = NULL,
+  plot.caption = NULL,
+  verbose = FALSE,
+  return_matrices = FALSE,
+  grid.color = "white",
+  border.color = "black",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -41,6 +51,8 @@ do_GroupedGOTermPlot(
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 
+\item{colors.use}{\strong{\code{\link[base]{character}}} | Named vector with two colors assigned to the names \strong{\code{Present}} and \strong{\code{Absent}}.}
+
 \item{legend.position}{\strong{\code{\link[base]{character}}} | Position of the legend in the plot. One of:
 \itemize{
 \item \emph{\code{top}}: Top of the figure.
@@ -50,23 +62,36 @@ do_GroupedGOTermPlot(
 \item \emph{\code{none}}: No legend is displayed.
 }}
 
-\item{heatmap_gap}{\strong{\code{\link[base]{numeric}}} | Gap in cm between heatmaps.}
-
-\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
-
-\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
-
-\item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
-
 \item{reverse.levels}{\strong{\code{\link[base]{logical}}} | Whether to place the higher levels first when computing the joint heatmap.}
 
-\item{colors.use}{\strong{\code{\link[base]{character}}} | Vector of 2 colors to use in the heatmap. The first will correspond to the empty values and the second one to the genes present in the terms.}
-
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 
+\item{font.type}{\strong{\code{\link[base]{character}}} | Base font family for the plot. One of:
+\itemize{
+\item \emph{\code{mono}}: Mono spaced font.
+\item \emph{\code{serif}}: Serif font family.
+\item \emph{\code{sans}}: Default font family.
+}}
+
+\item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
+
 \item{verbose}{\strong{\code{\link[base]{logical}}} | Whether to show extra comments, warnings,etc.}
+
+\item{return_matrices}{\strong{\code{\link[base]{logical}}} | Returns the matrices of grouped GO terms.}
+
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
+
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A list containing all the matrices for the respective GO levels and all the individual and combined heatmaps.
@@ -94,7 +119,7 @@ Compute an overview of the GO terms associated with the input list of genes.
     # Compute the grouped GO terms.
     out <- SCpubr::do_GroupedGOTermPlot(genes = genes.use,
                                         org.db = org.Hs.eg.db)
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

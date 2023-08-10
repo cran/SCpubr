@@ -17,7 +17,7 @@
     p <- SCpubr::do_RidgePlot(sample = sample,
                               feature = "nFeature_RNA",
                               continuous_scale = TRUE,
-                              viridis_direction = 1)
+                              viridis.direction = 1)
     p
 
     # Draw quantiles of the distribution.
@@ -43,7 +43,7 @@
                               compute_quantiles = TRUE,
                               color_by_probabilities = TRUE)
     p
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

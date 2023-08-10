@@ -1,4 +1,4 @@
-if (isFALSE(dep_check[["do_BeeSwarmPlot"]])){
+if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
 
   testthat::test_that("do_BeeSwarmPlot: CRAN essentials", {
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
@@ -53,6 +53,28 @@ if (isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE)
     testthat::expect_type(p, "list")
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 order = TRUE)
+    testthat::expect_type(p, "list")
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = TRUE,
+                                 use_viridis = TRUE)
+    testthat::expect_type(p, "list")
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = TRUE,
+                                 order = TRUE,
+                                 use_viridis = FALSE)
+    testthat::expect_type(p, "list")
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - legend position = right", {
@@ -104,15 +126,7 @@ if (isFALSE(dep_check[["do_BeeSwarmPlot"]])){
     testthat::expect_type(p, "list")
   })
 
-  testthat::test_that("do_BeeSwarmPlot: PASS - continuous variable legend colorsteps", {
-    testthat::skip_on_cran()
-    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
-                                 feature_to_rank = "PC_1",
-                                 group.by = "seurat_clusters",
-                                 continuous_feature = TRUE,
-                                 legend.type = "colorsteps")
-    testthat::expect_type(p, "list")
-  })
+
 
   testthat::test_that("do_BeeSwarmPlot: FAIL - wrong legend type", {
     testthat::skip_on_cran()
@@ -155,7 +169,7 @@ if (isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
-                                 viridis_color_map = "F")
+                                 viridis.palette = "F")
     testthat::expect_type(p, "list")
   })
 
@@ -175,7 +189,7 @@ if (isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                                    feature_to_rank = "not_found",
                                                    group.by = "seurat_clusters",
                                                    continuous_feature = TRUE,
-                                                   viridis_color_map = "F"))
+                                                   viridis.palette = "F"))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - raster", {

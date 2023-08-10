@@ -1,8 +1,8 @@
-if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
+if (base::isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
 
   testthat::test_that("do_FunctionalAnnotationPlot: CRAN essential tests", {
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "GO")
@@ -13,24 +13,23 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
 
   testthat::test_that("do_FunctionalAnnotationPlot: PASS - normal", {
     testthat::skip_on_cran()
-
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+  
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "GO",
-                                             flip = FALSE)
+                                             return_matrix = TRUE)
 
     testthat::expect_type(p, "list")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
-                                             database = "GO",
-                                             flip = TRUE)
+                                             database = "GO")
 
     testthat::expect_type(p, "list")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "GO",
@@ -39,7 +38,7 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
     testthat::expect_type(p, "list")
 
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "GO",
@@ -56,7 +55,7 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
     testthat::expect_type(p, "list")
 
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "GO",
@@ -71,22 +70,15 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
 
     testthat::expect_type(p, "character")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "KEGG")
 
     testthat::expect_type(p, "character")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("CCL1", "CCL4", "CENPE", "CENPK", "OLIG1"),
-                                             org.db = org.Hs.eg.db,
-                                             organism = "hsa",
-                                             database = "KEGG",
-                                             min.overlap = 1)
 
-    testthat::expect_type(p, "list")
-
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "KEGG",
@@ -94,7 +86,7 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
 
     testthat::expect_type(p, "character")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "KEGG",
@@ -102,7 +94,7 @@ if (isFALSE(dep_check[["do_FunctionalAnnotationPlot"]])){
 
     testthat::expect_type(p, "character")
 
-    p <- SCpubr::do_FunctionalAnnotationPlot(genes = c("MBP"),
+    p <- SCpubr::do_FunctionalAnnotationPlot(genes = "MBP",
                                              org.db = org.Hs.eg.db,
                                              organism = "hsa",
                                              database = "KEGG",

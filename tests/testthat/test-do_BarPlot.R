@@ -1,4 +1,4 @@
-if (isFALSE(dep_check[["do_BarPlot"]])){
+if (base::isFALSE(dep_check[["do_BarPlot"]])){
 
   testthat::test_that("do_BarPlot: CRAN essential tests", {
     sample$orig.ident <- ifelse(sample$seurat_clusters %in% c("1", "2"), "A", "B")
@@ -8,10 +8,6 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
                             position = "stack")
     testthat::expect_type(p, "list")
 
-    p <- SCpubr::do_BarPlot(sample = sample,
-                            group.by = "seurat_clusters",
-                            position = "fill")
-    testthat::expect_type(p, "list")
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
@@ -32,33 +28,6 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
                             position = "stack")
-    testthat::expect_type(p, "list")
-  })
-
-  testthat::test_that("do_BarPlot: PASS - one variable - fill", {
-    testthat::skip_on_cran()
-    p <- SCpubr::do_BarPlot(sample = sample,
-                            group.by = "seurat_clusters",
-                            position = "fill")
-    testthat::expect_type(p, "list")
-  })
-
-  testthat::test_that("do_BarPlot: PASS - one variable - remove guides", {
-    testthat::skip_on_cran()
-    p <- SCpubr::do_BarPlot(sample = sample,
-                            group.by = "seurat_clusters",
-                            position = "stack",
-                            plot.grid = FALSE)
-    testthat::expect_type(p, "list")
-  })
-
-  testthat::test_that("do_BarPlot: PASS - one variable - fill - flip", {
-    testthat::skip_on_cran()
-    p <- SCpubr::do_BarPlot(sample = sample,
-                            group.by = "seurat_clusters",
-                            split.by = NULL,
-                            position = "fill",
-                            flip = TRUE)
     testthat::expect_type(p, "list")
   })
 
@@ -133,7 +102,7 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
     sample$orig.ident <- ifelse(sample$seurat_clusters %in% c("1", "2"), "A", "B")
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "orig.ident",
-                            rotate_x_axis_labels  = 0)
+                            axis.text.x.angle  = 0)
     testthat::expect_type(p, "list")
   })
 
@@ -204,17 +173,6 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
     testthat::expect_type(p, "list")
   })
 
-
-  testthat::test_that("do_BarPlot: FAIL - order by not in group.by", {
-    testthat::skip_on_cran()
-
-    sample$orig.ident <- ifelse(sample$seurat_clusters %in% c("1", "2"), "A", "B")
-    testthat::expect_error(SCpubr::do_BarPlot(sample = sample,
-                                              group.by = "seurat_clusters",
-                                              order.by = "wrong"))
-  })
-
-
   testthat::test_that("do_BarPlot: PASS - one variable - rotate x labels", {
     testthat::skip_on_cran()
 
@@ -222,7 +180,7 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "orig.ident",
                             position = "stack",
-                            rotate_x_axis_labels = 0)
+                            axis.text.x.angle = 0)
     testthat::expect_type(p, "list")
   })
 
@@ -259,7 +217,7 @@ if (isFALSE(dep_check[["do_BarPlot"]])){
     sample$orig.ident <- ifelse(sample$seurat_clusters %in% c("1", "2"), "A", "B")
     sample$factor_seurat_clusters <- factor(sample$seurat_clusters)
     p <- SCpubr::do_BarPlot(sample = sample,
-                            group.by = c("seurat_clusters"),
+                            group.by = "seurat_clusters",
                             split.by = "factor_seurat_clusters",
                             position = "stack",
                             legend.position = "none")

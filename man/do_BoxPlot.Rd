@@ -13,7 +13,7 @@ do_BoxPlot(
   slot = "data",
   font.size = 14,
   font.type = "sans",
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   colors.use = NULL,
   na.value = "grey75",
   plot.title = NULL,
@@ -21,27 +21,13 @@ do_BoxPlot(
   plot.caption = NULL,
   xlab = NULL,
   ylab = NULL,
-  legend.title = if (is.null(split.by)) {
-     if (is.null(group.by)) {
-        
-    "Groups"
-     }
-     else {
-         group.by
-     }
- } else {
-     split.by
- },
+  legend.title = NULL,
   legend.title.position = "top",
-  legend.position = if (is.null(split.by)) {
-     "none"
- } else {
-     "bottom"
- },
+  legend.position = NULL,
   boxplot.line.color = "black",
   outlier.color = "black",
   outlier.alpha = 0.5,
-  boxplot.linewidth = 1,
+  boxplot.linewidth = 0.5,
   boxplot.width = NULL,
   plot.grid = TRUE,
   grid.color = "grey75",
@@ -52,7 +38,14 @@ do_BoxPlot(
   use_test = FALSE,
   comparisons = NULL,
   test = "wilcox.test",
-  map_signif_level = TRUE
+  map_signif_level = TRUE,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -77,7 +70,7 @@ do_BoxPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
 
@@ -118,7 +111,7 @@ do_BoxPlot(
 
 \item{plot.grid}{\strong{\code{\link[base]{logical}}} | Whether to plot grid lines.}
 
-\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the panels.}
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
 
 \item{grid.type}{\strong{\code{\link[base]{character}}} | One of the possible linetype options:
 \itemize{
@@ -154,6 +147,14 @@ named numeric vector to create custom mappings from p-values to annotation:
 For example: \code{c("***"=0.001, "**"=0.01, "*"=0.05)}.
 Alternatively, one can provide a function that takes a numeric argument
 (the p-value) and returns a string.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A ggplot2 object.
@@ -204,7 +205,7 @@ Generate Box Plots.
                             comparisons = list(c("A", "B")))
     p
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

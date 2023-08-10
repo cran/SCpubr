@@ -9,32 +9,44 @@ do_ExpressionHeatmap(
   features,
   group.by = NULL,
   assay = NULL,
+  cluster = TRUE,
+  features.order = NULL,
+  groups.order = NULL,
   slot = "data",
-  flip = FALSE,
-  column_title = NULL,
-  row_title = NULL,
-  cluster_cols = FALSE,
-  cluster_rows = FALSE,
   legend.title = "Avg. Expression",
-  row_names_rot = 0,
-  column_names_rot = 45,
-  cell_size = 8,
   na.value = "grey75",
   legend.position = "bottom",
-  use_viridis = TRUE,
-  viridis_color_map = "G",
-  viridis_direction = 1,
-  heatmap.legend.length = 75,
-  heatmap.legend.width = 5,
-  heatmap.legend.framecolor = "black",
-  rotate_x_axis_labels = 45,
+  legend.width = 1,
+  legend.length = 20,
+  legend.framewidth = 0.5,
+  legend.tickwidth = 0.5,
+  legend.framecolor = "grey50",
+  legend.tickcolor = "white",
+  legend.type = "colorbar",
+  font.size = 14,
+  font.type = "sans",
+  axis.text.x.angle = 45,
   enforce_symmetry = FALSE,
-  heatmap_gap = 0.5,
-  row_names_side = "right",
-  row_title_side = "left",
-  row_title_rot = 90,
-  min.cutoff = NULL,
-  max.cutoff = NULL
+  min.cutoff = NA,
+  max.cutoff = NA,
+  diverging.palette = "RdBu",
+  diverging.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = 1,
+  number.breaks = 5,
+  use_viridis = FALSE,
+  viridis.palette = "G",
+  viridis.direction = -1,
+  flip = FALSE,
+  grid.color = "white",
+  border.color = "black",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -46,25 +58,15 @@ do_ExpressionHeatmap(
 
 \item{assay}{\strong{\code{\link[base]{character}}} | Assay to use. Defaults to the current assay.}
 
+\item{cluster}{\strong{\code{\link[base]{logical}}} | Whether to perform clustering of rows and columns.}
+
+\item{features.order}{\strong{\code{\link[base]{character}}} | Should the gene sets be ordered in a specific way? Provide it as a vector of characters with the same names as the names of the gene sets.}
+
+\item{groups.order}{\strong{\code{\link[SCpubr]{named_list}}} | Should the groups in theheatmaps be ordered in a specific way? Provide it as a named list (as many lists as values in \strong{\code{group.by}}) with the order for each of the elements in the groups.}
+
 \item{slot}{\strong{\code{\link[base]{character}}} | Data slot to use. Only one of: counts, data, scale.data. Defaults to "data".}
 
-\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
-
-\item{column_title}{\strong{\code{\link[base]{character}}} | Title for the columns of the heatmaps. Only works with single heatmaps.}
-
-\item{row_title}{\strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.}
-
-\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
-
-\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
-
 \item{legend.title}{\strong{\code{\link[base]{character}}} | Title for the legend.}
-
-\item{row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.}
-
-\item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
-
-\item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
@@ -77,32 +79,67 @@ do_ExpressionHeatmap(
 \item \emph{\code{none}}: No legend is displayed.
 }}
 
-\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
+\item{legend.length, legend.width}{\strong{\code{\link[base]{numeric}}} | Length and width of the legend. Will adjust automatically depending on legend side.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{legend.framewidth, legend.tickwidth}{\strong{\code{\link[base]{numeric}}} | Width of the lines of the box in the legend.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{legend.framecolor}{\strong{\code{\link[base]{character}}} | Color of the lines of the box in the legend.}
 
-\item{heatmap.legend.length, heatmap.legend.width}{\strong{\code{\link[base]{numeric}}} | Width and length of the legend in the heatmap.}
+\item{legend.tickcolor}{\strong{\code{\link[base]{character}}} | Color of the ticks of the box in the legend.}
 
-\item{heatmap.legend.framecolor}{\strong{\code{\link[base]{character}}} | Color of the edges and ticks of the legend in the heatmap.}
+\item{legend.type}{\strong{\code{\link[base]{character}}} | Type of legend to display. One of:
+\itemize{
+\item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
+\item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
+}}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
+
+\item{font.type}{\strong{\code{\link[base]{character}}} | Base font family for the plot. One of:
+\itemize{
+\item \emph{\code{mono}}: Mono spaced font.
+\item \emph{\code{serif}}: Serif font family.
+\item \emph{\code{sans}}: Default font family.
+}}
+
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{enforce_symmetry}{\strong{\code{\link[base]{logical}}} | Return a symmetrical plot axes-wise or continuous color scale-wise, when applicable.}
 
-\item{heatmap_gap}{\strong{\code{\link[base]{numeric}}} | Gap in cm between heatmaps.}
-
-\item{row_names_side}{\strong{\code{\link[base]{character}}} | Side to put the row names. Either left or right.}
-
-\item{row_title_side}{\strong{\code{\link[base]{character}}} | Side to put the row titles Either left or right.}
-
-\item{row_title_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row titles.}
-
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
+
+\item{diverging.palette}{\strong{\code{\link[base]{character}}} | Type of symmetrical color palette to use. Out of the diverging palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{diverging.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Direction of the divering palette. This basically flips the two ends.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
+
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
+
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
+
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
-A ComplexHeatmap object.
+A ggplot2 object.
 }
 \description{
 This function generates a heatmap with averaged expression values by the unique groups of the metadata variables provided by the user.
@@ -124,8 +161,10 @@ This function generates a heatmap with averaged expression values by the unique 
     # Default parameters.
     p <- SCpubr::do_ExpressionHeatmap(sample = sample,
                                       features = genes,
-                                      viridis_direction = -1)
-  } else if (isFALSE(value)){
+                                      viridis.direction = -1)
+    
+    p
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

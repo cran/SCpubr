@@ -12,9 +12,11 @@ do_DimPlot(
   colors.use = NULL,
   shuffle = TRUE,
   order = NULL,
+  raster = FALSE,
   pt.size = 1,
   label = FALSE,
-  label.color = "white",
+  label.color = "black",
+  label.fill = "white",
   label.size = 4,
   label.box = TRUE,
   repel = FALSE,
@@ -33,8 +35,7 @@ do_DimPlot(
   legend.nrow = NULL,
   legend.icon.size = 4,
   legend.byrow = FALSE,
-  raster = FALSE,
-  raster.dpi = 1024,
+  raster.dpi = 2048,
   dims = c(1, 2),
   font.size = 14,
   font.type = "sans",
@@ -42,6 +43,7 @@ do_DimPlot(
   plot_cell_borders = TRUE,
   border.size = 2,
   border.color = "black",
+  border.density = 1,
   plot_marginal_distributions = FALSE,
   marginal.type = "density",
   marginal.size = 5,
@@ -52,7 +54,14 @@ do_DimPlot(
   contour.color = "grey90",
   contour.lineend = "butt",
   contour.linejoin = "round",
-  contour_expand_axes = 0.25
+  contour_expand_axes = 0.25,
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -70,11 +79,15 @@ do_DimPlot(
 
 \item{order}{\strong{\code{\link[base]{character}}} | Vector of identities to be plotted. Either one with all identities or just some, which will be plotted last.}
 
+\item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
+
 \item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots.}
 
 \item{label}{\strong{\code{\link[base]{logical}}} | Whether to plot the cluster labels in the UMAP. The cluster labels will have the same color as the cluster colors.}
 
 \item{label.color}{\strong{\code{\link[base]{character}}} | Color of the labels in the plot.}
+
+\item{label.fill}{\strong{\code{\link[base]{character}}} | Color to fill the labels. Has to be a single color, that will be used for all labels. If \strong{\code{NULL}}, the colors of the clusters will be used instead.}
 
 \item{label.size}{\strong{\code{\link[base]{numeric}}} | Size of the labels in the plot.}
 
@@ -119,8 +132,6 @@ do_DimPlot(
 
 \item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 
-\item{raster}{\strong{\code{\link[base]{logical}}} | Whether to raster the resulting plot. This is recommendable if plotting a lot of cells.}
-
 \item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024. Only activates on Seurat versions higher or equal than 4.1.0.}
 
 \item{dims}{\strong{\code{\link[base]{numeric}}} | Vector of 2 numerics indicating the dimensions to plot out of the selected reduction. Defaults to c(1, 2) if not specified.}
@@ -140,7 +151,9 @@ do_DimPlot(
 
 \item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
-\item{border.color}{\strong{\code{\link[base]{character}}} | Color to use for the border of the cells.}
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{border.density}{\strong{\code{\link[base]{numeric}}} | Controls the number of cells used when \strong{\code{plot_cell_borders = TRUE}}. Value between 0 and 1. It computes a 2D kernel density and based on this cells that have a density below the specified quantile will be used to generate the cluster contour. The lower this number, the less cells will be selected, thus reducing the overall size of the plot but also potentially preventing all the contours to be properly drawn.}
 
 \item{plot_marginal_distributions}{\strong{\code{\link[base]{logical}}} |  Whether to plot marginal distributions on the figure or not.}
 
@@ -170,6 +183,14 @@ do_DimPlot(
 \item{contour.linejoin}{\strong{\code{\link[base]{character}}} | Line join style (round, mitre, bevel).}
 
 \item{contour_expand_axes}{\strong{\code{\link[base]{numeric}}} | To make the contours fit the plot, the limits of the X and Y axis are expanding a given percentage from the min and max values for each axis. This controls such percentage.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
 A ggplot2 object containing a DimPlot.
@@ -208,7 +229,7 @@ Wrapper for \link[Seurat]{DimPlot}.
     p <- SCpubr::do_DimPlot(sample,
                             idents.highlight = c("1", "3"))
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

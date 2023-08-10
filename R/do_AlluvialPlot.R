@@ -57,30 +57,112 @@ do_AlluvialPlot <- function(sample,
                             label.color = "black",
                             curve_type = "sigmoid",
                             use_viridis = FALSE,
-                            viridis_color_map = "G",
-                            viridis_direction = -1,
+                            viridis.palette = "G",
+                            viridis.direction = -1,
+                            sequential.palette = "YlGnBu",
+                            sequential.direction = 1,
                             plot.grid = FALSE,
                             grid.color = "grey75",
                             grid.type = "dashed",
                             na.value = "white",
                             legend.position = "right",
-                            legend.title = NULL){
+                            legend.title = NULL,
+                            plot.title.face = "bold",
+                            plot.subtitle.face = "plain",
+                            plot.caption.face = "italic",
+                            axis.title.face = "bold",
+                            axis.text.face = "plain",
+                            legend.title.face = "bold",
+                            legend.text.face = "plain"){
+  # Add lengthy error messages.
+  withr::local_options(.new = list("warning.length" = 8170))
+  
   check_suggests(function_name = "do_AlluvialPlot")
   check_Seurat(sample)
+  
+  
+  
 
-  StatStratum <- ggalluvial::StatStratum
+  # Check logical parameters.
+  logical_list <- list("use_labels" = use_labels,
+                       "stratum.fill.conditional" = stratum.fill.conditional,
+                       "flip" = flip,
+                       "plot.grid" = plot.grid,
+                       "repel" = repel,
+                       "use_geom_flow" = use_geom_flow,
+                       "use_viridis" = use_viridis)
+  check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
+  # Check numeric parameters.
+  numeric_list <- list("stratum.width" = stratum.width,
+                       "font.size" = font.size,
+                       "viridis.direction" = viridis.direction,
+                       "sequential.direction" = sequential.direction)
+  check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
+  # Check character parameters.
+  character_list <- list("first_group" = first_group,
+                         "last_group" = last_group,
+                         "middle_groups" = middle_groups,
+                         "colors.use" = colors.use,
+                         "plot.title" = plot.title,
+                         "plot.subtitle" = plot.subtitle,
+                         "plot.caption" = plot.caption,
+                         "font.type" = font.type,
+                         "xlab" = xlab,
+                         "ylab" = ylab,
+                         "fill.by" = fill.by,
+                         "stratum.color" = stratum.color,
+                         "stratum.fill" = stratum.fill,
+                         "alluvium.color" = alluvium.color,
+                         "flow.color" = flow.color,
+                         "label.color" = label.color,
+                         "curve_type" = curve_type,
+                         "viridis.palette" = viridis.palette,
+                         "grid.color" = grid.color,
+                         "grid.type" = grid.type,
+                         "na.value" = na.value,
+                         "legend.position" = legend.position,
+                         "legend.title" = legend.title,
+                         "plot.title.face" = plot.title.face,
+                         "plot.subtitle.face" = plot.subtitle.face,
+                         "plot.caption.face" = plot.caption.face,
+                         "axis.title.face" = axis.title.face,
+                         "axis.text.face" = axis.text.face,
+                         "legend.title.face" = legend.title.face,
+                         "legend.text.face" = legend.text.face,
+                         "sequential.palette" = sequential.palette)
+  check_type(parameters = character_list, required_type = "character", test_function = is.character)
+
+  check_parameters(parameter = font.type, parameter_name = "font.type")
+  check_parameters(parameter = legend.position, parameter_name = "legend.position")
+  check_parameters(plot.title.face, parameter_name = "plot.title.face")
+  check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+  check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+  check_parameters(axis.title.face, parameter_name = "axis.title.face")
+  check_parameters(axis.text.face, parameter_name = "axis.text.face")
+  check_parameters(legend.title.face, parameter_name = "legend.title.face")
+  check_parameters(legend.text.face, parameter_name = "legend.text.face")
+  check_parameters(viridis.direction, parameter_name = "viridis.direction")
+  check_parameters(sequential.direction, parameter_name = "sequential.direction")
+  
+
+  #StatStratum <- ggalluvial::StatStratum
   `%>%` <- magrittr::`%>%`
-
+  
+  colors.gradient <- compute_continuous_palette(name = ifelse(isTRUE(use_viridis), viridis.palette, sequential.palette),
+                                                use_viridis = use_viridis,
+                                                direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
+                                                enforce_symmetry = FALSE)
+  
   if (isTRUE(use_labels)){
     if (isTRUE(repel)){
       func_use <- ggrepel::geom_label_repel
-    } else if (isFALSE(repel)){
+    } else if (base::isFALSE(repel)){
       func_use <- ggplot2::geom_label
     }
-  } else if (isFALSE(use_labels)){
+  } else if (base::isFALSE(use_labels)){
     if (isTRUE(repel)){
       func_use <- ggrepel::geom_text_repel
-    } else if (isFALSE(repel)){
+    } else if (base::isFALSE(repel)){
       func_use <- ggplot2::geom_text
     }
   }
@@ -93,18 +175,46 @@ do_AlluvialPlot <- function(sample,
 
   for (var in vars.use){
     assertthat::assert_that(var %in% colnames(sample@meta.data),
-                            msg = "Please make sure that the variables provided to first_group, middle_groups and last_group are in sample@meta.data.")
+                            msg = paste0(add_cross(), crayon_body("Please make sure that the variables provided to "),
+                                         crayon_key("first_group"),
+                                         crayon_body(", "),
+                                         crayon_key("middle_groups"),
+                                         crayon_body(" and "),
+                                         crayon_key("last_group"),
+                                         crayon_body(" are "),
+                                         crayon_key("metadata variables"),
+                                         crayon_body(".")))
 
     assertthat::assert_that(class(sample@meta.data[, var]) %in% c("character", "factor"),
-                            msg = "Please make sure that the variables provided to first_group, middle_groups and last_group are either characters or factors.")
+                            msg = paste0(add_cross(), crayon_body("Please make sure that the variables provided to "),
+                                         crayon_key("first_group"),
+                                         crayon_body(", "),
+                                         crayon_key("middle_groups"),
+                                         crayon_body(" and "),
+                                         crayon_key("last_group"),
+                                         crayon_body(" are of class "),
+                                         crayon_key("character"),
+                                         crayon_body(" or "),
+                                         crayon_key("factor"),
+                                         crayon_body(".")))
   }
 
   assertthat::assert_that(length(fill.by) == 1,
-                          msg = "Parameter fill.by has to be a single value.")
+                          msg = paste0(add_cross(), crayon_body("Please provide a single value to "),
+                                       crayon_key("fill.by"),
+                                       crayon_body(".")))
 
 
   assertthat::assert_that(isTRUE(fill.by %in% vars.use),
-                          msg = "Parameter fill.by has to be the same as one of the values in first_group, last_group or middle_groups.")
+                          msg = paste0(add_cross(), crayon_body("Paramter "),
+                                       crayon_key("fill.by"),
+                                       crayon_body(" has to be the same as one of the values in "),
+                                       crayon_key("first_group"),
+                                       crayon_body(", "),
+                                       crayon_key("middle_groups"),
+                                       crayon_body(" and "),
+                                       crayon_key("last_group"),
+                                       crayon_body(".")))
   suppressMessages({
     data <- sample@meta.data %>%
             dplyr::select(dplyr::all_of(vars.use)) %>%
@@ -116,9 +226,9 @@ do_AlluvialPlot <- function(sample,
   # COLORS.
   if (is.null(colors.use)){
     if (is.factor(data[[fill.by]])){
-      colors.use = generate_color_scale(levels(data[[fill.by]]))
+      colors.use <- generate_color_scale(levels(data[[fill.by]]))
     } else {
-      colors.use = generate_color_scale(sort(unique(data[[fill.by]])))
+      colors.use <- generate_color_scale(sort(unique(data[[fill.by]])))
     }
   } else {
     check_colors(colors.use)
@@ -132,7 +242,7 @@ do_AlluvialPlot <- function(sample,
     p <- p +
          ggalluvial::geom_flow(mapping = ggplot2::aes(fill = .data[[fill.by]]),
                                color = flow.color)
-  } else if (isFALSE(use_geom_flow)){
+  } else if (base::isFALSE(use_geom_flow)){
     p <- p +
          ggalluvial::geom_alluvium(mapping = ggplot2::aes(fill = .data[[fill.by]]),
                                                           color = alluvium.color,
@@ -143,7 +253,7 @@ do_AlluvialPlot <- function(sample,
          ggalluvial::geom_stratum(color = stratum.color,
                                   mapping = ggplot2::aes(fill = .data[[fill.by]]),
                                   width = stratum.width)
-  } else if (isFALSE(stratum.fill.conditional)){
+  } else if (base::isFALSE(stratum.fill.conditional)){
     p <- p +
          ggalluvial::geom_stratum(color = stratum.color,
                                   fill = stratum.fill,
@@ -156,51 +266,53 @@ do_AlluvialPlot <- function(sample,
              fontface = "bold") +
     ggplot2::scale_x_discrete(limits = vars.use)
 
-  if (isTRUE(use_viridis)){
-    p <- p +
-         ggplot2::scale_fill_viridis_d(option = viridis_color_map,
-                                       direction = viridis_direction,
-                                       na.value = na.value)
-  } else if (isFALSE(use_viridis)){
+  if (is.null(colors.use)){
+    p <- p + 
+         ggplot2::scale_fill_gradientn(colors = colors.gradient,
+                                       na.value = na.value,
+                                       name = legend.title)
+  } else if (base::isFALSE(use_viridis)){
     p <- p +
          ggplot2::scale_fill_manual(values = colors.use,
-                                    na.value = na.value)
+                                    na.value = na.value,
+                                    name = legend.title)
   }
   p <- p +
-    ggplot2::xlab(xlab) +
-    ggplot2::ylab(ylab) +
-    ggplot2::labs(title = plot.title,
-                  subtitle = plot.subtitle,
-                  caption = plot.caption) +
-    ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title)) +
-    ggplot2::theme_minimal(base_size = font.size) +
-    ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
-                                                      face = "bold"),
-                   axis.line.x = if (isFALSE(flip)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                   axis.line.y = if (isFALSE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
-                   axis.ticks.y = if (isFALSE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
-                   axis.ticks.x = if (isFALSE(flip)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
-                   axis.text.y = ggplot2::element_text(color = "black", face = "bold"),
-                   axis.text.x = ggplot2::element_text(color = "black", face = "bold"),
-                   panel.grid.major = ggplot2::element_blank(),
-                   plot.title.position = "plot",
-                   plot.title = ggplot2::element_text(face = "bold", hjust = 0),
-                   plot.subtitle = ggplot2::element_text(hjust = 0),
-                   plot.caption = ggplot2::element_text(hjust = 1),
-                   panel.grid = ggplot2::element_blank(),
-                   panel.grid.major.y = if (isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
-                   panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isFALSE(flip)) {ggplot2::element_blank()},
-                   text = ggplot2::element_text(family = font.type),
-                   plot.caption.position = "plot",
-                   legend.text = ggplot2::element_text(face = "bold"),
-                   legend.position = legend.position,
-                   legend.title = ggplot2::element_text(face = "bold"),
-                   legend.justification = "center",
-                   plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
-                   plot.background = ggplot2::element_rect(fill = "white", color = "white"),
-                   panel.background = ggplot2::element_rect(fill = "white", color = "white"),
-                   legend.background = ggplot2::element_rect(fill = "white", color = "white"),
-                   strip.text =ggplot2::element_text(color = "black", face = "bold"))
+       ggplot2::xlab(xlab) +
+       ggplot2::ylab(ylab) +
+       ggplot2::labs(title = plot.title,
+                     subtitle = plot.subtitle,
+                     caption = plot.caption) +
+       ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title)) +
+       ggplot2::theme_minimal(base_size = font.size) +
+       ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
+                                                         face = axis.title.face),
+                      axis.line.x = if (base::isFALSE(flip)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
+                      axis.line.y = if (base::isFALSE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
+                      axis.ticks.y = if (base::isFALSE(flip)){ggplot2::element_line(color = "black")} else {ggplot2::element_blank()},
+                      axis.ticks.x = if (base::isFALSE(flip)){ggplot2::element_blank()} else {ggplot2::element_line(color = "black")},
+                      axis.text.y = ggplot2::element_text(color = "black", face = axis.text.face),
+                      axis.text.x = ggplot2::element_text(color = "black", face = axis.text.face),
+                      panel.grid.major = ggplot2::element_blank(),
+                      plot.title.position = "plot",
+                      plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                      plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                      plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                      panel.grid = ggplot2::element_blank(),
+                      panel.grid.major.y = if (base::isFALSE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (isTRUE(flip)) {ggplot2::element_blank()},
+                      panel.grid.major.x = if (isTRUE(flip)) {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)}} else if (base::isFALSE(flip)) {ggplot2::element_blank()},
+                      text = ggplot2::element_text(family = font.type),
+                      plot.caption.position = "plot",
+                      legend.text = ggplot2::element_text(face = legend.text.face),
+                      legend.position = legend.position,
+                      legend.title = ggplot2::element_text(face = legend.title.face),
+                      legend.justification = "center",
+                      plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10),
+                      plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                      panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                      legend.background = ggplot2::element_rect(fill = "white", color = "white"),
+                      strip.text =ggplot2::element_text(color = "black", face = "bold"))
+  
 
   if (isTRUE(flip)){
     p <- p + ggplot2::coord_flip()

@@ -8,27 +8,13 @@ do_TFActivityPlot(
   sample,
   activities,
   n_tfs = 25,
+  slot = "scale.data",
+  statistic = "norm_wmean",
+  tfs.use = NULL,
   group.by = NULL,
   split.by = NULL,
-  plot_FeaturePlots = FALSE,
-  plot_Heatmaps = TRUE,
-  plot_GeyserPlots = FALSE,
-  row_title = NULL,
-  column_title = NULL,
-  flip = FALSE,
-  cluster_cols = TRUE,
-  cluster_rows = TRUE,
-  row_names_rot = 0,
-  column_names_rot = 45,
-  cell_size = 8,
-  pt.size = 1,
-  plot_cell_borders = TRUE,
-  border.size = 2,
   na.value = "grey75",
   legend.position = "bottom",
-  heatmap.legend.length = 75,
-  heatmap.legend.width = 5,
-  heatmap.legend.framecolor = "black",
   legend.width = 1,
   legend.length = 20,
   legend.framewidth = 0.5,
@@ -38,14 +24,29 @@ do_TFActivityPlot(
   legend.type = "colorbar",
   font.size = 14,
   font.type = "sans",
-  rotate_x_axis_labels = 45,
+  axis.text.x.angle = 45,
   enforce_symmetry = TRUE,
-  geyser_order_by_mean = TRUE,
-  geyser_scale_type = "continuous",
-  viridis_color_map = "G",
-  viridis_direction = 1,
-  min.cutoff = NULL,
-  max.cutoff = NULL
+  diverging.palette = "RdBu",
+  diverging.direction = -1,
+  use_viridis = FALSE,
+  viridis.palette = "G",
+  viridis.direction = -1,
+  sequential.palette = "YlGnBu",
+  sequential.direction = 1,
+  min.cutoff = NA,
+  max.cutoff = NA,
+  number.breaks = 5,
+  flip = FALSE,
+  return_object = FALSE,
+  grid.color = "white",
+  border.color = "black",
+  plot.title.face = "bold",
+  plot.subtitle.face = "plain",
+  plot.caption.face = "italic",
+  axis.title.face = "bold",
+  axis.text.face = "plain",
+  legend.title.face = "bold",
+  legend.text.face = "plain"
 )
 }
 \arguments{
@@ -55,37 +56,20 @@ do_TFActivityPlot(
 
 \item{n_tfs}{\strong{\code{\link[base]{numeric}}} | Number of top regulons to consider for downstream analysis.}
 
+\item{slot}{\strong{\code{\link[base]{character}}} | Data slot to use. Only one of: counts, data, scale.data. Defaults to "data".}
+
+\item{statistic}{\strong{\code{\link[base]{character}}} | DecoupleR statistic to use. One of:
+\itemize{
+\item \emph{\code{wmean}}: For weighted mean.
+\item \emph{\code{norm_wmean}}: For normalized weighted mean.
+\item \emph{\code{corr_wmean}}: For corrected weighted mean.
+}}
+
+\item{tfs.use}{\strong{\code{\link[base]{character}}} | Restrict the analysis to given regulons.}
+
 \item{group.by}{\strong{\code{\link[base]{character}}} | Metadata variable to group the output by. Has to be a character of factor column.}
 
 \item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
-
-\item{plot_FeaturePlots}{\strong{\code{\link[base]{logical}}} | Compute output FeaturePlots for each of the top regulons.}
-
-\item{plot_Heatmaps}{\strong{\code{\link[base]{logical}}} | Compute output heatmap showcasing the average TF activity per regulon and group.by variable.}
-
-\item{plot_GeyserPlots}{\strong{\code{\link[base]{logical}}} | Compute output GeyserPlots for each of the top regulons and group.by variable.}
-
-\item{row_title}{\strong{\code{\link[base]{character}}} | Title for the rows of the heatmaps. Only works with single heatmaps.}
-
-\item{column_title}{\strong{\code{\link[base]{character}}} | Title for the columns of the heatmaps. Only works with single heatmaps.}
-
-\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
-
-\item{cluster_cols}{\strong{\code{\link[base]{logical}}} | Cluster the columns or rows of the heatmaps.}
-
-\item{cluster_rows}{\strong{\code{\link[base]{logical}}} | Cluster the rows or rows of the heatmaps.}
-
-\item{row_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the row labels.}
-
-\item{column_names_rot}{\strong{\code{\link[base]{numeric}}} | Degree in which to rotate the column labels.}
-
-\item{cell_size}{\strong{\code{\link[base]{numeric}}} | Size of each cell in the heatmap.}
-
-\item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of the dots.}
-
-\item{plot_cell_borders}{\strong{\code{\link[base]{logical}}} | Whether to plot border around cells.}
-
-\item{border.size}{\strong{\code{\link[base]{numeric}}} | Width of the border of the cells.}
 
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
@@ -97,10 +81,6 @@ do_TFActivityPlot(
 \item \emph{\code{right}}: Right of the figure.
 \item \emph{\code{none}}: No legend is displayed.
 }}
-
-\item{heatmap.legend.length, heatmap.legend.width}{\strong{\code{\link[base]{numeric}}} | Width and length of the legend in the heatmap.}
-
-\item{heatmap.legend.framecolor}{\strong{\code{\link[base]{character}}} | Color of the edges and ticks of the legend in the heatmap.}
 
 \item{legend.length, legend.width}{\strong{\code{\link[base]{numeric}}} | Length and width of the legend. Will adjust automatically depending on legend side.}
 
@@ -114,7 +94,6 @@ do_TFActivityPlot(
 \itemize{
 \item \emph{\code{normal}}: Default legend displayed by \pkg{ggplot2}.
 \item \emph{\code{colorbar}}: Redefined colorbar legend, using \link[ggplot2]{guide_colorbar}.
-\item \emph{\code{colorsteps}}: Redefined legend with colors going by range, in steps, using \link[ggplot2]{guide_colorsteps}.
 }}
 
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
@@ -126,22 +105,46 @@ do_TFActivityPlot(
 \item \emph{\code{sans}}: Default font family.
 }}
 
-\item{rotate_x_axis_labels}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
+\item{axis.text.x.angle}{\strong{\code{\link[base]{numeric}}} | Degree to rotate the X labels. One of: 0, 45, 90.}
 
 \item{enforce_symmetry}{\strong{\code{\link[base]{logical}}} | Whether the geyser and feature plot has a symmetrical color scale.}
 
-\item{geyser_order_by_mean}{\strong{\code{\link[base]{logical}}} | Whether to order the X axis by the mean of the values.}
+\item{diverging.palette}{\strong{\code{\link[base]{character}}} | Type of symmetrical color palette to use. Out of the diverging palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
 
-\item{geyser_scale_type}{\strong{\code{\link[base]{character}}} | Type of scale to use. Either "continuous" or "categorical.}
+\item{diverging.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Direction of the divering palette. This basically flips the two ends.}
 
-\item{viridis_color_map}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+\item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
-\item{viridis_direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+\item{viridis.palette}{\strong{\code{\link[base]{character}}} | A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
+
+\item{viridis.direction}{\strong{\code{\link[base]{numeric}}} | Either 1 or -1. Controls how the gradient of viridis scale is formed.}
+
+\item{sequential.palette}{\strong{\code{\link[base]{character}}} | Type of sequential color palette to use. Out of the sequential palettes defined in \strong{\code{\link[RColorBrewer]{brewer.pal}}}.}
+
+\item{sequential.direction}{\strong{\code{\link[base]{numeric}}} | Direction of the sequential color scale. Either 1 or -1.}
 
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
+
+\item{number.breaks}{\strong{\code{\link[base]{numeric}}} | Controls the number of breaks in continuous color scales of ggplot2-based plots.}
+
+\item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
+
+\item{return_object}{\strong{\code{\link[base]{logical}}} | Returns the Seurat object with the modifications performed in the function. Nomally, this contains a new assay with the data that can then be used for any other visualization desired.}
+
+\item{grid.color}{\strong{\code{\link[base]{character}}} | Color of the grid in the plot. In heatmaps, color of the border of the cells.}
+
+\item{border.color}{\strong{\code{\link[base]{character}}} | Color for the border of the heatmap body.}
+
+\item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
 }
 \value{
-A list containing several output plots according to the user's specifications.
+A ggplot2 object.
 }
 \description{
 Plot TF Activities from decoupleR using Dorothea prior knowledge.
@@ -164,20 +167,11 @@ Plot TF Activities from decoupleR using Dorothea prior knowledge.
 
     # General heatmap.
     out <- SCpubr::do_TFActivityPlot(sample = sample,
-                                     activities = dorothea_activities,
-                                     plot_FeaturePlots = TRUE,
-                                     plot_GeyserPlots = TRUE)
+                                     activities = dorothea_activities)
     p <- out$heatmaps$average_scores
     p
 
-    # Retrieve feature plots.
-    p <- out$feature_plots$ARID2
-    p
-
-    # Retrieve Geyser plots.
-    p <- out$geyser_plots$ARID2
-    p
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

@@ -19,18 +19,13 @@
     # Get human chromosome locations.
     chromosome_locations = SCpubr::human_chr_locations
 
-    # Compute for a single chromosome.
-    out <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
-                                            infercnv_object = infercnv_object,
-                                            using_metacells = FALSE,
-                                            chromosome_locations = chromosome_locations,
-                                            chromosome_focus = "1")
-    # Retrieve the UMAP for 1p region.
-    out$`1p_umap`
-    # Retrieve the dot plot for 1p region.
-    out$`1p_dotplot`
+    # Compute for a all chromosomes.
+    p <- SCpubr::do_CopyNumberVariantPlot(sample = sample,
+                                          infercnv_object = infercnv_object,
+                                          using_metacells = FALSE,
+                                          chromosome_locations = chromosome_locations)
 
-  } else if (isFALSE(value)){
+  } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")
   }

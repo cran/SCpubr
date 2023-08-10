@@ -4,106 +4,85 @@
 #'
 #' @inheritParams doc_function
 #' @param enforce_symmetry \strong{\code{\link[base]{logical}}} | Whether the geyser and feature plot has a symmetrical color scale.
-#' @param flavor \strong{\code{\link[base]{character}}} | One of: Seurat, UCell. Compute the enrichment scores using \link[Seurat]{AddModuleScore} or \link[UCell]{AddModuleScore_UCell}.
 #' @param ncores \strong{\code{\link[base]{numeric}}} | Number of cores used to run UCell scoring.
 #' @param storeRanks \strong{\code{\link[base]{logical}}} | Whether to store the ranks for faster UCell scoring computations. Might require large amounts of RAM.
-#' @param geyser_order_by_mean,boxplot_order_by_mean \strong{\code{\link[base]{logical}}} | Whether to order the X axis by the mean of the values.
-#' @param geyser_scale_type \strong{\code{\link[base]{character}}} | Type of scale to use. Either "continuous" or "categorical.
-#' @param violin_plot_boxplot \strong{\code{\link[base]{logical}}} | Whether to plot the boxplots inside the violin plots.
-#' @param violin_boxplot_width \strong{\code{\link[base]{numeric}}} | Width of the boxplots in the violin plots.
-#' @param plot_FeaturePlots,plot_GeyserPlots,plot_BeeSwarmPlots,plot_BoxPlots,plot_ViolinPlots \strong{\code{\link[base]{logical}}} | Compute extra visualizations for each of the gene lists.
+#' @param scale_scores \strong{\code{\link[base]{logical}}} | Whether to transform the scores to a range of 0-1 for plotting.
 #' @param return_object \strong{\code{\link[base]{logical}}} | Return the Seurat object with the enrichment scores stored.
-#' @param return_matrix \strong{\code{\link[base]{logical}}} | Return the enrichment matrix used for the heatmaps for each value in group.by.
-#' @return A ComplexHeatmap object.
+#' @return A ggplot2 object.
 #' @export
 #'
 #' @example /man/examples/examples_do_EnrichmentHeatmap.R
 do_EnrichmentHeatmap <- function(sample,
                                  input_gene_list,
+                                 features.order = NULL,
+                                 groups.order = NULL,
+                                 cluster = TRUE,
+                                 scale_scores = TRUE,
                                  assay = NULL,
                                  slot = NULL,
                                  reduction = NULL,
                                  group.by = NULL,
                                  verbose = FALSE,
-                                 flip = FALSE,
-                                 cluster_cols = FALSE,
-                                 cluster_rows = FALSE,
-                                 row_names_rot = 0,
-                                 column_names_rot = 45,
-                                 cell_size = 8,
                                  na.value = "grey75",
                                  legend.position = "bottom",
-                                 use_viridis = TRUE,
-                                 viridis_color_map = "G",
-                                 viridis_direction = 1,
-                                 heatmap.legend.length = 75,
-                                 heatmap.legend.width = 5,
-                                 heatmap.legend.framecolor = "black",
-                                 legend.width = 1,
+                                 use_viridis = FALSE,
+                                 viridis.palette = "G",
+                                 viridis.direction = 1,
+                                 legend.framewidth = 0.5,
+                                 legend.tickwidth = 0.5,
                                  legend.length = 20,
-                                 legend.framewidth = 1.5,
-                                 legend.tickwidth = 1.5,
+                                 legend.width = 1,
                                  legend.framecolor = "grey50",
                                  legend.tickcolor = "white",
                                  legend.type = "colorbar",
                                  font.size = 14,
                                  font.type = "sans",
-                                 rotate_x_axis_labels = 45,
+                                 axis.text.x.angle = 45,
                                  enforce_symmetry = FALSE,
-                                 heatmap_gap = 0.5,
-                                 row_names_side = "right",
-                                 row_title_side = "left",
-                                 row_title_rot = 90,
-                                 column_title = NULL,
-                                 row_title = NULL,
                                  nbin = 24,
                                  ctrl = 100,
                                  flavor = "Seurat",
-                                 legend.title = if (flavor != "AUCell") {"Enrichment"} else {"AUC"},
+                                 legend.title = NULL,
                                  ncores = 1,
                                  storeRanks = TRUE,
-                                 min.cutoff = NULL,
-                                 max.cutoff = NULL,
-                                 plot_FeaturePlots = FALSE,
-                                 plot_GeyserPlots = FALSE,
-                                 plot_BeeSwarmPlots = FALSE,
-                                 plot_BoxPlots = FALSE,
-                                 plot_ViolinPlots = FALSE,
+                                 min.cutoff = NA,
+                                 max.cutoff = NA,
                                  pt.size = 1,
                                  plot_cell_borders = TRUE,
                                  border.size = 2,
-                                 geyser_order_by_mean = TRUE,
-                                 geyser_scale_type = "continuous",
-                                 boxplot_order_by_mean = TRUE,
-                                 violin_plot_boxplot = TRUE,
-                                 violin_boxplot_width = 0.2,
                                  return_object = FALSE,
-                                 return_matrix = FALSE){
+                                 number.breaks = 5,
+                                 sequential.palette = "YlGnBu",
+                                 diverging.palette = "RdBu",
+                                 diverging.direction = -1,
+                                 sequential.direction = 1,
+                                 flip = FALSE,
+                                 grid.color = "white",
+                                 border.color = "black",
+                                 plot.title.face = "bold",
+                                 plot.subtitle.face = "plain",
+                                 plot.caption.face = "italic",
+                                 axis.title.face = "bold",
+                                 axis.text.face = "plain",
+                                 legend.title.face = "bold",
+                                 legend.text.face = "plain"){
+  # Add lengthy error messages.
+  withr::local_options(.new = list("warning.length" = 8170))
+  
   check_suggests(function_name = "do_EnrichmentHeatmap")
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
 
   # Check logical parameters.
-  logical_list <- list("cluster_cols" = cluster_cols,
-                       "cluster_rows" = cluster_rows,
-                       "use_viridis" = use_viridis,
+  logical_list <- list("use_viridis" = use_viridis,
                        "enforce_symmetry" = enforce_symmetry,
-                       "plot_FeaturePlots" = plot_FeaturePlots,
-                       "plot_GeyserPlots" = plot_GeyserPlots,
                        "plot_cell_borders" = plot_cell_borders,
-                       "geyser_order_by_mean" = geyser_order_by_mean,
-                       "plot_BoxPlots" = plot_BoxPlots,
-                       "plot_BeeSwarmPlots" = plot_BeeSwarmPlots,
-                       "plot_ViolinPlots" = plot_ViolinPlots,
-                       "boxplot_order_by_mean" = boxplot_order_by_mean,
-                       "violin_plot_boxplot" = violin_plot_boxplot)
+                       "flip" = flip,
+                       "cluster" = cluster,
+                       "scale_scores" = scale_scores)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
-  numeric_list <- list("row_names_rot" = row_names_rot,
-                       "column_names_rot" = column_names_rot,
-                       "cell_size" = cell_size,
-                       "viridis_direction" = viridis_direction,
-                       "row_title_rot" = row_title_rot,
+  numeric_list <- list("viridis.direction" = viridis.direction,
                        "nbin" = nbin,
                        "ctrl" = ctrl,
                        "ncores" = ncores,
@@ -114,16 +93,16 @@ do_EnrichmentHeatmap <- function(sample,
                        "legend.length" = legend.length,
                        "legend.framewidth" = legend.framewidth,
                        "legend.tickwidth" = legend.tickwidth,
-                       "viridis_direction" = viridis_direction,
-                       "rotate_x_axis_labels" = rotate_x_axis_labels,
+                       "viridis.direction" = viridis.direction,
+                       "axis.text.x.angle" = axis.text.x.angle,
                        "min.cutoff" = min.cutoff,
                        "max.cutoff" = max.cutoff,
-                       "violin_boxplot_width" = violin_boxplot_width)
+                       "number.breaks" = number.breaks,
+                       "sequential.direction" = sequential.direction,
+                       "diverging.direction" = diverging.direction)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("input_gene_list" = input_gene_list,
-                         "column_title" = column_title,
-                         "row_title" = row_title,
                          "legend.title" = legend.title,
                          "legend.position" = legend.position,
                          "legend.framecolor" = legend.framecolor,
@@ -131,39 +110,161 @@ do_EnrichmentHeatmap <- function(sample,
                          "group.by" = group.by,
                          "na.value" = na.value,
                          "legend.position" = legend.position,
-                         "viridis_color_map" = viridis_color_map,
-                         "row_names_side" = row_names_side,
-                         "row_title_side" = row_title_side,
+                         "viridis.palette" = viridis.palette,
                          "flavor" = flavor,
-                         "geyser_scale_type" = geyser_scale_type)
+                         "sequential.palette" = sequential.palette,
+                         "diverging.palette" = diverging.palette,
+                         "grid.color" = grid.color,
+                         "border.color" = border.color,
+                         "plot.title.face" = plot.title.face,
+                         "plot.subtitle.face" = plot.subtitle.face,
+                         "plot.caption.face" = plot.caption.face,
+                         "axis.title.face" = axis.title.face,
+                         "axis.text.face" = axis.text.face,
+                         "legend.title.face" = legend.title.face,
+                         "legend.text.face" = legend.text.face)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
-  check_colors(na.value)
-  check_colors(heatmap.legend.framecolor, parameter_name = "heatmap.legend.framecolor")
 
-  check_parameters(parameter = viridis_direction, parameter_name = "viridis_direction")
+  check_colors(na.value, parameter_name = "na.value")
+  check_colors(legend.framecolor, parameter_name = "legend.framecolor")
+  check_colors(legend.tickcolor, parameter_name = "legend.tickcolor")
+  check_colors(grid.color, parameter_name = "grid.color")
+  check_colors(border.color, parameter_name = "border.color")
+
+
+  check_parameters(parameter = diverging.palette, parameter_name = "diverging.palette")
+  check_parameters(parameter = sequential.palette, parameter_name = "sequential.palette")
+  check_parameters(parameter = font.type, parameter_name = "font.type")
+  check_parameters(parameter = legend.type, parameter_name = "legend.type")
   check_parameters(parameter = legend.position, parameter_name = "legend.position")
   check_parameters(parameter = flavor, parameter_name = "flavor")
-
-
-  `%v%` <- ComplexHeatmap::`%v%`
+  check_parameters(parameter = number.breaks, parameter_name = "number.breaks")
+  check_parameters(plot.title.face, parameter_name = "plot.title.face")
+  check_parameters(plot.subtitle.face, parameter_name = "plot.subtitle.face")
+  check_parameters(plot.caption.face, parameter_name = "plot.caption.face")
+  check_parameters(axis.title.face, parameter_name = "axis.title.face")
+  check_parameters(axis.text.face, parameter_name = "axis.text.face")
+  check_parameters(legend.title.face, parameter_name = "legend.title.face")
+  check_parameters(legend.text.face, parameter_name = "legend.text.face")
+  check_parameters(viridis.direction, parameter_name = "viridis.direction")
+  check_parameters(sequential.direction, parameter_name = "sequential.direction")
+  check_parameters(diverging.direction, parameter_name = "diverging.direction")
+  
+  
   `%>%` <- magrittr::`%>%`
-
+  
+  
+  if (isTRUE(enforce_symmetry)){
+    colors.gradient <- compute_continuous_palette(name = diverging.palette,
+                                                  use_viridis = FALSE,
+                                                  direction = diverging.direction,
+                                                  enforce_symmetry = enforce_symmetry)
+  } else {
+    colors.gradient <- compute_continuous_palette(name = ifelse(isTRUE(use_viridis), viridis.palette, sequential.palette),
+                                                  use_viridis = use_viridis,
+                                                  direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
+                                                  enforce_symmetry = enforce_symmetry)
+  }
+  
   if (!(is.null(assay)) & flavor == "UCell"){
-    stop("If setting flavor = UCell, do not use assay parameter. Instead, make sure the assay you want is set as default.", call. = FALSE)
+    warning(paste0(add_warning(), crayon_body("When using "),
+                   crayon_key("flavor = UCell"),
+                   crayon_body(" do not use the "),
+                   crayon_key("assay"),
+                   crayon_body(" parameter.\nInstead, make sure that the "),
+                   crayon_key("assay"),
+                   crayon_body(" you want to compute the scores with is set as the "),
+                   crayon_key("default"),
+                   crayon_body(" assay. Setting it to "),
+                   crayon_key("NULL"),
+                   crayon_body(".")), call. = FALSE)
   }
-
+  
   if (!(is.null(slot)) & flavor == "Seurat"){
-    stop("If setting flavor = Seurat, do not use slot parameter. The slot is determined by default in Seurat.", call. = FALSE)
+    warning(paste0(add_warning(), crayon_body("When using "),
+                   crayon_key("flavor = Seurat"),
+                   crayon_body(" do not use the "),
+                   crayon_key("slot"),
+                   crayon_body(" parameter.\nThis is determiend by default in "),
+                   crayon_key("Seurat"),
+                   crayon_body(". Setting it to "),
+                   crayon_key("NULL"),
+                   crayon_body(".")), call. = FALSE)
   }
-
+  
+  if (is.null(assay)){assay <- check_and_set_assay(sample)$assay}
+  if (is.null(slot)){slot <- check_and_set_slot(slot)}
+  
   if (is.character(input_gene_list)){
-    # If input_gene_list is a character of genes.
-    input_list <- list("Input" = input_gene_list)
-  } else if (is.list(input_gene_list)){
-    input_list <- input_gene_list
-    assertthat::assert_that(!is.null(names(input_list)),
-                            msg = "Please provide a named list. This is, each gene list has to come with a name.")
+    stop(paste0(add_cross(),
+                crayon_body("You have provided a string of genes to "),
+                crayon_key("input_gene_list"),
+                crayon_body(". Please provide a "),
+                crayon_key("named list"),
+                crayon_body(" instead.")), call. = FALSE)
+    
   }
+  
+  
+  if (!is.null(features.order)){
+    assertthat::assert_that(sum(features.order %in% names(input_gene_list)) == length(names(input_gene_list)),
+                            msg = paste0(add_cross(), crayon_body("The names provided to "),
+                                         crayon_key("features.order"),
+                                         crayon_body(" do not match the names of the gene sets in "),
+                                         crayon_key("input_gene_list"),
+                                         crayon_body(".")))
+  }
+  
+  if (is.null(legend.title)){
+    if (flavor == "AUCell") {
+      legend.title <- "AUC"
+    } else if (flavor == "UCell"){
+      legend.title <- "UCell score"
+    } else if (flavor == "Seurat"){
+      legend.title <- "Enrichment"
+    }
+  }
+  
+  input_list <- input_gene_list
+  assertthat::assert_that(!is.null(names(input_list)),
+                          msg = paste0(add_cross(), crayon_body("Please provide a "),
+                                       crayon_key("named list"),
+                                       crayon_body(" to "),
+                                       crayon_key("input_gene_list"),
+                                       crayon_body(".")))
+  
+  if (length(unlist(stringr::str_match_all(names(input_list), "_"))) > 0){
+    warning(paste0(add_warning(), crayon_body("Found "),
+                   crayon_key("underscores (_)"),
+                   crayon_body(" in the name of the gene sets provided. Replacing them with "),
+                   crayon_key("dots (.)"),
+                   crayon_body(" to avoid conflicts when generating the Seurat assay.")), call. = FALSE)
+    names.use <- stringr::str_replace_all(names(input_list), "_", ".")
+    names(input_list) <- names.use
+    
+    # nocov start
+    if (!is.null(features.order)){
+      features.order <- stringr::str_replace_all(features.order, "_", ".")
+    }
+    # nocov end
+  }
+  
+  if (length(unlist(stringr::str_match_all(names(input_list), "-"))) > 0){
+    warning(paste0(add_warning(), crayon_body("Found "),
+                   crayon_key("dashes (-)"),
+                   crayon_body(" in the name of the gene sets provided. Replacing them with "),
+                   crayon_key("dots (.)"),
+                   crayon_body(" to avoid conflicts when generating the Seurat assay.")), call. = FALSE)
+    names.use <- stringr::str_replace_all(names(input_list), "-", ".")
+    names(input_list) <- names.use
+    
+    # nocov start
+    if (!is.null(features.order)){
+      features.order <- stringr::str_replace_all(features.order, "-", ".")
+    }
+    # nocov end
+  }
+  
 
   # Compute the enrichment scores.
   sample <- compute_enrichment_scores(sample = sample,
@@ -174,355 +275,325 @@ do_EnrichmentHeatmap <- function(sample,
                                       flavor = flavor,
                                       ncores = ncores,
                                       storeRanks = storeRanks,
-                                      assay = assay,
-                                      slot = slot)
+                                      # nocov start
+                                      assay = if (flavor == "UCell"){NULL} else {assay},
+                                      slot = if (flavor == "Seurat"){NULL} else {slot})
+                                      # nocov end
+  out.list <- list()
+  
+  # Check group.by.
+  out <- check_group_by(sample = sample,
+                        group.by = group.by,
+                        is.heatmap = TRUE)
 
-  list.heatmaps <- list()
-  list.legends <- list()
-  list.matrices <- list()
-  if (is.null(group.by)){
-    assertthat::assert_that(!("Groups" %in% colnames(sample@meta.data)),
-                            msg = "Please make sure you provide a value for group.by or do not have a metadata column named `Groups`.")
+  sample <- out[["sample"]]
+  group.by <- out[["group.by"]]
 
-    aggr_entities <- levels(sample)
-    sample@meta.data[, "Groups"] <- sample@active.ident
-    group.by <- "Groups"
-  }
-
-  for (g in group.by){
-    assertthat::assert_that(g %in% colnames(sample@meta.data),
-                            msg = paste0("Value ", g, " in group.by is not in the sample metadata."))
-
-    assertthat::assert_that(class(sample@meta.data[, g]) %in% c("character", "factor"),
-                            msg = paste0("Value ", g, " in group.by is not a character or factor column in the metadata."))
-  }
-
-
-  max_value_list <- c()
-  min_value_list <- c()
-  # Compute the max values for all heatmaps.
-  for (variant in group.by){
-    max_value <- sample@meta.data %>%
-                 dplyr::select(dplyr::all_of(c(variant, names(input_list)))) %>%
-                 dplyr::group_by(.data[[variant]]) %>%
-                 dplyr::summarize(dplyr::across(.cols = names(input_list), mean)) %>%
-                 tibble::column_to_rownames(var = variant) %>%
-                 as.matrix() %>%
-                 max()
-
-    min_value <- sample@meta.data %>%
-                 dplyr::select(dplyr::all_of(c(variant, names(input_list)))) %>%
-                 dplyr::group_by(.data[[variant]]) %>%
-                 dplyr::summarize(dplyr::across(.cols = names(input_list), mean)) %>%
-                 tibble::column_to_rownames(var = variant) %>%
-                 as.matrix() %>%
-                 min()
-
-    max_value_list <- c(max_value_list, max_value)
-    min_value_list <- c(min_value_list, min_value)
-  }
-  range.data <- c(min(min_value_list), max(max_value_list))
-  if (!is.null(min.cutoff) & !is.null(max.cutoff)){
-    assertthat::assert_that(min.cutoff < max.cutoff,
-                            msg = paste0("The value provided for min.cutoff (", min.cutoff, ") has to be lower than the value provided to max.cutoff (", max.cutoff, "). Please select another value."))
-  }
-
-  if (!is.null(min.cutoff)){
-    assertthat::assert_that(min.cutoff >= range.data[1],
-                            msg = paste0("The value provided for min.cutoff (", min.cutoff, ") is lower than the minimum value in the enrichment matrix (", range.data[1], "). Please select another value."))
-    range.data <- c(min.cutoff, range.data[2])
-  }
-
-  if (!is.null(max.cutoff)){
-    assertthat::assert_that(max.cutoff <= range.data[2],
-                            msg = paste0("The value provided for max.cutoff (", max.cutoff, ") is lower than the maximum value in the enrichment matrix (", range.data[2], "). Please select another value."))
-    range.data <- c(range.data[1], max.cutoff)
-
-  }
-
-  # Fix for automatic row and column titles.
-  if (is.null(column_title)){
-    if (length(group.by) == 1){
-      column_title <- ifelse(isTRUE(flip), "Groups", "List of genes")
-    } else {
-      if (isTRUE(flip)){
-        column_title <- rep("Groups", length(group.by))
-      } else {
-        column_title <- c("List of genes", rep("", length(group.by) - 1))
-      }
-    }
+  matrix.list <- list()
+  
+  if (base::isFALSE(scale_scores)){
+    names.use <- names(input_list)
   } else {
-    assertthat::assert_that(length(column_title) == length(group.by),
-                            msg = "Please provide as many different column titles as unique values in group.by.")
+    names.use <- unname(vapply(names(input_list), function(x){paste0(x, "_scaled")}, FUN.VALUE = character(1)))
   }
+  for (group in group.by){
+    suppressMessages({
+      sample$group.by <- sample@meta.data[, group]
 
-  if (is.null(row_title)){
-    if (length(group.by) == 1){
-      row_title <- ifelse(isFALSE(flip), "Groups", "List of genes")
-    } else {
-      if (isFALSE(flip)){
-        row_title <- rep("Groups", length(group.by))
-      } else {
-        row_title <- c("List of genes", rep("", length(group.by) - 1))
-      }
-    }
-  } else {
-    assertthat::assert_that(length(row_title) == length(group.by),
-                            msg = "Please provide as many different row titles as unique values in group.by.")
+      df <- sample@meta.data %>%
+            dplyr::select(dplyr::all_of(c("group.by", names.use))) %>%
+            tidyr::pivot_longer(cols = -"group.by",
+                                names_to = "gene_list",
+                                values_to = "enrichment") %>%
+            dplyr::group_by(.data$group.by, .data$gene_list) %>%
+            dplyr::summarise(mean = mean(.data$enrichment, na.rm = TRUE))
+
+      df.order <- df
+    })
+
+    matrix.list[[group]][["df"]] <- df
+    matrix.list[[group]][["df.order"]] <- df.order
   }
-
 
   counter <- 0
-  for (variant in group.by){
+  for (group in group.by){
     counter <- counter + 1
-    data <- sample@meta.data %>%
-            dplyr::select(dplyr::all_of(c(variant, names(input_list)))) %>%
-            dplyr::group_by(.data[[variant]]) %>%
-            dplyr::summarize(dplyr::across(.cols = names(input_list), mean)) %>%
-            tibble::column_to_rownames(var = variant) %>%
-            as.matrix()
 
-    row_title_use <- row_title[counter]
-    column_title_use <- column_title[counter]
+    df <- matrix.list[[group]][["df"]]
+    df.order <- matrix.list[[group]][["df.order"]]
 
+    # Transform to wide to retrieve the hclust.
+    df.order <- df.order %>%
+                tidyr::pivot_wider(id_cols = "group.by",
+                                   names_from = 'gene_list',
+                                   values_from = 'mean') %>%
+                tibble::column_to_rownames("group.by") %>%
+                as.matrix()
 
-    out <- heatmap_inner(if (isTRUE(flip)){t(data)} else {data},
-                         legend.title = legend.title,
-                         column_title = column_title_use,
-                         row_title = row_title_use,
-                         cluster_columns = cluster_cols,
-                         cluster_rows = cluster_rows,
-                         column_names_rot = column_names_rot,
-                         row_names_rot = row_names_rot,
-                         row_names_side = row_names_side,
-                         row_title_side = row_title_side,
-                         row_title_rotation = row_title_rot,
-                         column_title_side = "top",
-                         cell_size = cell_size,
-                         na.value = na.value,
-                         use_viridis = use_viridis,
-                         viridis_color_map = viridis_color_map,
-                         viridis_direction = viridis_direction,
-                         legend.position = legend.position,
-                         legend.length = heatmap.legend.length,
-                         range.data = range.data,
-                         legend.width = heatmap.legend.width,
-                         legend.framecolor = heatmap.legend.framecolor,
-                         data_range = "both",
-                         symmetrical_scale = enforce_symmetry,
-                         zeros_are_white = if (flavor %in% c("AUCell", "UCell") & viridis_direction == -1) {TRUE} else {FALSE})
-    list.heatmaps[[variant]] <- out[["heatmap"]]
-    list.legends[[variant]] <- out[["legend"]]
-    list.matrices[[variant]] <- data
-  }
-
-  # Compute joint heatmap.
-  grDevices::pdf(NULL)
-  ht_list <- NULL
-  # Append heatmaps vertically.
-  suppressWarnings({
-    for (heatmap in list.heatmaps){
-      if (isTRUE(flip)){
-        ht_list <- ht_list + heatmap
-      } else if (isFALSE(flip)){
-        ht_list <- ht_list %v% heatmap
+    df.order[is.na(df.order)] <- 0
+    
+    if (length(rownames(df.order)) == 1){
+      row_order <- rownames(df.order)[1]
+    } else {
+      if (isTRUE(cluster)){
+        row_order <- rownames(df.order)[stats::hclust(stats::dist(df.order, method = "euclidean"), method = "ward.D")$order]
+      } else {
+        row_order <- rownames(df.order)
+      }
+      
+    }
+    
+    if (counter == 1){
+      if (length(colnames(df.order)) == 1){
+        col_order <- colnames(df.order)[1]
+      } else {
+        if (isTRUE(cluster)){
+          col_order <- colnames(df.order)[stats::hclust(stats::dist(t(df.order), method = "euclidean"), method = "ward.D")$order]
+        } else {
+          col_order <- colnames(df.order)
+        }
       }
     }
-  })
+    
+    
+    if (!is.null(groups.order)){
+      if (group %in% names(groups.order)){
+        groups.order.use <- groups.order[[group]]
+      } else {
+        groups.order.use <- groups.order
+      }
+    } else {
+      groups.order.use <- row_order
+    }
+    
+    data <- df %>%
+            dplyr::mutate("gene_list" = factor(.data$gene_list, levels = if (is.null(features.order)){rev(col_order)} else {features.order}),
+                          "group.by" = factor(.data$group.by, levels = groups.order.use))
 
-  # Control gap between legends.
-  ComplexHeatmap::ht_opt(message = FALSE)
+    if (!is.na(min.cutoff)){
+      data <- data %>%
+              dplyr::mutate("mean" = ifelse(.data$mean < min.cutoff, min.cutoff, .data$mean))
+    }
 
-  # Draw final heatmap.
-  h <- ComplexHeatmap::draw(ht_list,
-                            heatmap_legend_list = list.legends[[1]],
-                            heatmap_legend_side = if (legend.position %in% c("top", "bottom")){"bottom"} else {"right"},
-                            padding = ggplot2::unit(c(5, 5, 5, 5), "mm"),
-                            ht_gap = ggplot2::unit(heatmap_gap, "cm"))
-  grDevices::dev.off()
+    if (!is.na(max.cutoff)){
+      data <- data %>%
+              dplyr::mutate("mean" = ifelse(.data$mean > max.cutoff, max.cutoff, .data$mean))
+    }
+    matrix.list[[group]] <- NULL
+    matrix.list[[group]][["data"]] <- data
+  }
 
-  out.list <- list()
-  out.list[["heatmap"]] <- h
 
-  # Plot extra FeaturePlots.
-  if (isTRUE(plot_FeaturePlots)){
-    list.FeaturePlots <- list()
-    for (sig in names(input_list)){
-      p <- SCpubr::do_FeaturePlot(sample = sample,
-                                  features = sig,
-                                  assay = if (is.null(assay)){Seurat::DefaultAssay(sample)} else {assay},
-                                  reduction = if(is.null(reduction)){Seurat::Reductions(sample)[length(Seurat::Reductions(sample))]} else {reduction},
-                                  slot = if (is.null(slot)){"data"} else {slot},
-                                  pt.size = pt.size,
-                                  order = FALSE,
-                                  border.size = border.size,
-                                  enforce_symmetry = enforce_symmetry,
-                                  plot_cell_borders = plot_cell_borders,
-                                  font.size = font.size,
-                                  font.type = font.type,
-                                  legend.position = legend.position,
+
+  # Compute limits.
+  min.vector <- NULL
+  max.vector <- NULL
+
+  for (group in group.by){
+    data <- matrix.list[[group]][["data"]]
+
+    min.vector <- append(min.vector, min(data$mean, na.rm = TRUE))
+    max.vector <- append(max.vector, max(data$mean, na.rm = TRUE))
+  }
+
+  # Get the absolute limits of the datasets.
+  limits <- c(min(min.vector),
+              max(max.vector))
+
+
+  # Compute overarching scales for all heatmaps.
+  scale.setup <- compute_scales(sample = sample,
+                                feature = " ",
+                                assay = "SCT",
+                                reduction = NULL,
+                                slot = "scale.data",
+                                number.breaks = number.breaks,
+                                min.cutoff = min.cutoff,
+                                max.cutoff = max.cutoff,
+                                flavor = "Seurat",
+                                enforce_symmetry = enforce_symmetry,
+                                from_data = TRUE,
+                                limits.use = limits)
+
+
+  # Plot individual heatmaps.
+  counter <- 0
+  list.heatmaps <- list()
+  for (group in group.by){
+    counter <- counter + 1
+    data <- matrix.list[[group]][["data"]]
+
+    p <- data %>% 
+         # nocov start
+         ggplot2::ggplot(mapping = ggplot2::aes(x = if(base::isFALSE(flip)){.data$gene_list} else {.data$group.by},
+                                                y = if(base::isFALSE(flip)){.data$group.by} else {.data$gene_list},
+                                                fill = .data$mean)) +
+         # nocov end
+         ggplot2::geom_tile(color = grid.color, linewidth = 0.5) +
+         ggplot2::scale_y_discrete(expand = c(0, 0)) +
+         ggplot2::scale_x_discrete(expand = c(0, 0),
+                                   position = "top") +
+         ggplot2::guides(y.sec = guide_axis_label_trans(~paste0(levels(.data$group.by))),
+                         x.sec = guide_axis_label_trans(~paste0(levels(.data$gene)))) +
+         ggplot2::coord_equal() + 
+         ggplot2::scale_fill_gradientn(colors = colors.gradient,
+                                       na.value = na.value,
+                                       name = legend.title,
+                                       breaks = scale.setup$breaks,
+                                       labels = scale.setup$labels,
+                                       limits = scale.setup$limits)
+
+
+    p <- modify_continuous_legend(p = p,
+                                  legend.title = legend.title,
+                                  legend.aes = "fill",
                                   legend.type = legend.type,
+                                  legend.position = legend.position,
+                                  legend.length = legend.length,
+                                  legend.width = legend.width,
                                   legend.framecolor = legend.framecolor,
                                   legend.tickcolor = legend.tickcolor,
                                   legend.framewidth = legend.framewidth,
-                                  legend.tickwidth = legend.tickwidth,
-                                  legend.length = legend.length,
-                                  legend.width = legend.width,
-                                  legend.title = if (flavor != "AUCell") {paste0(sig, " enrichment")} else {paste0(sig, " AUC")},
-                                  viridis_color_map = viridis_color_map,
-                                  viridis_direction = viridis_direction,
-                                  min.cutoff = if (is.null(min.cutoff)) {NA} else {min.cutoff},
-                                  max.cutoff = if (is.null(max.cutoff)) {NA} else {max.cutoff})
-      list.FeaturePlots[[sig]] <- p
-    }
-    out.list[["FeaturePlots"]] <- list.FeaturePlots
-  }
-
-  # Plot extra GeyserPlots.
-  if (isTRUE(plot_GeyserPlots)){
-    list.group.by = list()
-    for (var in group.by){
-      list.GeyserPlots <- list()
-
-      for (sig in names(input_list)){
-        p <- SCpubr::do_GeyserPlot(sample = sample,
-                                   assay = if (is.null(assay)){Seurat::DefaultAssay(sample)} else {assay},
-                                   slot = if (is.null(slot)){"data"} else {slot},
-                                   features = sig,
-                                   group.by = var,
-                                   pt.size = pt.size,
-                                   border.size = border.size,
-                                   enforce_symmetry = enforce_symmetry,
-                                   scale_type = geyser_scale_type,
-                                   order_by_mean = geyser_order_by_mean,
-                                   plot_cell_borders = plot_cell_borders,
-                                   font.size = font.size,
-                                   font.type = font.type,
-                                   legend.position = legend.position,
-                                   legend.type = legend.type,
-                                   legend.framecolor = legend.framecolor,
-                                   legend.tickcolor = legend.tickcolor,
-                                   legend.framewidth = legend.framewidth,
-                                   legend.tickwidth = legend.tickwidth,
-                                   legend.length = legend.length,
-                                   legend.width = legend.width,
-                                   xlab = if (is.null(group.by)) {"Clusters"} else {var},
-                                   ylab = if (flavor != "AUCell") {paste0(sig, " enrichment")} else {paste0(sig, " AUC")},
-                                   legend.title = if (flavor != "AUCell") {paste0(sig, " enrichment")} else {paste0(sig, " AUC")},
-                                   rotate_x_axis_labels = rotate_x_axis_labels,
-                                   viridis_color_map = viridis_color_map,
-                                   viridis_direction = viridis_direction,
-                                   min.cutoff = min.cutoff,
-                                   max.cutoff = max.cutoff)
-        list.GeyserPlots[[sig]] <- p
+                                  legend.tickwidth = legend.tickwidth)
+    # nocov start
+    # Set axis titles.
+    if(base::isFALSE(flip)){
+      if (counter == 1){
+        if (length(group.by) > 1){
+          xlab <- NULL
+        } else {
+          xlab <- "Gene set"
+        }
+        
+        ylab <- group
+      } else {
+        if (length(group.by) > 1){
+          if (counter == length(group.by)){
+            xlab <- "Gene set"
+          } else {
+            xlab <- NULL
+          }
+        } else {
+          xlab <- NULL
+        }
+        ylab <- group
       }
-      list.group.by[[var]] <- list.GeyserPlots
-    }
-    out.list[["GeyserPlots"]] <- list.group.by
-  }
-
-  # Plot extra BeeSwarmPlots.
-  if (isTRUE(plot_BeeSwarmPlots)){
-    list.group.by = list()
-    for(var in group.by){
-      list.BeeSwarmPlots <- list()
-      for (sig in names(input_list)){
-        p <- SCpubr::do_BeeSwarmPlot(sample = sample,
-                                     feature_to_rank = sig,
-                                     assay = if (is.null(assay)){Seurat::DefaultAssay(sample)} else {assay},
-                                     slot = if (is.null(slot)){"data"} else {slot},
-                                     group.by = var,
-                                     pt.size = pt.size,
-                                     border.size = border.size,
-                                     font.size = font.size,
-                                     font.type = font.type,
-                                     legend.position = legend.position,
-                                     legend.type = legend.type,
-                                     legend.framecolor = legend.framecolor,
-                                     legend.tickcolor = legend.tickcolor,
-                                     legend.framewidth = legend.framewidth,
-                                     legend.tickwidth = legend.tickwidth,
-                                     legend.length = legend.length,
-                                     legend.width = legend.width,
-                                     continuous_feature = TRUE,
-                                     min.cutoff = min.cutoff,
-                                     max.cutoff = max.cutoff,
-                                     ylab = if (is.null(group.by)) {"Clusters"} else {var},
-                                     xlab = if (flavor != "AUCell") {paste0("Ranking of ", sig, " enrichment")} else {paste0("Ranking of ", sig, " AUC")},
-                                     viridis_color_map = viridis_color_map,
-                                     viridis_direction = viridis_direction)
-        list.BeeSwarmPlots[[sig]] <- p
+    } else {
+      if (counter == 1){
+        ylab <- "Gene set"
+        xlab <- group
+      } else {
+        xlab <- group
+        ylab <- NULL
       }
-      list.group.by[[var]] <- list.BeeSwarmPlots
     }
-    out.list[["BeeSwarmPlots"]] <- list.group.by
+    # nocov end
+
+
+    axis.parameters <- handle_axis(flip = flip,
+                                   group.by = group.by,
+                                   group = group,
+                                   counter = counter,
+                                   axis.text.x.angle = axis.text.x.angle,
+                                   plot.title.face = plot.title.face,
+                                   plot.subtitle.face = plot.subtitle.face,
+                                   plot.caption.face = plot.caption.face,
+                                   axis.title.face = axis.title.face,
+                                   axis.text.face = axis.text.face,
+                                   legend.title.face = legend.title.face,
+                                   legend.text.face = legend.text.face)
+
+
+
+    # Set theme
+    p <- p +
+         ggplot2::xlab(xlab) +
+         ggplot2::ylab(ylab) +
+         ggplot2::theme_minimal(base_size = font.size) +
+         ggplot2::theme(axis.ticks.x.bottom = axis.parameters$axis.ticks.x.bottom,
+                        axis.ticks.x.top = axis.parameters$axis.ticks.x.top,
+                        axis.ticks.y.left = axis.parameters$axis.ticks.y.left,
+                        axis.ticks.y.right = axis.parameters$axis.ticks.y.right,
+                        axis.text.y.left = axis.parameters$axis.text.y.left,
+                        axis.text.y.right = axis.parameters$axis.text.y.right,
+                        axis.text.x.top = axis.parameters$axis.text.x.top,
+                        axis.text.x.bottom = axis.parameters$axis.text.x.bottom,
+                        axis.title.x.bottom = axis.parameters$axis.title.x.bottom,
+                        axis.title.x.top = axis.parameters$axis.title.x.top,
+                        axis.title.y.right = axis.parameters$axis.title.y.right,
+                        axis.title.y.left = axis.parameters$axis.title.y.left,
+                        axis.line = ggplot2::element_blank(),
+                        plot.title = ggplot2::element_text(face = plot.title.face, hjust = 0),
+                        plot.subtitle = ggplot2::element_text(face = plot.subtitle.face, hjust = 0),
+                        plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
+                        plot.title.position = "plot",
+                        panel.grid = ggplot2::element_blank(),
+                        panel.grid.minor.y = ggplot2::element_line(color = "white", linewidth = 1),
+                        text = ggplot2::element_text(family = font.type),
+                        plot.caption.position = "plot",
+                        legend.text = ggplot2::element_text(face = legend.text.face),
+                        legend.title = ggplot2::element_text(face = legend.title.face),
+                        legend.justification = "center",
+                        plot.margin = ggplot2::margin(t = 0, r = 0, b = 0, l = 0),
+                        panel.border = ggplot2::element_rect(fill = NA, color = border.color, linewidth = 1),
+                        panel.grid.major = ggplot2::element_blank(),
+                        legend.position = legend.position,
+                        plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+                        panel.background = ggplot2::element_rect(fill = "white", color = "white"),
+                        legend.background = ggplot2::element_rect(fill = "white", color = "white"))
+
+    list.heatmaps[[group]] <- p
   }
 
-  # Plot extra BoxPlots.
-  if (isTRUE(plot_BoxPlots)){
-    list.group.by = list()
-    for(var in group.by){
-      list.BoxPlots <- list()
-      for (sig in names(input_list)){
-        p <- SCpubr::do_BoxPlot(sample = sample,
-                                feature = sig,
-                                assay = if (is.null(assay)){Seurat::DefaultAssay(sample)} else {assay},
-                                slot = if (is.null(slot)){"data"} else {slot},
-                                group.by = var,
-                                legend.position = legend.position,
-                                font.size = font.size,
-                                font.type = font.type,
-                                xlab = if (is.null(group.by)) {"Clusters"} else {var},
-                                ylab = if (flavor != "AUCell") {paste0(sig, " enrichment")} else {paste0(sig, " AUC")},
-                                order = boxplot_order_by_mean)
-        list.BoxPlots[[sig]] <- p
-      }
-      list.group.by[[var]] <- list.BoxPlots
-    }
-    out.list[["BoxPlots"]] <- list.group.by
-  }
+  # Plot the combined plot
+  input <- if(base::isFALSE(flip)){list.heatmaps[rev(group.by)]}else{list.heatmaps[group.by]}
+  p <- patchwork::wrap_plots(input,
+                             ncol = if (base::isFALSE(flip)){1} else {NULL},
+                             nrow = if(isTRUE(flip)) {1} else {NULL},
+                             guides = "collect")
+  p <- p +
+       patchwork::plot_annotation(theme = ggplot2::theme(legend.position = legend.position,
+                                                         plot.title = ggplot2::element_text(size = font.size,
+                                                                                            family = font.type,
+                                                                                            color = "black",
+                                                                                            face = plot.title.face,
+                                                                                            hjust = 0),
+                                                         plot.subtitle = ggplot2::element_text(size = font.size,
+                                                                                               face = plot.subtitle.face,
+                                                                                               family = font.type,
+                                                                                               color = "black",
+                                                                                               hjust = 0),
+                                                         plot.caption = ggplot2::element_text(size = font.size,
+                                                                                              face = plot.caption.face,
+                                                                                              family = font.type,
+                                                                                              color = "black",
+                                                                                              hjust = 1),
+                                                         plot.caption.position = "plot"))
 
-  # Plot extra ViolinPlots.
-  if (isTRUE(plot_ViolinPlots)){
-    list.group.by = list()
-    for (var in group.by){
-      list.ViolinPlots <- list()
-      for (sig in names(input_list)){
-        p <- SCpubr::do_ViolinPlot(sample = sample,
-                                   features = sig,
-                                   plot_boxplot = violin_plot_boxplot,
-                                   boxplot_width = violin_boxplot_width,
-                                   assay = if (is.null(assay)){Seurat::DefaultAssay(sample)} else {assay},
-                                   slot = if (is.null(slot)){"data"} else {slot},
-                                   group.by = var,
-                                   legend.position = legend.position,
-                                   font.size = font.size,
-                                   font.type = font.type,
-                                   xlab = if (is.null(group.by)) {"Clusters"} else {var},
-                                   ylab = if (flavor != "AUCell") {paste0(sig, " enrichment")} else {paste0(sig, " AUC")})
-        list.ViolinPlots[[sig]] <- p
-      }
-      list.group.by[[var]] <- list.ViolinPlots
-    }
-    out.list[["ViolinPlots"]] <- list.group.by
-  }
 
-  # Return the scored Seurat object.
+
+
+  out.list[["Heatmap"]] <- p
+
   if (isTRUE(return_object)){
-    if (isTRUE("Groups" %in% colnames(sample@meta.data))){
-      sample$Groups <- NULL
-    }
-    out.list[["object"]] <- sample
+    # Generate a Seurat assay.
+    sample[["Enrichment"]] <- sample@meta.data %>% 
+                              dplyr::select(dplyr::all_of(names(input_list))) %>% 
+                              t() %>% 
+                              as.data.frame() %>% 
+                              Seurat::CreateAssayObject(.)
+    
+    sample@meta.data <- sample@meta.data %>% 
+                        dplyr::select(-dplyr::all_of(names(input_list)))
+    
+    sample@assays$Enrichment@key <- "Enrichment_"
+    Seurat::DefaultAssay(sample) <- "Enrichment"
+    
+    out.list[["Object"]] <- sample
   }
 
-  # Return the scoring matrix.
-  if (isTRUE(return_matrix)){
-    out.list[["matrices"]] <- list.matrices
-  }
-
-
-  if (isFALSE(plot_GeyserPlots) & isFALSE(plot_FeaturePlots) & isFALSE(plot_BeeSwarmPlots) & isFALSE(plot_BoxPlots) & isFALSE(return_object) & isFALSE(return_matrix)){
-    return_me <- h
+  if (base::isFALSE(return_object)){
+    return_me <- out.list[["Heatmap"]]
   } else {
     return_me <- out.list
   }
