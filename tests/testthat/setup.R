@@ -31,7 +31,7 @@ enriched_terms <- readRDS(system.file("extdata/enriched_terms_example.rds", pack
 
 
 # Get packages.
-dependencies <- SCpubr::check_dependencies(return_dependencies = TRUE)
+dependencies <- SCpubr:::return_dependencies()
 
 dependencies[["utils"]] <- c("Seurat",
                              "rlang",

@@ -1,6 +1,6 @@
-37417acc55e4f3969cbe3501f9e9b195 *DESCRIPTION
-6b290036a7de7b78a5da5d77905f3386 *NAMESPACE
-6387bffa2ddec41f3403244c9d79cc30 *NEWS.md
+9863e766add0df1493bb73445d156907 *DESCRIPTION
+1310dbd7185c3574c2a5c6ada7a9dfbb *NAMESPACE
+2159db6a125879204b3c58bb7c3c5135 *NEWS.md
 0389521335dbbc9db460e2db5dc59b45 *R/data.R
 8d7f32e712c2327a99fbe348fbc0e85e *R/do_AlluvialPlot.R
 1527084bfec35e106d5833d6313a8c1d *R/do_BarPlot.R
@@ -14,7 +14,7 @@ c61265cf83451eab640ce39eea734827 *R/do_CellularStatesPlot.R
 7b5fab64ba6a9e1852510b25e30f65df *R/do_DimPlot.R
 8c37319bafc36f4e74a20ee9e773ae13 *R/do_DotPlot.R
 39ea2e1aa4fa016583215544776bd0bd *R/do_EnrichmentHeatmap.R
-4418bdcf3414e3b10f15dc3dc7214991 *R/do_ExpressionHeatmap.R
+f21e859cafb3c73c33f81736320b9690 *R/do_ExpressionHeatmap.R
 05622bfd6bd08c24a7b95488e9c18a5f *R/do_FeaturePlot.R
 d4ffdb3ded110751a740f0ed7c5ff049 *R/do_FunctionalAnnotationPlot.R
 5f23e25c7473b205fbc1110ca60c8072 *R/do_GeyserPlot.R
@@ -28,9 +28,9 @@ c1ee8d2760a3e01995d41ab4461de00e *R/do_TermEnrichmentPlot.R
 513f3d39cb5b3ffca57b269d5e6412dc *R/do_ViolinPlot.R
 8c92ff127c8f6bf7ae5d6d1c2a9d5eac *R/do_VolcanoPlot.R
 af364a7cbd6c09301724e1c09fcf4cba *R/globals.R
-dc6f0b7f3b5f6dfe0b41f514b45297ec *R/utils.R
-ca99963bf46dd516f99acdc552136cc5 *R/zzz.R
-029d722a3e97f60b8137cd1d41db9eab *README.md
+5ad253d5671cbdd985bf90fb46f87072 *R/utils.R
+e8ea75777769867eab4671bc6e2194f9 *R/zzz.R
+14083ec70487d96b577a9d8016c6e06b *README.md
 1961639f6f4f7f9efffa91b624b3d060 *build/partial.rdb
 7540dc01356f70c254971b21accd4097 *build/vignette.rds
 203d0f90b46a88058108474c78ada938 *data/human_chr_locations.rda
@@ -47,7 +47,6 @@ a6552ab17d89992484c69b3c533efa0c *inst/extdata/dorothea_activities_example.rds
 cf45ba5a5366a0514f390d7ddf762233 *inst/extdata/metacell_mapping_example.rds
 d64147aca42bc0eb886366f599af6128 *inst/extdata/progeny_activities_example.rds
 5c2867514dee1d9bdac5ba29658c1ea3 *inst/extdata/seurat_dataset_example.rds
-ad6bf2891661c54199e926d62ccd1143 *man/check_dependencies.Rd
 f2a4bacdf294658b5af6def82970e8ee *man/do_AlluvialPlot.Rd
 1c0179ebd1b62ac7c2ea1a578008af46 *man/do_BarPlot.Rd
 952042db6900bf69fd065508471f8f38 *man/do_BeeSwarmPlot.Rd
@@ -102,9 +101,9 @@ dc3a7c1c59e32f860c9fce3157ce21c6 *man/examples/examples_do_VolcanoPlot.R
 282333a64a16f53e78e5a55f974cfa75 *man/human_chr_locations.Rd
 cac18f410142fa6b5f9a75725715e267 *man/named_list.Rd
 23ecdc63ee897e893ffba481d5e747ca *man/named_vector.Rd
-51dc4438d3fb0493955578213007a93f *man/package_report.Rd
+5d0e148a8e2b70f6b5ed654883fa3227 *man/package_report.Rd
 26cde245be629d6e78e51892dd4027e4 *tests/testthat.R
-80ae75731292584c18072715e2849251 *tests/testthat/setup.R
+ff2ce83ecf2c82d87512c74ce3df367e *tests/testthat/setup.R
 b8c19a91ee72e0aed0320a740d9d5cf0 *tests/testthat/test-do_AlluvialPlot.R
 8b58fd7a7f02c681b797acbfd51a2c22 *tests/testthat/test-do_BarPlot.R
 85192a7df978f8b220b51204c435a527 *tests/testthat/test-do_BeeSwarmPlot.R
@@ -130,5 +129,5 @@ adebaaf2e22adc33c72d310a1c1a1ca2 *tests/testthat/test-do_PathwayActivityPlot.R
 d2b2e5e684a413a3030bab7eb1605825 *tests/testthat/test-do_TermEnrichmentPlot.R
 aff13e5ef5e3fa11603e68b1ebc8372d *tests/testthat/test-do_ViolinPlot.R
 589116f48d8af13db893ac67dfca7be7 *tests/testthat/test-do_VolcanoPlot.R
-53de34c61e22c3fbd8d5e3e88d5308b5 *tests/testthat/test-utils.R
+7f48a4584f6ebee36ba7798b27758e65 *tests/testthat/test-utils.R
 ba3ca54003d9d3ada272f451b6c4a0d5 *vignettes/reference_manual.Rmd
