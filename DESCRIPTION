@@ -2,7 +2,7 @@ Type: Package
 Package: SCpubr
 Title: Generate Publication Ready Visualizations of Single Cell
         Transcriptomics Data
-Version: 2.0.1
+Version: 2.0.2
 Authors@R: 
     person("Enrique", "Blanco-Carmona", , "scpubr@gmail.com", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0002-1208-1691"))
@@ -23,9 +23,9 @@ Suggests: AnnotationDbi, assertthat, AUCell, circlize, cli, cluster,
         ggplotify, ggrastr, ggrepel, ggridges, ggsignif, graphics,
         infercnv, knitr, labeling, magrittr, MASS, Matrix, methods,
         Nebulosa, org.Hs.eg.db, patchwork, pheatmap, plyr, purrr, qpdf,
-        RColorBrewer, rgdal, rjags, rlang, rmarkdown, scales,
-        scattermore, Seurat, SeuratObject, stringr, svglite, testthat
-        (>= 3.0.0), tibble, tidyr, UCell, viridis, withr
+        RColorBrewer, rjags, rlang, rmarkdown, scales, scattermore,
+        Seurat, SeuratObject, sf, stringr, svglite, testthat (>=
+        3.0.0), tibble, tidyr, UCell, viridis, withr
 VignetteBuilder: knitr
 biocViews: Software, SingleCell, Visualization
 Config/testthat/edition: 3
@@ -34,9 +34,9 @@ LazyData: true
 LazyDataCompression: xz
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2023-08-13 10:28:03 UTC; e420a
+Packaged: 2023-10-11 09:31:17 UTC; e420a
 Author: Enrique Blanco-Carmona [cre, aut]
     (<https://orcid.org/0000-0002-1208-1691>)
 Maintainer: Enrique Blanco-Carmona <scpubr@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-08-13 12:40:15 UTC
+Date/Publication: 2023-10-11 09:50:02 UTC
