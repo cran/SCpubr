@@ -18,6 +18,7 @@ do_BeeSwarmPlot <- function(sample,
                             continuous_feature = FALSE,
                             order = FALSE,
                             colors.use = NULL,
+                            colorblind = FALSE,
                             legend.title = NULL,
                             legend.type = "colorbar",
                             legend.position = "bottom",
@@ -91,7 +92,8 @@ do_BeeSwarmPlot <- function(sample,
                        "raster" = raster,
                        "plot_cell_borders" = plot_cell_borders,
                        "use_viridis" = use_viridis,
-                       "order" = order)
+                       "order" = order,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("font.size" = font.size,
@@ -138,7 +140,7 @@ do_BeeSwarmPlot <- function(sample,
                          "na.value" = na.value)
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
   # Check slot.
-  slot <- check_and_set_slot(slot = slot)
+  slot <- if(is.null(slot)){"data"} else {slot}
 
   # Check the colors provided to legend.framecolor and legend.tickcolor and border color.
   check_colors(legend.framecolor, parameter_name = "legend.framecolor")
@@ -312,7 +314,7 @@ do_BeeSwarmPlot <- function(sample,
                                   legend.tickwidth = legend.tickwidth)
   } else if (continuous_feature == FALSE) {
     if (is.null(colors.use)){
-      colors.use <- generate_color_scale(levels(sample))
+      colors.use <- generate_color_scale(levels(sample), colorblind = colorblind)
     } else {
       colors.use <- check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
     }
@@ -330,17 +332,17 @@ do_BeeSwarmPlot <- function(sample,
          ggplot2::theme(legend.position = legend.position)
   }
 
-  if (remove_x_axis == TRUE){
+  if (base::isTRUE(remove_x_axis)){
     p <- p +
          ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                         axis.ticks.x = ggplot2::element_blank())
   }
-  if (remove_y_axis == TRUE){
+  if (base::isTRUE(remove_y_axis)){
     p <- p +
          ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                         axis.ticks.y = ggplot2::element_blank())
   }
-  if (flip == TRUE){
+  if (base::isTRUE(flip)){
     p <- p +
          ggplot2::coord_flip() +
          ggplot2::theme(axis.text.y = ggplot2::element_blank(),

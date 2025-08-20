@@ -36,6 +36,7 @@ do_AlluvialPlot <- function(sample,
                             last_group,
                             middle_groups = NULL,
                             colors.use = NULL,
+                            colorblind = FALSE,
                             plot.title = NULL,
                             plot.subtitle = NULL,
                             plot.caption = NULL,
@@ -65,7 +66,7 @@ do_AlluvialPlot <- function(sample,
                             grid.color = "grey75",
                             grid.type = "dashed",
                             na.value = "white",
-                            legend.position = "right",
+                            legend.position = "bottom",
                             legend.title = NULL,
                             plot.title.face = "bold",
                             plot.subtitle.face = "plain",
@@ -90,7 +91,8 @@ do_AlluvialPlot <- function(sample,
                        "plot.grid" = plot.grid,
                        "repel" = repel,
                        "use_geom_flow" = use_geom_flow,
-                       "use_viridis" = use_viridis)
+                       "use_viridis" = use_viridis,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("stratum.width" = stratum.width,
@@ -143,6 +145,14 @@ do_AlluvialPlot <- function(sample,
   check_parameters(legend.text.face, parameter_name = "legend.text.face")
   check_parameters(viridis.direction, parameter_name = "viridis.direction")
   check_parameters(sequential.direction, parameter_name = "sequential.direction")
+  
+  # Check minimum version.
+  assertthat::assert_that(utils::packageVersion("ggalluvial") >= "0.12.5",
+                          msg = paste0(add_cross(), crayon_body("Please, update "),
+                                       crayon_key("ggalluvial"),
+                                       crayon_body(" to minimum version "),
+                                       crayon_key("0.12.5"),
+                                       crayon_body(".")))
   
 
   #StatStratum <- ggalluvial::StatStratum
@@ -226,14 +236,17 @@ do_AlluvialPlot <- function(sample,
   # COLORS.
   if (is.null(colors.use)){
     if (is.factor(data[[fill.by]])){
-      colors.use <- generate_color_scale(levels(data[[fill.by]]))
+      colors.use <- generate_color_scale(levels(data[[fill.by]]), colorblind = colorblind)
     } else {
-      colors.use <- generate_color_scale(sort(unique(data[[fill.by]])))
+      colors.use <- generate_color_scale(sort(unique(data[[fill.by]])), colorblind = colorblind)
     }
   } else {
     check_colors(colors.use)
   }
-
+  
+  if (is.null(legend.title)){
+    legend.title = last_group
+  }
 
   p <- prepare_ggplot_alluvial_plot(data = data,
                                     vars.use = vars.use)
@@ -283,7 +296,6 @@ do_AlluvialPlot <- function(sample,
        ggplot2::labs(title = plot.title,
                      subtitle = plot.subtitle,
                      caption = plot.caption) +
-       ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title)) +
        ggplot2::theme_minimal(base_size = font.size) +
        ggplot2::theme(axis.title = ggplot2::element_text(color = "black",
                                                          face = axis.title.face),
@@ -312,6 +324,13 @@ do_AlluvialPlot <- function(sample,
                       panel.background = ggplot2::element_rect(fill = "white", color = "white"),
                       legend.background = ggplot2::element_rect(fill = "white", color = "white"),
                       strip.text =ggplot2::element_text(color = "black", face = "bold"))
+  
+  p <- p +
+       ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title,
+                                                    title.position = "top",
+                                                    title.hjust = 0.5,
+                                                    override.aes = list(color = "black",
+                                                                        shape = 22))) 
   
 
   if (isTRUE(flip)){

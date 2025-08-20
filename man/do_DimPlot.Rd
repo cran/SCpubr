@@ -9,7 +9,9 @@ do_DimPlot(
   reduction = NULL,
   group.by = NULL,
   split.by = NULL,
+  split.by.combined = TRUE,
   colors.use = NULL,
+  colorblind = FALSE,
   shuffle = TRUE,
   order = NULL,
   raster = FALSE,
@@ -35,6 +37,7 @@ do_DimPlot(
   legend.nrow = NULL,
   legend.icon.size = 4,
   legend.byrow = FALSE,
+  legend.dot.border = TRUE,
   raster.dpi = 2048,
   dims = c(1, 2),
   font.size = 14,
@@ -73,7 +76,11 @@ do_DimPlot(
 
 \item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
 
+\item{split.by.combined}{\strong{\code{\link[base]{logical}}} | Adds a combined view of the all the values before splitting them by \strong{\code{split.by}}. Think of this as a regular DimPlot added in front. This is set to \strong{\code{TRUE}} if \strong{\code{split.by}} is used in combination with \strong{\code{group.by}}.}
+
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
+
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
 
 \item{shuffle}{\strong{\code{\link[base]{logical}}} | Whether to shuffle the cells or not, so that they are not plotted cluster-wise. Recommended.}
 
@@ -131,6 +138,8 @@ do_DimPlot(
 \item{legend.icon.size}{\strong{\code{\link[base]{numeric}}} | Size of the icons in legend.}
 
 \item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
+
+\item{legend.dot.border}{\strong{\code{\link[base]{logical}}} | Adds a black border around the dots in the legend.}
 
 \item{raster.dpi}{\strong{\code{\link[base]{numeric}}} | Pixel resolution for rasterized plots. Defaults to 1024. Only activates on Seurat versions higher or equal than 4.1.0.}
 

@@ -1,3 +1,152 @@
+# SCpbur v3.0.0 (In Development)
+
+## Reason for the mejor version change
+-   Due to the preparation for the publication of SCpubr's manuscript, a major effort has been made to further standardize and wrap up the package nicely.
+-   Some functions have been removed, and many have been renamed, for consistency.
+-   Development version of functions have been transferred to the normal release, with the exception of `SCpubr::do_SavePlot()`.
+
+## General
+-   Enhanced startup message for clarity. Not it guides the user to run `SCpubr::package_report(extended = TRUE)` to get an overview of the missing dependencies.
+-   Added black border to glyphs in legends.
+-   Whenever a categorical color scale is used, now you can set `colorblind = TRUE`, and it will pull from a collection of different published colorblind-safe palettes. If the length of the classes in the categorical variable matches the length of one of the palettes, that palettes is used. If not, a pool will be selected, with a total maximum of 85 categories allowed. If `colors.use` is used, `colorblind` has no effect (thus, check if your palette is colorblind-safe with `do_ColorBlindCheck()`). For continuous variables, `YlGnBu` is used. For divergent variables, `RdBu` is used. Both `YlGnBu` and `RdBu` are colorblind-safe. Since they are set as default, there is no need for `colorblind` parameter in the functions that only plot continuous/divergent variables.
+-  Added support to show the values as text in most heatmap-based functions. This is achieved by using `values.show = TRUE`.
+-  Aesthetics of the text labels can be tuned with `values.threshold`, `values.size` and `values.round`. 
+-  Fixed an issue where `symmetry_center` would not work as intended. Now it correctly displays the color scale with the provided value in the center.
+
+## Added functions
+-   `do_WafflePlot()`: This function displays proportions as a pictogram grid of 10x10 tiles. It helps to visually see at a glance the proportions of your data. This fails to correctly convey decimal proportions and completely ignores heavily under-represented classes in your dataset. 
+-   `do_RankedExpressionHeatmap()` to plot expression values as a heatmap along a dimensional reduction component.
+-   `do_ColorBlindCheck` to provide a comparative view of a given color paletter under different kinds of color blindness. This will allow to check for the suitability of a given set of colors for publication.
+
+## Removed functions
+-   `do_FunctionalAnnotationPlot()`.
+-   `do_GroupedGOTermPlot()`.
+
+The reason behind it is that they, together with do_TermEnrichmentPlot() targeted the same analysis and, therefore, were redundant.
+
+## Renamed functions
+In an effort to standardize function names, the following changes have been implemented: 
+
+-   `do_DiffusionMapPlot()` is now called `do_RankedEnrichmentHeatmap()`. 
+-   `save_plot()` (development release only) is now called `do_SavePlot()`. 
+-   `package_report()`  is now called `do_PackageReport()`. 
+-   `do_LoadingsPlot()` is now called `do_LoadingsHeatmap()`. 
+-   `do_AffinityAnalysisPlot()` is now called `do_ActivityHeatmap()`. 
+-   `do_PathwayActivityPlot()` is now called `do_PathwayActivityHeatmap()`. 
+-   `do_TFActivityPlot()` is now called `do_TFActivityHeatmap()`.
+-   `do_GroupwiseDEPlot()` is now called `do_GroupwiseDEHeatmap()`. 
+-   `do_CopyNumberVariantPlot()` is now called `do_CNVHeatmap()`. 
+-   `do_CorrelationPlot()` is now called `do_CorrelationHeatmap()`. 
+-   `do_MetadataPlot()` is now called `do_MetadataHeatmap()`. 
+-   `do_GeyserPlot()` is now called `do_StripPlot()`. 
+
+## Heavily modified functions.
+-   `do_TermEnrichmentPlot()`: Recoded the whole function. Now accepts the result of using `clusterProfiler::enrichGO()`, `clusterProfiler::enrichKEGG()`, etc. The output is a dot plot with the terms on the Y axis, the Gene Ratio in the X, colored by the adjusted p-value and size mapped to the Gene Count.
+-   `do_DotPlot()`: Removed dependencies with `Seurat::DotPlot()`.
+-   `do_RankedEnrichmentPlot()`, `do_EnrichmentHeatmap()` and `do_SCEnrichmentHeatmap()` do not longer accept `flavor = "AUCell"` due to dependency issues and lack of development support.
+
+The reason of these modification is to allow for a much clearer and concise output than before.
+
+## do_ActivityHeatmap()
+-   Changed legend title to "Z-Scored | ulm score", for consistency with other functions in the package.
+
+## do_AlluvialPlot()
+-   Enforced a minimum version of `ggalluvial` to deal with deprecation of functions from `dplyr` and `tidyr` that were still used in `ggalluvial` functions.
+-   Modified the legend items to have a black border.
+-   Changed default legend position to bottom and legend title to top and centered.
+
+## do_BoxPlot()
+-   Added `legend.ncol`, `legend.nrow` and `legend.byrow` parameters to control legend behavior.
+-   Fixed a bug in which `map_signif_levels` would only accept a logical and not custom mappings.
+-   When `map_signif_levels` is used, the mapping now appears as a plot legend for clarity.
+-   Added black borders to the legend glyphs when using `use_silhouette = FALSE`. 
+
+## do_CellularStatesPlot()
+-  Added reference lines to the plot to better visualize the segments.
+-  Added black border around the legend items. 
+-  Fixed bug where axis text will always display in bold. 
+
+## do_ChortDiagramPlot()
+-  Added `font.size` parameter to control the font size of the plot.
+
+## do_CNVHeatmap()
+-   Added `include_chr_arms` parameter to decide whether the heatmap should include a breakdown of the arms or just keep it by chromosomes.
+
+## do_ColorPalette()
+-  Changed "Wheel" to "Color wheel" when plotting the output without additional parameters.
+
+## do_DimPlot()
+-   Fixed a bug caused by using `cells.highlight` with only one cell.
+-   Fixed a bug causing the "Combined" plot resulting of the use of `split.by` and `group.by` to have a different size than the rest of panels when `ncol` parameter was also used.
+-   Fixed a bug causing a "selected_cells" plot title to show up when using `cells.highlight` and `idents.highlight`. 
+-   Changed the plot title of the "Combined" plot to either `group.by` or `split.by` depending of the usage context.
+-   Added `split.by.combined` parameter and set its default value to `TRUE`. This allows to toggle on or off whether to display the combined view when `split.by` is used.
+-   However, when `split.by`is used alongside `group.by`, it is now enforced to show the combined plot (`split.by.combined = TRUE`), to avoid bugs.
+-   Added `legend.dot.border` parameter to select whether we want a black border around the legend dots or not.
+-   Fixed a bug in which `font.family` would not be applied when `label = TRUE`. 
+-   Fixed a bug in which groups would not cluster if `cluster = TRUE` if there were missing values.
+
+## do_DotPlot()
+-   Fixed a bug that caused sequential palettes to not be checked properly.
+-   Changed default value of `dot.scale` to 8.
+-   Removed legacy parameter `colors.use`, which had no effect as of previous version but was still listed as parameter.
+-   Removed dependency with `Seurat::DotPlot()`. This means that there will be some differences with the output of this function. However, this is a design choice for the sake of preventing future dependency problems.
+-   Added `split.by` parameter.
+-   If `features` is provided as a named list, the plot facets them based on the belonging list (duplcated genes are removed). Cannot be used alongside `split.by`.
+-   Removed `scale`and `scale.by` parameters. In the sense of how they worked in `Seurat`.
+-   Added `zscore.data` parameter. When set to `TRUE`, it computes Z-scores for each gene across the different groups, allowing for inspection of which group has highest or lowest expression, but prevents you from comparing values across different genes. It is intended to be used alongside `slot = "data"`. 
+-   Removed the possibility to use a list of features. Instead, facets are being drawn according to `split.by` parameter.
+-   Removed `dot_border`. This is a design choice of `SCpubr`.
+-   Added `dot.min` parameter to exclude dots falling below a threshold for `P.Exp`.
+
+## do_EnrichmentHeatmap()
+-   Changed default value of `scale_scores` to `FALSE`.
+-   Fixed a bug in which scores were not actually being scaled when `scale_scores = TRUE`.
+-   Fixed a bug in which setting `scale_scores = TRUE` and `features.order` would trigger an error since the output had the suffix `_scaled` on it. This has been patched.
+
+## do_FeaturePlot()
+-   Fixed a bug in which legend titles would not show up as intended.
+-   Enabled the use of several legend titles when multiple features are provided. The number of legend titles and features have to be equal.
+-   Fixed a bug in which `font.family` would not be applied when `label = TRUE`. 
+-   Added `scale.limits` parameter to control the range of values the color scale should take. This is specially useful if you want to plot several features and make the color comparable between them. 
+
+## do_GroupwiseDEHeatmap()
+-   Reduced the legend title texts to allow for more room in the plot.
+-   Fixed a bug in which providing a DE genes object with `p_val_adj = 0` would cause the function to crash.
+
+## do_LigandReceptorPlot()
+-   Added a new parameter `top_interactions_by_group` which when set to `TRUE` will report for each pair of `source` and `target`, as many interactions as stated in `top_interactions`.
+
+## do_MetadataHeatmap()
+-   Modified the legend items to have a black border.
+-   Set `cluster = FALSE` as default.
+
+## do_PathwayActivityHeatmap
+-   Changed legend title to "Z-Scored | <statistic> score", for consistency with other functions in the package.
+
+## do_RidgePlot()
+-   Removed `size = 1.25` aesthetic from the call to `ggridges::geom_ridge...`.
+-   Set default legend position to bottom.
+-   Fixed a bug in which plot grid would not react properly to `flip`.
+-   Simplified the functionality of the function due to inconsistent interactions with `ggridges` package. As such, parameters `compute_quantiles`, `compute_custom_quantiles`, `quantiles`, `compute_distribution_tails`, `prob_tails` and `color_by_probabilities` are removed. 
+
+## do_SavePlot()
+-   Added `limitsize` parameter, that allows for very big ggplot2-based plots to be saved with big dimensions.
+
+## do_TFActivityHeatmap()
+-   Changed legend title to "Z-Scored | <statistic> score", for consistency with other functions in the package.
+
+## do_ViolinPlot()
+-   Added `order` parameter to reorder the groups based on the median. Only works when `split.by` is set to `NULL`.
+-   Fixed typos in error logging.
+-   Fixed a bug in which color palettes would not display by default when using `split.by`.
+
+## do_VolcanoPlot()
+-   Fixed an issue in which tags would be duplicated when using `use_labels = TRUE` in combination with `order_tabs_by = "both"`.
+-   Renewed aesthetics.
+-   Parameter `colors.use` now defaults to `NULL`, allowing a default color scheme to take place. Setting this parameter to a color will modify the color scheme appropriately.
+-   Simplified axis titles. 
+
 # SCpbur v2.0.2
 
 ## General.
@@ -26,6 +175,7 @@
 -   Changed default value of `legend.position` to `bottom`. 
 -   Fixed a bug in which the default color palette would not be applied when `plot_boxplots = FALSE`.
 -   Added `legend.title.position` parameter and set it up as `top` by default.
+-   Fixed a bug in which plot grid would not react properly to `flip`.
 
 # SCpubr v2.0.1 
 

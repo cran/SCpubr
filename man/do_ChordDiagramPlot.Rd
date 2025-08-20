@@ -10,6 +10,7 @@ do_ChordDiagramPlot(
   to = NULL,
   colors.from = NULL,
   colors.to = NULL,
+  colorblind = FALSE,
   big.gap = 10,
   small.gap = 1,
   link.border.color = NA,
@@ -28,7 +29,7 @@ do_ChordDiagramPlot(
   alignment = "default",
   annotationTrack = c("grid", "axis"),
   padding_labels = 4,
-  ...
+  font.size = 1
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ do_ChordDiagramPlot(
 \item{from, to}{\strong{\code{\link[base]{character}}} | Categorical metadata variable to be used as origin and end points of the interactions.}
 
 \item{colors.from, colors.to}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of colors corresponding to the unique values of "from" and "to".}
+
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
 
 \item{big.gap}{\strong{\code{\link[base]{numeric}}} | Space between the groups in "from" and "to".}
 
@@ -102,7 +105,7 @@ do_ChordDiagramPlot(
 
 \item{padding_labels}{\strong{\code{\link[base]{numeric}}} | Number of extra padding (white spaces) of the labels so that they do not overlap with the scales.}
 
-\item{...}{For internal use only.}
+\item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 }
 \value{
 A circlize plot.

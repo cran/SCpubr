@@ -3,12 +3,12 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - single feature", {
@@ -17,7 +17,12 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_FeaturePlot(sample = sample,
+                                features = "nCount_RNA",
+                                slot = NULL)
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
   
   testthat::test_that("do_FeaturePlot: PASS - group.by", {
@@ -29,7 +34,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 use_viridis = TRUE,
                                 viridis.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -37,7 +42,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 use_viridis = TRUE,
                                 viridis.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -45,7 +50,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = TRUE,
                                 use_viridis = TRUE,
                                 viridis.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -53,7 +58,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = TRUE,
                                 use_viridis = TRUE,
                                 viridis.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
@@ -62,7 +67,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 use_viridis = FALSE,
                                 sequential.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -70,7 +75,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 use_viridis = FALSE,
                                 sequential.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -78,7 +83,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = TRUE,
                                 use_viridis = TRUE,
                                 sequential.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -86,7 +91,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = TRUE,
                                 use_viridis = FALSE,
                                 sequential.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -96,7 +101,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.cell_borders = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -106,7 +111,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.cell_borders = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -116,7 +121,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 sequential.direction = -1,
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -126,7 +131,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 sequential.direction = -1,
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -137,7 +142,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NULL)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -148,7 +153,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NA)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -159,7 +164,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -171,7 +176,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NULL,
                                 group.by.colors.use = c("Cell" = "blue"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -184,7 +189,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.legend = NULL,
                                 group.by.colors.use = c("Cell" = "blue"),
                                 group.by.cell_borders = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -197,32 +202,32 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.legend = NULL,
                                 group.by.colors.use = c("Cell" = "blue"),
                                 group.by.cell_borders = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 use_viridis = FALSE,
                                 sequential.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 use_viridis = FALSE,
                                 sequential.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("TOX2", "EPC1"),
                                 use_viridis = FALSE,
                                 sequential.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("TOX2", "EPC1"),
                                 use_viridis = FALSE,
                                 sequential.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
@@ -230,62 +235,62 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 use_viridis = FALSE,
                                 sequential.direction = 1,
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 use_viridis = FALSE,
                                 sequential.direction = -1,
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("TOX2", "EPC1"),
                                 use_viridis = FALSE,
                                 sequential.direction = 1,
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("TOX2", "EPC1"),
                                 use_viridis = FALSE,
                                 sequential.direction = -1,
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NULL)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NA)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -293,42 +298,42 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test",
                                 group.by.colors.use = c("Cell" = "blue"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "orig.ident",
                                 use_viridis = TRUE,
                                 viridis.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "orig.ident",
                                 use_viridis = TRUE,
                                 viridis.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "orig.ident",
                                 use_viridis = FALSE,
                                 sequential.direction = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "orig.ident",
                                 use_viridis = FALSE,
                                 sequential.direction = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "orig.ident",
                                 use_viridis = FALSE,
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -337,7 +342,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -346,7 +351,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 enforce_symmetry = FALSE,
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -356,7 +361,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NULL)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -366,7 +371,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = NA)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -376,7 +381,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "seurat_clusters",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -387,7 +392,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test",
                                 group.by.colors.use = c("Cell" = "blue"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -399,7 +404,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.legend = "Test",
                                 group.by.colors.use = c("Cell" = "blue"),
                                 group.by.cell_borders = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
@@ -411,7 +416,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by.legend = "Test",
                                 group.by.colors.use = c("Cell" = "blue"),
                                 group.by.cell_borders = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     sample$orig.ident <- as.factor(sample$orig.ident)
     p <- SCpubr::do_FeaturePlot(sample = sample,
@@ -422,7 +427,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 group.by = "orig.ident",
                                 group.by.show.dots = TRUE,
                                 group.by.legend = "Test")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - cutoffs", {
@@ -433,37 +438,37 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "nCount_RNA",
                                 min.cutoff = 19500,
                                 max.cutoff = 20000)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     testthat::expect_warning({p <- SCpubr::do_FeaturePlot(sample = sample,
                                                           features = c("TOX2", "EPC1"),
                                                           min.cutoff = 1)})
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   
   testthat::expect_warning({p <- SCpubr::do_FeaturePlot(sample = sample,
                                                         features = c("TOX2", "EPC1"),
                                                         max.cutoff = 1)})
-  testthat::expect_type(p, "list")
+  testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "seurat_clusters",
                                 min.cutoff = 19500,
                                 max.cutoff = 20000)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("nCount_RNA", "EPC1"),
                                 min.cutoff = c(19500, 1),
                                 max.cutoff = c(20000, 2))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 split.by = "annotation",
                                 features = c("nCount_RNA", "EPC1"),
                                 min.cutoff = c(19500, 1),
                                 max.cutoff = c(20000, 2))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - contour", {
@@ -473,33 +478,33 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
                             plot_density_contour = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
                             plot_density_contour = TRUE,
                             contour.position = "bottom")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
                             plot_density_contour = TRUE,
                             contour.position = "top")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
                                 plot_density_contour = TRUE,
                                 contour.position = "bottom",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
                                 plot_density_contour = TRUE,
                                 contour.position = "top",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -507,7 +512,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                             raster = TRUE,
                             plot_density_contour = TRUE,
                             contour.position = "top")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -515,7 +520,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 raster = TRUE,
                                 plot_density_contour = TRUE,
                                 contour.position = "bottom")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -524,7 +529,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 plot_density_contour = TRUE,
                                 contour.position = "top",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -533,7 +538,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 plot_density_contour = TRUE,
                                 contour.position = "bottom",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
@@ -542,7 +547,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                             raster = TRUE,
                             plot_density_contour = TRUE,
                             contour.position = "top")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -550,7 +555,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 raster = TRUE,
                                 plot_density_contour = TRUE,
                                 contour.position = "bottom")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -559,7 +564,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 plot_density_contour = TRUE,
                                 contour.position = "top",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 feature = "nCount_RNA",
@@ -568,7 +573,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 plot_density_contour = TRUE,
                                 contour.position = "bottom",
                                 enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
   })
 
@@ -580,18 +585,18 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 legend.title = "pepe")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 legend.title = "pepe",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - cell_borders", {
@@ -599,17 +604,17 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
 
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE, raster = TRUE, pt.size = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE, idents.highlight = "1")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE, raster = TRUE, idents.highlight = "1", pt.size = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE, split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE, raster = TRUE, split.by = "seurat_clusters", pt.size = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - enforce_symmetry", {
@@ -617,16 +622,16 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
 
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample, features = c("EPC1", "nCount_RNA"), enforce_symmetry = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", enforce_symmetry = TRUE, idents.highlight = c("1", "3"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample, features = "EPC1", enforce_symmetry = TRUE, split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - multiple features", {
@@ -635,7 +640,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("nCount_RNA", "nFeature_RNA"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - title", {
@@ -645,7 +650,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 plot.title = "Feature Plot")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - subtitle", {
@@ -655,7 +660,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 plot.subtitle = "Feature Plot")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - caption", {
@@ -665,7 +670,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 plot.caption = "Feature Plot")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - individual titles", {
@@ -675,7 +680,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("nCount_RNA", "nFeature_RNA"),
                                 individual.titles = c("A", NA))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - individual subtitles ", {
@@ -685,7 +690,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("nCount_RNA", "nFeature_RNA"),
                                 individual.subtitles = c("A", NA))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - individual captions", {
@@ -695,7 +700,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = c("nCount_RNA", "nFeature_RNA"),
                                 individual.captions = c("A", NA))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - dims", {
@@ -705,7 +710,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 features = "nCount_RNA",
                                 dims = c(2, 1))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - subset of cells", {
@@ -716,7 +721,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "EPC1",
                                 cells.highlight = cells.plot)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - subset of identities", {
@@ -726,7 +731,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "EPC1",
                                 idents.highlight = c("1", "2"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - subset of cells and identities", {
@@ -738,7 +743,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "EPC1",
                                 cells.highlight = cells.plot,
                                 idents.highlight = c("1", "2"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by", {
@@ -748,7 +753,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "EPC1",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by and idents.keep", {
@@ -759,7 +764,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "EPC1",
                                 split.by = "seurat_clusters",
                                 idents.keep = c("1", "2"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by and idents.keep multiple features", {
@@ -770,7 +775,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = c("EPC1", "nCount_RNA"),
                                 split.by = "seurat_clusters",
                                 idents.keep = c("1", "2"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - modify color maps", {
@@ -780,7 +785,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "nCount_RNA",
                                 viridis.palette = "F")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: WARNING - features as a list", {
@@ -813,7 +818,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "nCount_RNA",
                                 legend.position = "right")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -828,7 +833,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "nCount_RNA",
                                 reduction = "diffusion")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - duplicated idents.keep", {
@@ -848,7 +853,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "PC_1")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by factor", {
@@ -859,7 +864,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "PC_1",
                                 split.by = "factor_seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by and plot.title", {
@@ -872,7 +877,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 plot.title = "Title",
                                 plot.subtitle = "Subtitle",
                                 plot.caption = "Caption")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by and pca", {
@@ -883,7 +888,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "PC_1",
                                 split.by = "seurat_clusters",
                                 reduction = "pca")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - split.by and diffusion", {
@@ -898,7 +903,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "PC_1",
                                 split.by = "seurat_clusters",
                                 reduction = "diffusion")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - remove legend", {
@@ -908,7 +913,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "PC_1",
                                 legend.position = "none")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - normal legend", {
@@ -918,7 +923,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "PC_1",
                                 legend.type = "normal")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - colorbar legend", {
@@ -928,7 +933,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
     p <- SCpubr::do_FeaturePlot(sample,
                                 features = "PC_1",
                                 legend.type = "colorbar")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -941,7 +946,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "PC_1",
                                 legend.type = "normal",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_FeaturePlot: PASS - colorbar legend - split.by", {
@@ -952,7 +957,7 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
                                 features = "PC_1",
                                 legend.type = "colorbar",
                                 split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -988,20 +993,42 @@ if (base::isFALSE(dep_check[["do_FeaturePlot"]])){
 
 
     p <- SCpubr::do_FeaturePlot(sample = sample, plot.axes = TRUE, features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample, reduction = "pca", plot.axes = TRUE, features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_FeaturePlot(sample = sample, dims = c(2, 1), plot.axes = TRUE, features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     sample@reductions$diffusion <- sample@reductions$umap
     p <- SCpubr::do_FeaturePlot(sample = sample,
                                 reduction = "diffusion",
                                 plot.axes = TRUE,
                                 features = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+  })
+  
+  testthat::test_that("do_FeaturePlot: PASS - scale limits", {
+    testthat::skip_on_cran()
+    
+    
+    p <- SCpubr::do_FeaturePlot(sample = sample, 
+                                features = "nCount_RNA",
+                                scale.limits = c(0, 1))
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    testthat::expect_error(SCpubr::do_FeaturePlot(sample = sample, 
+                                                       features = "nCount_RNA",
+                                                       scale.limits = c(0, 1),
+                                                  min.cutoff = 0.2))
+    
+    testthat::expect_error(SCpubr::do_FeaturePlot(sample = sample, 
+                                                  features = "nCount_RNA",
+                                                  scale.limits = c(0, 1),
+                                                  max.cutoff = 0.2))
+    
+    
   })
 }
 

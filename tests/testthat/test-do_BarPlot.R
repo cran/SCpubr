@@ -6,19 +6,93 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
                             position = "stack")
-    testthat::expect_type(p, "list")
-
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            position = "stack",
+                            colors.use = NULL)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            position = "stack",
+                            order = FALSE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             position = "stack")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             position = "fill")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = NULL,
+                            position = "stack")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = NULL,
+                            position = "stack",
+                            flip = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            position = "fill",
+                            add.n = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            position = "fill",
+                            order = TRUE,
+                            order.by = "0")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            position = "fill",
+                            add.n = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            facet.by = "orig.ident",
+                            position = "fill",
+                            add.n = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            facet.by = "orig.ident",
+                            position = "fill",
+                            add.n = TRUE,
+                            return_data = TRUE)
+    testthat::expect_type(p, "list")
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            facet.by = "orig.ident",
+                            position = "fill",
+                            add.n = TRUE,
+                            return_data = TRUE,
+                            flip = TRUE)
     testthat::expect_type(p, "list")
   })
 
@@ -28,7 +102,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat_clusters",
                             position = "stack")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - two variables - fill - flip", {
@@ -39,7 +113,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             split.by = "orig.ident",
                             position = "fill",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - two variables - stack - flip", {
@@ -52,7 +126,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             split.by = "orig.ident",
                             position = "stack",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - two variables - stack - flip - ordered", {
@@ -65,7 +139,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             position = "stack",
                             flip = TRUE,
                             order = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -103,7 +177,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "orig.ident",
                             axis.text.x.angle  = 0)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - rotate x labels", {
@@ -113,7 +187,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     sample$seurat.clusters.factor <- factor(sample$seurat_clusters)
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat.clusters.factor")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - rotate x labels with group.by", {
@@ -124,7 +198,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat.clusters.factor",
                             split.by = "seurat_clusters")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -148,7 +222,13 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat.clusters.factor",
                             split.by = "seurat_clusters",
                             colors.use = colors)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            group.by = "seurat.clusters.factor",
+                            split.by = "seurat_clusters",
+                            colors.use = NULL)
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - colors.use ", {
@@ -170,7 +250,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
     p <- SCpubr::do_BarPlot(sample = sample,
                             group.by = "seurat.clusters.factor",
                             colors.use = colors)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - one variable - rotate x labels", {
@@ -181,7 +261,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "orig.ident",
                             position = "stack",
                             axis.text.x.angle = 0)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - one variable - xlab, ylab and title", {
@@ -196,7 +276,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             plot.title = "C",
                             plot.subtitle = "D",
                             plot.caption = "E")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - one variable - no legend", {
@@ -207,7 +287,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "orig.ident",
                             position = "stack",
                             legend.position = "none")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -221,7 +301,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             split.by = "factor_seurat_clusters",
                             position = "stack",
                             legend.position = "none")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BarPlot: PASS - labs", {
@@ -233,7 +313,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = NULL,
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = NULL,
@@ -241,7 +321,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = NULL,
@@ -249,7 +329,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = NULL,
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = "A",
@@ -257,7 +337,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
 
 
@@ -267,7 +347,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = NULL,
                             flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = NULL,
@@ -275,7 +355,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = NULL,
@@ -283,7 +363,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = NULL,
                             flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = "A",
@@ -291,7 +371,17 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+
+    p <- SCpubr::do_BarPlot(sample = sample,
+                            xlab = "A",
+                            ylab = "B",
+                            legend.title = NULL,
+                            position = "fill",
+                            group.by = "seurat_clusters",
+                            split.by = "orig.ident",
+                            flip = FALSE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = "A",
@@ -299,17 +389,8 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             legend.title = NULL,
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
-                            flip = FALSE)
-    testthat::expect_type(p, "list")
-
-    p <- SCpubr::do_BarPlot(sample = sample,
-                            xlab = "A",
-                            ylab = "B",
-                            legend.title = NULL,
-                            group.by = "seurat_clusters",
-                            split.by = "orig.ident",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
 
     p <- SCpubr::do_BarPlot(sample = sample,
@@ -319,7 +400,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BarPlot(sample = sample,
                             xlab = "A",
@@ -328,7 +409,7 @@ if (base::isFALSE(dep_check[["do_BarPlot"]])){
                             group.by = "seurat_clusters",
                             split.by = "orig.ident",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 }
 

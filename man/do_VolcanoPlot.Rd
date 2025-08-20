@@ -9,7 +9,7 @@ do_VolcanoPlot(
   de_genes,
   pval_cutoff = 0.05,
   FC_cutoff = 2,
-  pt.size = 2,
+  pt.size = 1,
   border.size = 1.5,
   border.color = "black",
   font.size = 14,
@@ -21,10 +21,12 @@ do_VolcanoPlot(
   line_color = "grey75",
   line_size = 0.5,
   add_gene_tags = TRUE,
+  add_tag_side = "both",
   order_tags_by = "both",
+  tag_size = 6,
   n_genes = 5,
   use_labels = FALSE,
-  colors.use = "steelblue",
+  colors.use = NULL,
   plot.title.face = "bold",
   plot.subtitle.face = "plain",
   plot.caption.face = "italic",
@@ -68,13 +70,17 @@ do_VolcanoPlot(
 
 \item{add_gene_tags}{\strong{\code{\link[base]{logical}}} | Whether to plot the top genes.}
 
+\item{add_tag_side}{\strong{\code{\link[base]{logical}}} | Either "both", "positive" or "negative" to indicate which side of genes to tag}
+
 \item{order_tags_by}{\strong{\code{\link[base]{character}}} | Either "both", "pvalue" or "logfc".}
 
-\item{n_genes}{\strong{\code{\link[base]{numeric}}} | Number of top genes in each side to plot.}
+\item{tag_size}{\strong{\code{\link[base]{numeric}}} | Size of the text/label for the tags.}
+
+\item{n_genes}{\strong{\code{\link[base]{numeric}}} | Number of top genes to plot.}
 
 \item{use_labels}{\strong{\code{\link[base]{logical}}} | Whether to use labels instead of text for the tags.}
 
-\item{colors.use}{\strong{\code{\link[base]{character}}} | Color to generate a tetradic color scale with.}
+\item{colors.use}{\strong{\code{\link[base]{character}}} | Color to generate a tetradic color scale with. If NULL, default colors are used.}
 
 \item{plot.title.face, plot.subtitle.face, plot.caption.face, axis.title.face, axis.text.face, legend.title.face, legend.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the corresponding theme element.  One of:
 \itemize{

@@ -8,10 +8,12 @@
 #' @param line_color \strong{\code{\link[base]{character}}} | Color for the lines.
 #' @param line_size \strong{\code{\link[base]{numeric}}} | Size of the lines in the plot.
 #' @param add_gene_tags \strong{\code{\link[base]{logical}}} | Whether to plot the top genes.
+#' @param add_tag_side \strong{\code{\link[base]{logical}}} | Either "both", "positive" or "negative" to indicate which side of genes to tag
 #' @param order_tags_by \strong{\code{\link[base]{character}}} | Either "both", "pvalue" or "logfc".
-#' @param n_genes \strong{\code{\link[base]{numeric}}} | Number of top genes in each side to plot.
+#' @param tag_size \strong{\code{\link[base]{numeric}}} | Size of the text/label for the tags.
+#' @param n_genes \strong{\code{\link[base]{numeric}}} | Number of top genes to plot.
 #' @param use_labels \strong{\code{\link[base]{logical}}} | Whether to use labels instead of text for the tags.
-#' @param colors.use \strong{\code{\link[base]{character}}} | Color to generate a tetradic color scale with.
+#' @param colors.use \strong{\code{\link[base]{character}}} | Color to generate a tetradic color scale with. If NULL, default colors are used.
 #'
 #' @return A volcano plot as a ggplot2 object.
 #' @export
@@ -21,7 +23,7 @@ do_VolcanoPlot <- function(sample,
                            de_genes,
                            pval_cutoff = 0.05,
                            FC_cutoff = 2,
-                           pt.size = 2,
+                           pt.size = 1,
                            border.size = 1.5,
                            border.color = "black",
                            font.size = 14,
@@ -33,10 +35,12 @@ do_VolcanoPlot <- function(sample,
                            line_color = "grey75",
                            line_size = 0.5,
                            add_gene_tags = TRUE,
+                           add_tag_side = "both",
                            order_tags_by = "both",
+                           tag_size = 6,
                            n_genes = 5,
                            use_labels = FALSE,
-                           colors.use = "steelblue",
+                           colors.use = NULL,
                            plot.title.face = "bold",
                            plot.subtitle.face = "plain",
                            plot.caption.face = "italic",
@@ -46,7 +50,7 @@ do_VolcanoPlot <- function(sample,
                            legend.text.face = "plain"){
   # Add lengthy error messages.
   withr::local_options(.new = list("warning.length" = 8170))
-  
+
   check_suggests(function_name = "do_VolcanoPlot")
   # Check if the sample provided is a Seurat object.
   check_Seurat(sample = sample)
@@ -63,7 +67,8 @@ do_VolcanoPlot <- function(sample,
                        "border.size" = border.size,
                        "font.size" = font.size,
                        "line_size" = line_size,
-                       "n_genes" = n_genes)
+                       "n_genes" = n_genes,
+                       "tag_size" = tag_size)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("border.color" = border.color,
@@ -72,6 +77,7 @@ do_VolcanoPlot <- function(sample,
                          "plot.title" = plot.title,
                          "plot.subtitle" = plot.subtitle,
                          "plot.caption" = plot.caption,
+                         "add_tag_side" = add_tag_side,
                          "order_tags_by" = order_tags_by,
                          "colors.use" = colors.use,
                          "plot.title.face" = plot.title.face,
@@ -95,14 +101,26 @@ do_VolcanoPlot <- function(sample,
   check_parameters(axis.text.face, parameter_name = "axis.text.face")
   check_parameters(legend.title.face, parameter_name = "legend.title.face")
   check_parameters(legend.text.face, parameter_name = "legend.text.face")
-  
-  
+
+
   assertthat::assert_that(order_tags_by %in% c("both", "pvalue", "logfc"),
                           msg = "Please use either both, pvalue or logfc in order_tags_by.")
 
+  assertthat::assert_that(add_tag_side %in% c("both", "positive", "negative"),
+                          msg = "Please use either both, positive or negative in add_tag_side")
+
   `%>%` <- magrittr::`%>%`
-  colors <- do_ColorPalette(colors.use, tetradic = TRUE)
-  names(colors) <- c("A", "C", "B", "D")
+  
+  if (!is.null(colors.use)){
+    colors <- do_ColorPalette(colors.use, tetradic = TRUE)
+    names(colors) <- c("A", "C", "B", "D")
+  } else {
+    colors <- c("A" = "#385f71",
+                "B" = "#d7b377",
+                "C" = "#f5f0f6",
+                "D" = "grey75")
+  }
+  
 
   if (!("gene" %in% colnames(de_genes))){
     data <- de_genes %>%
@@ -147,7 +165,7 @@ do_VolcanoPlot <- function(sample,
                                                      title.hjust = 0.5)) +
        ggplot2::xlim(x_lims) +
        ggplot2::xlab(expression(bold(paste("Avg. ", log["2"], "(FC)")))) +
-       ggplot2::ylab(expression(bold(paste("-", log["10"], "(p-value adjusted)"))))
+       ggplot2::ylab(expression(bold(paste("-", log["10"], "(p.adj.)"))))
 
   if (isTRUE(plot_lines)){
     p <- p +
@@ -167,17 +185,22 @@ do_VolcanoPlot <- function(sample,
 
   if (isTRUE(add_gene_tags)){
     if (order_tags_by == "both"){
-      data.up <- data %>%
-                 dplyr::arrange(dplyr::desc(.data$log_p),
-                                dplyr::desc(.data$avg_log2FC)) %>%
-                 as.data.frame() %>%
+      data.label <- data %>%
+                    dplyr::mutate("abs_avg_log2FC" = abs(.data$avg_log2FC)) %>% 
+                    dplyr::arrange(dplyr::desc(.data$log_p),
+                                   dplyr::desc(.data$abs_avg_log2FC)) %>%
+                    as.data.frame()
+      
+      data.up <- data.label %>% 
+                 dplyr::filter(.data$avg_log2FC > 0) %>% 
                  utils::head(n_genes)
-
-      data.down <- data %>%
-                   dplyr::arrange(dplyr::desc(.data$log_p),
-                                  .data$avg_log2FC) %>%
-                   as.data.frame() %>%
+      
+      data.down <- data.label %>% 
+                   dplyr::filter(.data$avg_log2FC < 0) %>% 
                    utils::head(n_genes)
+      
+      data.label <- dplyr::bind_rows(data.up, data.down)
+                    
     } else if (order_tags_by == "pvalue"){
       data.up <- data %>%
                  dplyr::filter(.data$avg_log2FC > 0) %>%
@@ -191,6 +214,8 @@ do_VolcanoPlot <- function(sample,
                    dplyr::arrange(dplyr::desc(.data$log_p)) %>%
                    as.data.frame() %>%
                    utils::head(n_genes)
+      
+      data.label <- dplyr::bind_rows(data.up, data.down)
     } else if (order_tags_by == "logfc"){
       data.up <- data %>%
                  dplyr::arrange(dplyr::desc(.data$avg_log2FC)) %>%
@@ -201,8 +226,17 @@ do_VolcanoPlot <- function(sample,
                    dplyr::arrange(.data$avg_log2FC) %>%
                    as.data.frame() %>%
                    utils::head(n_genes)
+
+      data.label <- dplyr::bind_rows(data.up, data.down)
     }
-    data.label <- dplyr::bind_rows(data.up, data.down)
+
+    if (add_tag_side == "positive") {
+      data.label <- data.up
+
+    } else if (add_tag_side == "negative") {
+      data.label <- data.down
+
+    }
 
     if (base::isFALSE(use_labels)){
       p <- p +
@@ -210,14 +244,16 @@ do_VolcanoPlot <- function(sample,
                                     mapping = ggplot2::aes(label = .data$gene),
                                     max.overlaps = 1000,
                                     color = "black",
-                                    fontface = "bold")
+                                    fontface = "bold",
+                                    size = tag_size)
     } else if (isTRUE(use_labels)){
       p <- p +
            ggrepel::geom_label_repel(data = data.label,
                                      mapping = ggplot2::aes(label = .data$gene),
                                      max.overlaps = 1000,
                                      color = "black",
-                                     fontface = "bold")
+                                     fontface = "bold",
+                                     size = tag_size)
     }
 
   }

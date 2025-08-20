@@ -3,38 +3,59 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
   testthat::test_that("do_BoxPlot: CRAN essentials", {
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     sample$group.by <- as.character(sample$seurat_clusters)
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "group.by",
                             split.by = NULL)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             split.by = "orig.ident")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BoxPlot: PASS - default", {
     testthat::skip_on_cran()
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BoxPlot(sample = sample,
+                            feature = "nCount_RNA",
+                            split.by = "orig.ident")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BoxPlot(sample = sample,
+                            feature = "nCount_RNA",
+                            group.by = "orig.ident",
+                            colors.use = c("Cell" = "red"))
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BoxPlot(sample = sample,
+                            feature = "nCount_RNA",
+                            order = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BoxPlot(sample = sample,
+                            feature = "nCount_RNA",
+                            use_silhouette = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     sample$group.by <- as.character(sample$seurat_clusters)
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "group.by",
                             split.by = NULL)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             split.by = "orig.ident")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BoxPlot: PASS - custom_grouping", {
@@ -42,19 +63,19 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "orig.ident")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     sample$orig.ident <- factor(sample$orig.ident)
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "orig.ident")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             group.by = "orig.ident",
                             colors.use = c("Cell" = "blue"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -64,7 +85,7 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             split.by = "orig.ident")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -73,7 +94,7 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             use_silhouette = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BoxPlot: PASS - silhouette", {
@@ -82,7 +103,7 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
                             feature = "nCount_RNA",
                             use_test = TRUE,
                             comparisons = list(c("0", "1")))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BoxPlot: PASS - order", {
@@ -90,13 +111,13 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             order = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             order = TRUE,
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BoxPlot: PASS - flip", {
@@ -104,7 +125,7 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     p <- SCpubr::do_BoxPlot(sample = sample,
                             feature = "nCount_RNA",
                             flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -127,6 +148,12 @@ if (base::isFALSE(dep_check[["do_BoxPlot"]])){
     testthat::expect_error({SCpubr::do_BoxPlot(sample = sample,
                                                feature = "nCount_RNA",
                                                order = TRUE,
+                                               split.by = "orig.ident")})
+    
+    testthat::expect_error({SCpubr::do_BoxPlot(sample = sample,
+                                               feature = "nCount_RNA",
+                                               use_silhouette = TRUE,
+                                               order = FALSE,
                                                split.by = "orig.ident")})
   })
 }

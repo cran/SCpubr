@@ -5,13 +5,13 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - categorical variable dimred component", {
@@ -20,7 +20,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "PC_1",
@@ -33,16 +33,16 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE,
                                  legend.title = "A")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - cell_borders", {
     testthat::skip_on_cran()
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample, feature_to_rank = "EPC1", group.by = "seurat_clusters", plot_cell_borders = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     p <- SCpubr::do_BeeSwarmPlot(sample = sample, feature_to_rank = "EPC1", group.by = "seurat_clusters", plot_cell_borders = TRUE, raster = TRUE, pt.size = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - categorical variable gene", {
@@ -52,21 +52,85 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "EPC1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 remove_x_axis = TRUE,
+                                 remove_y_axis = TRUE,
+                                 flip = TRUE,
+                                 raster = TRUE,
+                                 ylab = "Ylab")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 remove_x_axis = TRUE,
+                                 remove_y_axis = TRUE,
+                                 flip = TRUE,
+                                 raster = TRUE,
+                                 ylab = NULL)
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "EPC1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE,
                                  order = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 raster = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 flip = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 flip = FALSE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "orig.ident",
+                                 continuous_feature = FALSE,
+                                 colors.use = c("Cell" = "red"))
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 legend.title = NULL)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+    
+    p <- SCpubr::do_BeeSwarmPlot(sample = sample,
+                                 feature_to_rank = "EPC1",
+                                 group.by = "seurat_clusters",
+                                 continuous_feature = FALSE,
+                                 order = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "EPC1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
                                  use_viridis = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "EPC1",
@@ -74,7 +138,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  continuous_feature = TRUE,
                                  order = TRUE,
                                  use_viridis = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - legend position = right", {
@@ -85,7 +149,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE,
                                  legend.position = "right")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - categorical variable metadata", {
@@ -94,7 +158,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "nCount_RNA",
                                  group.by = "seurat_clusters",
                                  continuous_feature = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - continuous variable", {
@@ -103,7 +167,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - continuous variable legend normal", {
@@ -113,7 +177,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
                                  legend.type = "normal")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - continuous variable legend colorbar", {
@@ -123,7 +187,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
                                  legend.type = "colorbar")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
 
@@ -170,7 +234,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
                                  viridis.palette = "F")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - continuous variable legend position = top", {
@@ -180,7 +244,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  group.by = "seurat_clusters",
                                  continuous_feature = TRUE,
                                  legend.position = "top")
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: FAIL - feature not found", {
@@ -198,7 +262,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  raster = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - colors.use", {
@@ -215,7 +279,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                                 "6" = "#ca6702",
                                                 "7" = "#bb3e03",
                                                 "8" = "#ae2012"))
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - remove x axis", {
@@ -224,7 +288,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  remove_x_axis = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - remove y axis", {
@@ -233,7 +297,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  remove_y_axis = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - flip", {
@@ -242,7 +306,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = "seurat_clusters",
                                  flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - all NULL", {
@@ -251,7 +315,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  feature_to_rank = "PC_1",
                                  group.by = NULL,
                                  flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - labs", {
@@ -262,7 +326,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  xlab = "A",
                                  ylab = "B",
                                  flip = TRUE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "PC_1",
@@ -270,7 +334,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  xlab = "A",
                                  ylab = "B",
                                  flip = FALSE)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
   testthat::test_that("do_BeeSwarmPlot: PASS - continuous feature cutoffs", {
@@ -282,7 +346,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  continuous_feature = TRUE,
                                  min.cutoff = -1,
                                  max.cutoff = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
                                  feature_to_rank = "PC_1",
@@ -290,7 +354,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  flip = TRUE,
                                  continuous_feature = TRUE,
                                  min.cutoff = -1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
 
     p <- SCpubr::do_BeeSwarmPlot(sample = sample,
@@ -299,7 +363,7 @@ if (base::isFALSE(dep_check[["do_BeeSwarmPlot"]])){
                                  flip = TRUE,
                                  continuous_feature = TRUE,
                                  max.cutoff = 1)
-    testthat::expect_type(p, "list")
+    testthat::expect_true(ggplot2::is_ggplot(p))
 
     testthat::expect_error({
       SCpubr::do_BeeSwarmPlot(sample = sample,

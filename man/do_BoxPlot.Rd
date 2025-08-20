@@ -15,6 +15,7 @@ do_BoxPlot(
   font.type = "sans",
   axis.text.x.angle = 45,
   colors.use = NULL,
+  colorblind = FALSE,
   na.value = "grey75",
   plot.title = NULL,
   plot.subtitle = NULL,
@@ -24,6 +25,9 @@ do_BoxPlot(
   legend.title = NULL,
   legend.title.position = "top",
   legend.position = "bottom",
+  legend.ncol = NULL,
+  legend.nrow = NULL,
+  legend.byrow = FALSE,
   boxplot.line.color = "black",
   outlier.color = "black",
   outlier.alpha = 0.5,
@@ -38,7 +42,7 @@ do_BoxPlot(
   use_test = FALSE,
   comparisons = NULL,
   test = "wilcox.test",
-  map_signif_level = TRUE,
+  map_signif_level = c(`***` = 0.001, `**` = 0.01, `*` = 0.05),
   plot.title.face = "bold",
   plot.subtitle.face = "plain",
   plot.caption.face = "italic",
@@ -74,6 +78,8 @@ do_BoxPlot(
 
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
 
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
+
 \item{na.value}{\strong{\code{\link[base]{character}}} | Color value for NA.}
 
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
@@ -98,6 +104,12 @@ do_BoxPlot(
 \item \emph{\code{right}}: Right of the figure.
 \item \emph{\code{none}}: No legend is displayed.
 }}
+
+\item{legend.ncol}{\strong{\code{\link[base]{numeric}}} | Number of columns in the legend.}
+
+\item{legend.nrow}{\strong{\code{\link[base]{numeric}}} | Number of rows in the legend.}
+
+\item{legend.byrow}{\strong{\code{\link[base]{logical}}} | Whether the legend is filled by row or not.}
 
 \item{boxplot.line.color}{\strong{\code{\link[base]{character}}} | Color of the borders of the boxplots if use_silhouette is FALSE.}
 

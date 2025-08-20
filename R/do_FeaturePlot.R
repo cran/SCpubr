@@ -11,6 +11,7 @@
 #' @param group.by.colors.use \strong{\code{\link[base]{character}}} | Colors to use for the group dots.
 #' @param group.by.show.dots \strong{\code{\link[base]{logical}}} | Controls whether to place in the middle of the groups.
 #' @param group.by.cell_borders.alpha \strong{\code{\link[base]{numeric}}} | Controls the transparency of the new borders drawn by \strong{\code{group.by.cell_borders}}.
+#' @param scale.limits \strong{\code{\link[base]{numeric}}} | Vector of two values (i.e: \code{c(0, 1)}) to limit the scales. Particularly useful to extend the color scale beyond the values in the dataset, contrary to \code{min.cutoff} and \code{max.cutoff}. 
 #' @param symmetry.type \strong{\code{\link[base]{character}}} | Type of symmetry to be enforced. One of:
 #' \itemize{
 #'   \item \emph{\code{absolute}}: The highest absolute value will be taken into a account to generate the color scale. Works after \strong{\code{min.cutoff}} and \strong{\code{max.cutoff}}.
@@ -29,6 +30,7 @@ do_FeaturePlot <- function(sample,
                            order = FALSE,
                            group.by = NULL,
                            group.by.colors.use = NULL,
+                           colorblind = FALSE,
                            group.by.legend = NULL,
                            group.by.show.dots = TRUE,
                            group.by.dot.size = 8,
@@ -78,6 +80,7 @@ do_FeaturePlot <- function(sample,
                            plot.axes = FALSE,
                            min.cutoff = rep(NA, length(features)),
                            max.cutoff = rep(NA, length(features)),
+                           scale.limits = NULL,
                            plot_density_contour = FALSE,
                            contour.position = "bottom",
                            contour.color = "grey90",
@@ -110,7 +113,7 @@ do_FeaturePlot <- function(sample,
   sample <- out[["sample"]]
   assay <- out[["assay"]]
 
-  sample <- check_Assay5(sample, assay = assay)
+  #sample <- check_Assay5(sample, assay = assay)
 
   # Check the reduction.
   reduction <- check_and_set_reduction(sample = sample, reduction = reduction)
@@ -128,7 +131,8 @@ do_FeaturePlot <- function(sample,
                        "legend.byrow" = legend.byrow,
                        "group.by.cell_borders" = group.by.cell_borders,
                        "group.by.show.dots" = group.by.show.dots,
-                       "use_viridis" = use_viridis)
+                       "use_viridis" = use_viridis,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -202,7 +206,7 @@ do_FeaturePlot <- function(sample,
   check_type(parameters = character_list, required_type = "character", test_function = is.character)
 
   # Check slot.
-  slot <- check_and_set_slot(slot = slot)
+  slot <- if(is.null(slot)){"data"} else {slot}
 
   # Check split.by is on metadata.
   if (!(is.null(split.by))){check_feature(sample = sample, features = split.by, enforce_check = "metadata", enforce_parameter = "split.by")}
@@ -249,6 +253,37 @@ do_FeaturePlot <- function(sample,
                                        crayon_body(" higher or equal than "),
                                        crayon_key("0"),
                                        crayon_body(".")))
+  
+  if (!is.null(scale.limits)){
+    assertthat::assert_that(length(scale.limits) == 2,
+                            msg = paste0(add_cross(), crayon_body("Please provide a two values to "),
+                                         crayon_key("scale.limits"),
+                                         crayon_body(".")))
+  }
+
+  
+  if (!is.null(scale.limits)){
+    comparison <- !is.na(min.cutoff)
+    for (item in comparison){
+      assertthat::assert_that(base::isFALSE(item),
+                              msg = paste0(add_cross(), crayon_body("When using "),
+                                           crayon_key("scale.limits"),
+                                           crayon_body(" you can not provide values to "),
+                                           crayon_key("min.cutoff"),
+                                           crayon_body(".")))
+    }
+    
+    comparison <- !is.na(max.cutoff)
+    for (item in comparison){
+      assertthat::assert_that(base::isFALSE(item),
+                              msg = paste0(add_cross(), crayon_body("When using "),
+                                           crayon_key("scale.limits"),
+                                           crayon_body(" you can not provide values to "),
+                                           crayon_key("max.cutoff"),
+                                           crayon_body(".")))
+    }
+    
+  }
 
 
   check_colors(border.color, parameter_name = "border.color")
@@ -268,10 +303,19 @@ do_FeaturePlot <- function(sample,
       # If the variable is a factor, use the levels as order. If not, order the values alphabetically.
       names.use <- if (is.factor(data.use[, 1])){levels(data.use[, 1])} else {sort(unique(data.use[, 1]))}
       # Generate the color scale to be used based on the unique values of group.by.
-      group.by.colors.use <- generate_color_scale(names.use)
+      group.by.colors.use <- generate_color_scale(names.use, colorblind = colorblind)
     }
   }
-
+  
+  # Check that the legend title match the length of features.
+  if (!is.null(legend.title)){
+    assertthat::assert_that(length(legend.title) == length(features),
+                            msg = paste0(add_cross(), crayon_body("Please provide as many different "),
+                                         crayon_key("legend titles"),
+                                         crayon_body(" as number of "),
+                                         crayon_key("features"),
+                                         crayon_body(" queried.")))
+  }
 
 
   check_parameters(parameter = font.type, parameter_name = "font.type")
@@ -326,7 +370,6 @@ do_FeaturePlot <- function(sample,
                                                   direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
                                                   enforce_symmetry = enforce_symmetry)
   }
-
 
   # Generate base layer.
   if (isTRUE(plot_cell_borders)){
@@ -412,6 +455,8 @@ do_FeaturePlot <- function(sample,
                                       assay = assay,
                                       reduction = NULL,
                                       slot = slot,
+                                      limits.use = scale.limits,
+                                      from_data = if (is.null(scale.limits)){FALSE} else {TRUE},
                                       number.breaks = number.breaks,
                                       min.cutoff = min.cutoff,
                                       max.cutoff = max.cutoff,
@@ -419,6 +464,7 @@ do_FeaturePlot <- function(sample,
                                       enforce_symmetry = enforce_symmetry,
                                       center_on_value = if(symmetry.type == "absolute"){FALSE} else {TRUE},
                                       value_center = symmetry.center)
+        
         p <- add_scale(p = p,
                        function_use = ggplot2::scale_color_gradientn(colors = colors.gradient,
                                                                      na.value = na.value,
@@ -435,6 +481,8 @@ do_FeaturePlot <- function(sample,
                                       assay = assay,
                                       reduction = NULL,
                                       slot = slot,
+                                      limits.use = scale.limits,
+                                      from_data = if (is.null(scale.limits)){FALSE} else {TRUE},
                                       number.breaks = number.breaks,
                                       min.cutoff = min.cutoff[counter],
                                       max.cutoff = max.cutoff[counter],
@@ -668,6 +716,8 @@ do_FeaturePlot <- function(sample,
                                       assay = assay,
                                       reduction = NULL,
                                       slot = slot,
+                                      limits.use = scale.limits,
+                                      from_data = if (is.null(scale.limits)){FALSE} else {TRUE},
                                       number.breaks = number.breaks,
                                       min.cutoff = min.cutoff.use,
                                       max.cutoff = max.cutoff.use,
@@ -852,6 +902,8 @@ do_FeaturePlot <- function(sample,
                                         feature = feature,
                                         assay = assay,
                                         reduction = NULL,
+                                        limits.use = scale.limits,
+                                        from_data = if (is.null(scale.limits)){FALSE} else {TRUE},
                                         slot = slot,
                                         number.breaks = number.breaks,
                                         min.cutoff = min.cutoff.use,
@@ -961,7 +1013,14 @@ do_FeaturePlot <- function(sample,
             })
 
           }
-
+          
+          # Add label font customization.
+          for (layer.use in seq(1, length(p.loop$layers))){
+            if (sum(stringr::str_detect(class(p.loop$layers[[layer.use]]$geom), "GeomText|GeomLabel"))){
+              p.loop$layers[[layer.use]]$aes_params$family <- font.type
+            }
+          }
+          
           list.plots.split.by[[iteration]] <- p.loop
         }
         p.loop <- patchwork::wrap_plots(list.plots.split.by,
@@ -989,7 +1048,7 @@ do_FeaturePlot <- function(sample,
     }
 
     # Generate the final plot with patchwork and use the "ncol" parameter value for the number of columns.
-    p <- patchwork::wrap_plots(list.plots, nrow = 1)
+    p <- patchwork::wrap_plots(list.plots, nrow = ncol)
 
   }
 
@@ -1012,12 +1071,37 @@ do_FeaturePlot <- function(sample,
                       plot.background = ggplot2::element_rect(fill = "white", color = "white"),
                       panel.background = ggplot2::element_rect(fill = "white", color = "white"),
                       legend.background = ggplot2::element_rect(fill = "white", color = "white"))
+  
+  
+  # Add font.family to geom_text and geom_label.
+  if (is.null(split.by)){
+    if (length(p$patches$plots) > 0){
+      num.plots <- length(p$patches$plots)
+    } else {
+      num.plots <- 1
+    }
+    for (plot.use in seq(1, num.plots)){
+      for (layer.use in seq(1, length(p[[plot.use]]$layers))){
+        if (sum(stringr::str_detect(class(p[[plot.use]]$layers[[layer.use]]$geom), "GeomText|GeomLabel"))){
+          p[[plot.use]]$layers[[layer.use]]$aes_params$family <- font.type
+        }
+      }
+    }
+  }
+
+  
+  
   if (is.null(split.by) & legend.position != "none"){
     counter <- 0
     for (feature in features){
       counter <- counter + 1
+      if (is.null(legend.title)){
+        legend.title.use <- feature
+      } else {
+        legend.title.use <- legend.title[counter]
+      }
       p[[counter]] <- modify_continuous_legend(p = p[[counter]],
-                                               legend.title = legend.title,
+                                               legend.title = legend.title.use,
                                                legend.aes = "color",
                                                legend.type = legend.type,
                                                legend.position = legend.position,
@@ -1123,15 +1207,6 @@ do_FeaturePlot <- function(sample,
                         max(sample@reductions[[reduction]][[]][, labels[2]], na.rm = TRUE)))
     })
 
-  }
-
-  # Add legend titles.
-  if (is.null(split.by) & is.null(legend.title)){
-    counter <- 0
-    for (feature in features){
-      counter <- counter + 1
-      p[[counter]]$guides$colour$title <- feature
-    }
   }
 
   # Return the plot.

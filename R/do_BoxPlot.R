@@ -9,7 +9,6 @@
 #' @param outlier.alpha \strong{\code{\link[base]{numeric}}} | Alpha applied to the outliers.
 #' @param boxplot.linewidth \strong{\code{\link[base]{numeric}}} | Width of the lines in the boxplots. Also controls the lines of the tests applied if use_test is set to true.
 #' @param boxplot.width \strong{\code{\link[base]{numeric}}} | Width of the boxplots.
-#' @param order \strong{\code{\link[base]{logical}}} | Whether to order the boxplots by average values. Can not be used alongside split.by.
 #' @param use_silhouette \strong{\code{\link[base]{logical}}} | Whether to color the borders of the boxplots instead of the inside area.
 #' @param use_test \strong{\code{\link[base]{logical}}} | Whether to apply a statistical test to a given pair of elements. Can not be used alongside split.by.
 #'
@@ -28,6 +27,7 @@ do_BoxPlot <- function(sample,
                        font.type = "sans",
                        axis.text.x.angle = 45,
                        colors.use = NULL,
+                       colorblind = FALSE,
                        na.value = "grey75",
                        plot.title = NULL,
                        plot.subtitle = NULL,
@@ -37,6 +37,9 @@ do_BoxPlot <- function(sample,
                        legend.title = NULL,
                        legend.title.position = "top",
                        legend.position = "bottom",
+                       legend.ncol = NULL,
+                       legend.nrow = NULL,
+                       legend.byrow = FALSE,
                        boxplot.line.color = "black",
                        outlier.color = "black",
                        outlier.alpha = 0.5,
@@ -51,7 +54,7 @@ do_BoxPlot <- function(sample,
                        use_test = FALSE,
                        comparisons = NULL,
                        test = "wilcox.test",
-                       map_signif_level = TRUE,
+                       map_signif_level = c("***" = 0.001, "**" = 0.01, "*" = 0.05),
                        plot.title.face = "bold",
                        plot.subtitle.face = "plain",
                        plot.caption.face = "italic",
@@ -71,20 +74,23 @@ do_BoxPlot <- function(sample,
   sample <- out[["sample"]]
   assay <- out[["assay"]]
   # Check slot.
-  slot <- check_and_set_slot(slot = slot)
+  slot <- if(is.null(slot)){"data"} else {slot}
   # Check logical parameters.
   logical_list <- list("flip" = flip,
                        "plot.grid" = plot.grid,
                        "order" = order,
                        "use_silhouette" = use_silhouette,
-                       "map_signif_level" = map_signif_level)
+                       "legend.byrow" = legend.byrow,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("font.size" = font.size,
                        "outlier.alpha" = outlier.alpha,
                        "boxplot.linewidth" = boxplot.linewidth,
                        "boxplot.width" = boxplot.width,
-                       "axis.text.x.angle" = axis.text.x.angle)
+                       "axis.text.x.angle" = axis.text.x.angle,
+                       "legend.nrow" = legend.nrow,
+                       "legend.ncol" = legend.ncol)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
   character_list <- list("feature" = feature,
@@ -159,15 +165,28 @@ do_BoxPlot <- function(sample,
   sample <- out[["sample"]]
   group.by <- out[["group.by"]]
   
+  # Custom function to draw black border in legend.
+  # Define the custom draw_key function
+  draw_key_square_black_border <- function(data, 
+                                           params, 
+                                           size) {
+    grid::rectGrob(width = grid::unit(1, "npc"),        # Full size of the key (square)
+                  height = grid::unit(1, "npc"),
+                  gp = grid::gpar(col = "black", # Black border
+                                  fill = ggplot2::alpha(data$fill, data$alpha),  # Fill with specified color and alpha
+                                  lwd = 1)  # Border line width
+    )
+  }
+  
   if (is.null(colors.use)){
     if (is.null(split.by)){
       colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, group.by])) {
         levels(sample@meta.data[, group.by])
       } else {
         sort(unique(sample@meta.data[, group.by]))
-      })
+      }, colorblind = colorblind)
     } else {
-      colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, split.by])) {levels(sample@meta.data[, split.by])} else {sort(unique(sample@meta.data[, split.by]))})
+      colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, split.by])) {levels(sample@meta.data[, split.by])} else {sort(unique(sample@meta.data[, split.by]))}, colorblind = colorblind)
     }
   } else {
     check_colors(colors.use, parameter_name = "colors.use")
@@ -208,7 +227,21 @@ do_BoxPlot <- function(sample,
                                          crayon_key("order"),
                                          crayon_body(".")))
   }
-
+  
+  
+  if (!is.null(map_signif_level)){
+    assertthat::assert_that(base::isTRUE(is.logical(map_signif_level) | is.numeric(map_signif_level)),
+                            msg = paste0(add_cross(), crayon_body("Parameter "),
+                                         crayon_key("map_signif_level"),
+                                         crayon_body(" needs to be a "),
+                                         crayon_key("logical"),
+                                         crayon_body(" or a "),
+                                         crayon_key("custom mapping"),
+                                         crayon_body(" such as "),
+                                         crayon_key('c("***" = 0.001, "**" = 0.01, "*" = 0.05)'),
+                                         crayon_body(".")))
+  }
+  
   if (isTRUE(use_silhouette) & is.null(split.by)){
     p <- data %>%
          ggplot2::ggplot(mapping = ggplot2::aes(x = .data[["group.by"]],
@@ -223,7 +256,10 @@ do_BoxPlot <- function(sample,
                                na.rm = TRUE)   +
          ggplot2::guides(color = ggplot2::guide_legend(title = legend.title,
                                                        title.position = legend.title.position,
-                                                       title.hjust = 0.5))
+                                                       title.hjust = 0.5,
+                                                       ncol = legend.ncol,
+                                                       nrow = legend.nrow,
+                                                       byrow = legend.byrow))
   } else if (isTRUE(use_silhouette) & !is.null(split.by)){
     stop(paste0(add_cross(), crayon_body("Parameter "), crayon_key("use_silhouette"),  crayon_body("can not be used alongside "), crayon_key("split.by"), crayon_body(".")), call. = FALSE)
   } else if (base::isFALSE(use_silhouette)){
@@ -246,11 +282,14 @@ do_BoxPlot <- function(sample,
                                width = boxplot.width,
                                lwd = boxplot.linewidth,
                                fatten = 1,
-                               key_glyph = "rect",
+                               key_glyph = draw_key_square_black_border,
                                na.rm = TRUE)   +
          ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title,
                                                       title.position = legend.title.position,
-                                                      title.hjust = 0.5))
+                                                      title.hjust = 0.5,
+                                                      ncol = legend.ncol,
+                                                      nrow = legend.nrow,
+                                                      byrow = legend.byrow))
   }
 
    p <- p +
@@ -306,6 +345,14 @@ do_BoxPlot <- function(sample,
                                  textsize = font.size - 8,
                                  family = font.type,
                                  fontface = "bold")
+      
+      if (!is.logical(map_signif_level)){
+        caption <- c()
+        for (i in seq_len(length(map_signif_level))){caption <- append(caption, paste0(names(map_signif_level)[i], " = ", format(map_signif_level[i], scientific = FALSE)))}
+        caption <- paste(caption, collapse = ", ")
+        
+        p <- p + ggplot2::labs(caption = caption)
+      }
     } else {
       stop(paste0(add_cross(), crayon_body("Please provide the pair of groups to test.")), call. = FALSE)
     }

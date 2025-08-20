@@ -1,21 +1,16 @@
+# SCpubr <a href="https://github.com/enblacar/SCpubr"><img src="man/figures/SCpubr_Logo512.png" align="right" height="200" width="200"/></a>
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/SCpubr)](https://CRAN.R-project.org/package=SCpubr)
 [![R-CMD-check](https://github.com/enblacar/SCpubr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/enblacar/SCpubr/actions/workflows/R-CMD-check.yaml)
 [![Code Coverage](https://codecov.io/gh/enblacar/SCpubr/branch/main/graph/badge.svg?token=HK7JB08VFD)](https://app.codecov.io/gh/enblacar/SCpubr/)
 [![CodeFactor](https://www.codefactor.io/repository/github/enblacar/scpubr/badge/main)](https://www.codefactor.io/repository/github/enblacar/scpubr/overview/main)
 [![metacran downloads](https://cranlogs.r-pkg.org/badges/grand-total/SCpubr)](https://cran.r-project.org/package=SCpubr)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
-  
-# SCpubr
-<span class="border-0"><img src="man/figures/logo.png" class="mx-auto d-block" alt="" style="box-shadow: none; width: 100%"/></span>
 
-This package aims to provide a streamlined way of generating publication ready plots for known **S**ingle-**C**ell visualizations in a "**pub**lication **r**eady" format (**SCpubr**). This is, the aim is to automatically generate plots with the highest quality possible, that can be used right away or with minimal modifications for a research article. 
+**SCpubr** provides a streamlined way of generating publication ready plots for known **S**ingle-**C**ell visualizations in a "**pub**lication **r**eady" format (**SCpubr**). This is, the aim is to automatically generate plots with the highest quality possible, that can be used right away or with minimal modifications for a research article. 
 
-For installation and tutorials consult the [reference manual](https://enblacar.github.io/SCpubr-book/).
-
-# Installation
+## Installation
 
 **SCpubr** can be installed via:
 
@@ -31,12 +26,21 @@ if(!requireNamespace("devtools", quietly = TRUE)){
 devtools::install_github("enblacar/SCpubr", ref = "v2.0.0-dev-stable")
 ```
 
-# Updates
+By default, **SCpubr** downloads without installing any of the required dependencies. A comprehensive report of which dependencies are still missing and which functions can be run is available through:
+
+```r
+SCpubr::package_report(extended = TRUE)
+```
+
+For tutorials, check **SCpubr**'s [reference manual](https://enblacar.github.io/SCpubr-book/).
+
+
+## Updates
 `SCpubr` is an active package currently aiming to improve and add new functionalities.
 
 Keep track of our new updates in the [NEWS page](https://github.com/enblacar/SCpubr/blob/master/NEWS.md)!
 
-# Citation
+## Citation
 To cite `SCpubr` in your publications, please use: 
 
 ```
@@ -45,6 +49,5 @@ for Single Cell transcriptomics using SCpubr. bioRxiv (2022)
 doi:10.1101/2022.02.28.482303.
 ```
 
-# Contact
+## Contact
 `scpubr@gmail.com`
-

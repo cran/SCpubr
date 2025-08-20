@@ -12,6 +12,7 @@ do_ViolinPlot(
   group.by = NULL,
   split.by = NULL,
   colors.use = NULL,
+  colorblind = FALSE,
   pt.size = 0,
   line_width = 0.5,
   y_cut = rep(NA, length(features)),
@@ -29,6 +30,7 @@ do_ViolinPlot(
   plot.grid = TRUE,
   grid.color = "grey75",
   grid.type = "dashed",
+  order = TRUE,
   flip = FALSE,
   ncol = NULL,
   share.y.lims = FALSE,
@@ -60,6 +62,8 @@ do_ViolinPlot(
 \item{split.by}{\strong{\code{\link[base]{character}}} | Secondary metadata variable to further group (split) the output by. Has to be a character of factor column.}
 
 \item{colors.use}{\strong{\code{\link[SCpubr]{named_vector}}} | Named vector of valid color representations (either name of HEX codes) with as many named colors as unique values of group.by. If group.by is not provided, defaults to the unique values of \link[Seurat]{Idents}. If not provided, a color scale will be set by default.}
+
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
 
 \item{pt.size}{\strong{\code{\link[base]{numeric}}} | Size of points in the Violin plot.}
 
@@ -109,6 +113,8 @@ do_ViolinPlot(
 \item \emph{\code{longdash}}.
 \item \emph{\code{twodash}}.
 }}
+
+\item{order}{\strong{\code{\link[base]{logical}}} | Whether to order the boxplots by average values. Can not be used alongside split.by.}
 
 \item{flip}{\strong{\code{\link[base]{logical}}} | Whether to invert the axis of the displayed plot.}
 

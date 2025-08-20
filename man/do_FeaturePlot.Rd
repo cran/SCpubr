@@ -13,6 +13,7 @@ do_FeaturePlot(
   order = FALSE,
   group.by = NULL,
   group.by.colors.use = NULL,
+  colorblind = FALSE,
   group.by.legend = NULL,
   group.by.show.dots = TRUE,
   group.by.dot.size = 8,
@@ -62,6 +63,7 @@ do_FeaturePlot(
   plot.axes = FALSE,
   min.cutoff = rep(NA, length(features)),
   max.cutoff = rep(NA, length(features)),
+  scale.limits = NULL,
   plot_density_contour = FALSE,
   contour.position = "bottom",
   contour.color = "grey90",
@@ -101,6 +103,8 @@ do_FeaturePlot(
 \item{group.by}{\strong{\code{\link[base]{character}}} | Metadata variable based on which cells are grouped. This will effectively introduce a big dot in the center of each cluster, colored using a categorical color scale or with the values provided by the user in \strong{\code{group.by.colors.use}}. It will also displays a legend.}
 
 \item{group.by.colors.use}{\strong{\code{\link[base]{character}}} | Colors to use for the group dots.}
+
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
 
 \item{group.by.legend}{\strong{\code{\link[base]{character}}} | Title for the legend when \strong{\code{group.by}} is used. Use \strong{\code{NA}} to disable it and \strong{\code{NULL}} to use the default column title provided in \strong{\code{group.by}}.}
 
@@ -203,6 +207,8 @@ do_FeaturePlot(
 \item{plot.axes}{\strong{\code{\link[base]{logical}}} | Whether to plot axes or not.}
 
 \item{min.cutoff, max.cutoff}{\strong{\code{\link[base]{numeric}}} | Set the min/max ends of the color scale. Any cell/group with a value lower than min.cutoff will turn into min.cutoff and any cell with a value higher than max.cutoff will turn into max.cutoff. In FeaturePlots, provide as many values as features. Use NAs to skip a feature.}
+
+\item{scale.limits}{\strong{\code{\link[base]{numeric}}} | Vector of two values (i.e: \code{c(0, 1)}) to limit the scales. Particularly useful to extend the color scale beyond the values in the dataset, contrary to \code{min.cutoff} and \code{max.cutoff}.}
 
 \item{plot_density_contour}{\strong{\code{\link[base]{logical}}} | Whether to plot density contours in the UMAP.}
 

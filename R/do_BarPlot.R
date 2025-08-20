@@ -17,13 +17,6 @@
 #'   \item \emph{\code{stack}}: Set the bars side by side, displaying the total number of counts. Uses \link[ggplot2]{position_stack}.
 #'   \item \emph{\code{fill}}: Set the bars on top of each other, displaying the proportion of counts from the total that each group represents. Uses \link[ggplot2]{position_fill}.
 #' }
-#' @param strip.text.face \strong{\code{\link[base]{character}}} | Controls the style of the font for the strip text.  One of:
-#' \itemize{
-#'   \item \emph{\code{plain}}: For normal text.
-#'   \item \emph{\code{italic}}: For text in itallic.
-#'   \item \emph{\code{bold}}: For text in bold.
-#'   \item \emph{\code{bold.italic}}: For text both in itallic and bold.
-#' }
 #' @return A ggplot2 object containing a Bar plot.
 #' @export
 #'
@@ -50,6 +43,7 @@ do_BarPlot <- function(sample,
                        xlab = NULL,
                        ylab = NULL,
                        colors.use = NULL,
+                       colorblind = FALSE,
                        flip = FALSE,
                        plot.title = NULL,
                        plot.subtitle = NULL,
@@ -81,7 +75,8 @@ do_BarPlot <- function(sample,
                        "plot.grid" = plot.grid,
                        "legend.byrow" = legend.byrow,
                        "add.n" = add.n,
-                       "return_data" = return_data)
+                       "return_data" = return_data,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("font.size" = font.size,
@@ -165,7 +160,7 @@ do_BarPlot <- function(sample,
                                        crayon_body(".")))
   
   if (is.null(colors.use)){
-    colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, group.by])) {levels(sample@meta.data[, group.by])} else {sort(unique(sample@meta.data[, group.by]))})
+    colors.use <- generate_color_scale(names_use = if (is.factor(sample@meta.data[, group.by])) {levels(sample@meta.data[, group.by])} else {sort(unique(sample@meta.data[, group.by]))}, colorblind = colorblind)
   } else {
     check_colors(colors.use, parameter_name = "colors.use")
     check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
@@ -228,10 +223,12 @@ do_BarPlot <- function(sample,
                                          crayon_key("position = fill"),
                                          crayon_body(".")))
     if (is.null(split.by) & !is.null(group.by)){
+      # nocov start
       data.n <- data %>% 
                 dplyr::group_by(.data[[group.by]]) %>% 
                 dplyr::summarise(n = dplyr::n()) %>% 
                 dplyr::mutate(n = paste0("n = ", .data$n))
+      # nocov end
     } else if (!is.null(split.by) & !is.null(group.by)){
       data.n <- data %>% 
                 dplyr::group_by(.data[[split.by]]) %>% 
@@ -283,6 +280,7 @@ do_BarPlot <- function(sample,
   
   if (isTRUE(add.n)){
     if (is.null(split.by) & !is.null(group.by)){
+      # nocov start
       p <- p + 
            ggplot2::geom_text(data = data.n,
                               mapping = ggplot2::aes(x = .data[[group.by]],
@@ -292,6 +290,7 @@ do_BarPlot <- function(sample,
                               hjust = ifelse(isTRUE(flip), 0, 0.5),
                               fontface = "plain",
                               size = add.n.size)
+      # nocov end
     } else if (!is.null(split.by) & !is.null(group.by)){
       p <- p + 
            ggplot2::geom_text(data = data.n,

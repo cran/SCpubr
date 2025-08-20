@@ -251,6 +251,18 @@
 
 \item{interpolate}{\strong{\code{\link[base]{logical}}} | Smoothes the output heatmap, saving space on disk when saving the image. However, the image is not as crisp.}
 
+\item{order}{\strong{\code{\link[base]{logical}}} | Whether to order the boxplots by average values. Can not be used alongside split.by.}
+
+\item{dot.scale}{\strong{\code{\link[base]{numeric}}} | Scale the size of the dots.}
+
+\item{values.show}{\strong{\code{\link[base]{logical}}} | Whether to add values as text in the heatmap.}
+
+\item{values.threshold}{\strong{\code{\link[base]{numeric}}} | Value from which the text color turns from black to white. If mode = "hvg", this is applied to both ends of the color scale.}
+
+\item{values.size}{\strong{\code{\link[base]{numeric}}} | Size of the text labels.}
+
+\item{values.round}{\strong{\code{\link[base]{numeric}}} | Decimal to which round the values to.}
+
 \item{viridis.palette.pvalue, viridis.palette.logfc, viridis.palette.expression}{\strong{\code{\link[base]{character}}} | Viridis color palettes for the p-value, logfc and expression heatmaps. A capital letter from A to H or the scale name as in \link[viridis]{scale_fill_viridis}.}
 
 \item{nbin}{\strong{\code{\link[base]{numeric}}} | Number of bins to use in \link[Seurat]{AddModuleScore}.}
@@ -277,6 +289,16 @@
 }}
 
 \item{cluster}{\strong{\code{\link[base]{logical}}} | Whether to perform clustering of rows and columns.}
+
+\item{strip.text.face}{\strong{\code{\link[base]{character}}} | Controls the style of the font for the strip text.  One of:
+\itemize{
+\item \emph{\code{plain}}: For normal text.
+\item \emph{\code{italic}}: For text in itallic.
+\item \emph{\code{bold}}: For text in bold.
+\item \emph{\code{bold.italic}}: For text both in itallic and bold.
+}}
+
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
 }
 \value{
 Nothing. This is a mock function.

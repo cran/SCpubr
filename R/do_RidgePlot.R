@@ -4,12 +4,6 @@
 #'
 #' @inheritParams doc_function
 #' @param colors.use \strong{\code{\link[base]{character}}} | Named vector of colors to use. Has to match the unique values of group.by or color.by (if used) when scale_type is set to categorical.
-#' @param compute_quantiles \strong{\code{\link[base]{logical}}} | Whether to compute quantiles of the distribution and color the ridge plots by them.
-#' @param compute_custom_quantiles \strong{\code{\link[base]{logical}}} | Whether to compute custom quantiles.
-#' @param quantiles \strong{\code{\link[base]{numeric}}} | Numeric vector of quantiles.
-#' @param compute_distribution_tails \strong{\code{\link[base]{logical}}} | Whether to compute distribution tails and color them.
-#' @param prob_tails \strong{\code{\link[base]{numeric}}} | The accumulated probability that the tails should contain.
-#' @param color_by_probabilities \strong{\code{\link[base]{logical}}} | Whether to color the ridges depending on the probability.
 #' @param continuous_scale \strong{\code{\link[base]{logical}}} | Whether to color the ridges depending on a categorical or continuous scale.
 #' @return A ggplot2 object.
 #' @export
@@ -26,7 +20,7 @@ do_RidgePlot <- function(sample,
                          legend.ncol = NULL,
                          legend.nrow = NULL,
                          legend.byrow = FALSE,
-                         legend.position = NULL,
+                         legend.position = "bottom",
                          legend.width = 1,
                          legend.length = 20,
                          legend.framewidth = 0.5,
@@ -35,6 +29,7 @@ do_RidgePlot <- function(sample,
                          legend.tickcolor = "white",
                          legend.type = "colorbar",
                          colors.use = NULL,
+                         colorblind = FALSE,
                          font.size = 14,
                          font.type = "sans",
                          axis.text.x.angle = 45,
@@ -43,13 +38,7 @@ do_RidgePlot <- function(sample,
                          plot.caption = NULL,
                          xlab = NULL,
                          ylab = NULL,
-                         compute_quantiles = FALSE,
-                         compute_custom_quantiles = FALSE,
-                         quantiles = c(0.25, 0.50, 0.75),
-                         compute_distribution_tails = FALSE,
-                         prob_tails = 0.025,
-                         color_by_probabilities = FALSE,
-                         use_viridis = TRUE,
+                         use_viridis = FALSE,
                          viridis.palette = "G",
                          viridis.direction = 1,
                          sequential.palette = "YlGnBu",
@@ -77,14 +66,11 @@ do_RidgePlot <- function(sample,
 
   # Check logical parameters.
   logical_list <- list("continuous_scale" = continuous_scale,
-                       "compute_quantiles" = compute_quantiles,
-                       "compute_custom_quantiles" = compute_custom_quantiles,
-                       "compute_distribution_tails" = compute_distribution_tails,
-                       "color_by_probabilities" = color_by_probabilities,
                        "plot.grid" = plot.grid,
                        "flip" = flip,
                        "legend.nrow" = legend.nrow,
-                       "use_viridis" = use_viridis)
+                       "use_viridis" = use_viridis,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("legend.width" = legend.width,
@@ -92,8 +78,6 @@ do_RidgePlot <- function(sample,
                        "legend.framewidth" = legend.framewidth,
                        "legend.tickwidth" = legend.tickwidth,
                        "font.size" = font.size,
-                       "quantiles" = quantiles,
-                       "prob_tails" = prob_tails,
                        "viridis.direction" = viridis.direction,
                        "axis.text.x.angle" = axis.text.x.angle,
                        "legend.ncol" = legend.ncol,
@@ -157,10 +141,12 @@ do_RidgePlot <- function(sample,
                                                 direction = ifelse(isTRUE(use_viridis), viridis.direction, sequential.direction),
                                                 enforce_symmetry = FALSE)
   
-  if (!is.null(colors.use)){check_colors(colors.use, parameter_name = "colors.use")}
+  if (!is.null(colors.use)){
+    check_colors(colors.use, parameter_name = "colors.use")
+  }
 
   if (is.null(legend.position)){
-    legend.position <- ifelse(isTRUE(continuous_scale), "bottom", "none")
+    legend.position <- if(isTRUE(continuous_scale)){"bottom"} else {"none"}
   }
   
   # Check group.by.
@@ -170,6 +156,12 @@ do_RidgePlot <- function(sample,
   sample <- out[["sample"]]
   group.by <- out[["group.by"]]
   
+  
+  if (is.null(legend.title)){
+    legend.title = group.by
+  }
+  
+  
   data <- get_data_column_in_context(sample = sample,
                                      feature = feature,
                                      assay = assay,
@@ -177,13 +169,11 @@ do_RidgePlot <- function(sample,
                                      group.by = group.by,
                                      split.by = split.by)
   if (isTRUE(continuous_scale)){
-    if (base::isFALSE(compute_quantiles)){
       p <- data %>%
            ggplot2::ggplot(mapping = ggplot2::aes(x = .data$feature,
                                                   y = .data$group.by,
                                                   fill = ggplot2::after_stat(x))) +
-           ggridges::geom_density_ridges_gradient(color = "black",
-                                                  size = 1.25) + 
+           ggridges::geom_density_ridges_gradient(color = "black") + 
            ggplot2::scale_fill_gradientn(colors = colors.gradient,
                                          na.value = "grey75",
                                          name = feature,
@@ -198,103 +188,29 @@ do_RidgePlot <- function(sample,
                                     legend.tickcolor = legend.tickcolor,
                                     legend.framewidth = legend.framewidth,
                                     legend.tickwidth = legend.tickwidth)
-    } else if (isTRUE(compute_quantiles)){
-      if (isTRUE(compute_custom_quantiles)){
-        labels <- NULL
-        for (i in seq_along(quantiles)){
-          if (i == 1){
-            labels <- append(labels, paste0("[0 , ", quantiles[i], "["))
-          } else if (i == length(quantiles)){
-            labels <- append(labels, paste0("]", quantiles[i], ", 1]"))
-          } else {
-            labels <- append(labels, paste0("]", quantiles[i - 1], ", ", quantiles[i], "]"))
-            labels <- append(labels, paste0("]", quantiles[i], ", ", quantiles[i + 1], "]"))
-          }
-        }
-        p <- data %>%
-             ggplot2::ggplot(mapping = ggplot2::aes(x = .data$feature,
-                                                    y = .data$group.by,
-                                                    fill = ggplot2::after_stat(quantile))) +
-             ggridges::stat_density_ridges(color = "black",
-                                           size = 1.25,
-                                           quantile_lines = TRUE,
-                                           calc_ecdf = TRUE,
-                                           geom = "density_ridges_gradient",
-                                           quantiles = quantiles)
-        if (isTRUE(use_viridis)){
-          p  <- p + 
-                ggplot2::scale_fill_manual(values = viridis::viridis(n = length(quantiles) + 1, option = viridis.palette, direction = viridis.direction),
-                                           name = ifelse(is.null(legend.title), "Probability", legend.title),
-                                           labels = unique(labels))
-        } else {
-          p <- p + 
-               ggplot2::scale_fill_manual(values = if (sequential.direction == 1) {RColorBrewer::brewer.pal(n = length(quantiles) + 1, name = sequential.palette)} else {rev(RColorBrewer::brewer.pal(n = length(quantiles) + 1, name = sequential.palette))},
-                                          name = ifelse(is.null(legend.title), "Probability", legend.title),
-                                          labels = unique(labels))
-        }
-        p <- p +
-             ggplot2::guides(fill = ggplot2::guide_legend(title = ifelse(is.null(legend.title), "Probability", legend.title),
-                                                          title.position = "top",
-                                                          title.hjust = 0.5,
-                                                          ncol = legend.ncol,
-                                                          nrow = legend.nrow,
-                                                          byrow = legend.byrow))
-      } else if (isTRUE(compute_distribution_tails)){
-        p <- data %>%
-             ggplot2::ggplot(mapping = ggplot2::aes(x = .data$feature,
-                                                    y = .data$group.by,
-                                                    fill = ggplot2::after_stat(quantile))) +
-             ggridges::stat_density_ridges(color = "black",
-                                           size = 1.25,
-                                           quantile_lines = TRUE,
-                                           calc_ecdf = TRUE,
-                                           geom = "density_ridges_gradient",
-                                           quantiles = c(0 + prob_tails, 1 - prob_tails)) +
-             ggplot2::scale_fill_manual(values = c("#134074", "grey75", "#721313"),
-                                        labels = c(paste0("]0 , ", 0 + prob_tails, "]"),
-                                                   paste0("]", 0 + prob_tails, ", ",  1 - prob_tails, "]"),
-                                                   paste0("]", 1 - prob_tails, ", 1]")),
-                                        name = ifelse(is.null(legend.title), "Probability", legend.title))  +
-             ggplot2::guides(fill = ggplot2::guide_legend(title = ifelse(is.null(legend.title), "Probability", legend.title),
-                                                          title.position = "top",
-                                                          title.hjust = 0.5,
-                                                          ncol = legend.ncol))
-      } else if (isTRUE(color_by_probabilities)){
-        p <- data %>%
-             ggplot2::ggplot(mapping = ggplot2::aes(x = .data$feature,
-                                                    y = .data$group.by,
-                                                    fill = 0.5 - abs(0.5 - ggplot2::after_stat(ecdf)))) +
-             ggridges::stat_density_ridges(color = "black",
-                                           size = 1.25,
-                                           calc_ecdf = TRUE,
-                                           geom = "density_ridges_gradient") + 
-             ggplot2::scale_fill_gradientn(colors = colors.gradient,
-                                           na.value = "grey75",
-                                           name = "Tail probability",
-                                           breaks = scales::extended_breaks(n = number.breaks))
-
-        p <- modify_continuous_legend(p = p,
-                                      legend.title = legend.title,
-                                      legend.aes = "fill",
-                                      legend.type = legend.type,
-                                      legend.position = legend.position,
-                                      legend.length = legend.length,
-                                      legend.width = legend.width,
-                                      legend.framecolor = legend.framecolor,
-                                      legend.tickcolor = legend.tickcolor,
-                                      legend.framewidth = legend.framewidth,
-                                      legend.tickwidth = legend.tickwidth)
-      }
-    }
 
   } else if (base::isFALSE(continuous_scale)){
+    if (is.null(colors.use)){
+      if (is.null(group.by)){
+        values.use <- generate_color_scale(levels(sample), colorblind = colorblind)
+      } else {
+        if (is.factor(sample@meta.data[, group.by])){
+          values.use <- generate_color_scale(levels(sample@meta.data[, group.by]), colorblind = colorblind)
+        } else {
+          values.use <- generate_color_scale(unique(sample@meta.data[, group.by]), colorblind = colorblind)
+        }
+       
+      } 
+    } else {
+      values.use <- colors.use
+    }
+    
     p <- data %>%
          ggplot2::ggplot(mapping = ggplot2::aes(x = .data$feature,
                                                 y = .data$group.by,
                                                 fill = .data$group.by)) +
-         ggridges::geom_density_ridges(color = "black",
-                                       size = 1.25) +
-         ggplot2::scale_fill_manual(values = if (is.null(colors.use)) {generate_color_scale(if (is.null(group.by)){levels(sample)} else {if(is.factor(sample@meta.data[, group.by])){levels(sample@meta.data[, group.by])} else {unique(sample@meta.data[, group.by])}})} else {colors.use},
+         ggridges::geom_density_ridges(color = "black") +
+         ggplot2::scale_fill_manual(values = values.use,
                                     name = legend.title) +
          ggplot2::guides(fill = ggplot2::guide_legend(title = legend.title,
                                                       title.position = "top",
@@ -335,8 +251,8 @@ do_RidgePlot <- function(sample,
                       plot.caption = ggplot2::element_text(face = plot.caption.face, hjust = 1),
                       legend.text = ggplot2::element_text(face = legend.text.face),
                       legend.title = ggplot2::element_text(face = legend.title.face),
-                      panel.grid.major.y = ggplot2::element_blank(),
-                      panel.grid.major.x = if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()},
+                      panel.grid.major.y = if(base::isFALSE(flip)){ggplot2::element_blank()} else {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()}},
+                      panel.grid.major.x = if(base::isFALSE(flip)){if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()}} else {ggplot2::element_blank()},
                       text = ggplot2::element_text(family = font.type),
                       plot.caption.position = "plot",
                       legend.position = legend.position,

@@ -16,7 +16,7 @@ do_RidgePlot(
   legend.ncol = NULL,
   legend.nrow = NULL,
   legend.byrow = FALSE,
-  legend.position = NULL,
+  legend.position = "bottom",
   legend.width = 1,
   legend.length = 20,
   legend.framewidth = 0.5,
@@ -25,6 +25,7 @@ do_RidgePlot(
   legend.tickcolor = "white",
   legend.type = "colorbar",
   colors.use = NULL,
+  colorblind = FALSE,
   font.size = 14,
   font.type = "sans",
   axis.text.x.angle = 45,
@@ -33,13 +34,7 @@ do_RidgePlot(
   plot.caption = NULL,
   xlab = NULL,
   ylab = NULL,
-  compute_quantiles = FALSE,
-  compute_custom_quantiles = FALSE,
-  quantiles = c(0.25, 0.5, 0.75),
-  compute_distribution_tails = FALSE,
-  prob_tails = 0.025,
-  color_by_probabilities = FALSE,
-  use_viridis = TRUE,
+  use_viridis = FALSE,
   viridis.palette = "G",
   viridis.direction = 1,
   sequential.palette = "YlGnBu",
@@ -106,6 +101,8 @@ do_RidgePlot(
 
 \item{colors.use}{\strong{\code{\link[base]{character}}} | Named vector of colors to use. Has to match the unique values of group.by or color.by (if used) when scale_type is set to categorical.}
 
+\item{colorblind}{\strong{\code{\link[base]{logical}}} | Whether to use colorblind-friendly colors for categorical variables. In place when \code{colors.use} is not used. Allows for a maximum of 85 different classes within a categorical variable.}
+
 \item{font.size}{\strong{\code{\link[base]{numeric}}} | Overall font size of the plot. All plot elements will have a size relationship with this font size.}
 
 \item{font.type}{\strong{\code{\link[base]{character}}} | Base font family for the plot. One of:
@@ -120,18 +117,6 @@ do_RidgePlot(
 \item{plot.title, plot.subtitle, plot.caption}{\strong{\code{\link[base]{character}}} | Title, subtitle or caption to use in the plot.}
 
 \item{xlab, ylab}{\strong{\code{\link[base]{character}}} | Titles for the X and Y axis.}
-
-\item{compute_quantiles}{\strong{\code{\link[base]{logical}}} | Whether to compute quantiles of the distribution and color the ridge plots by them.}
-
-\item{compute_custom_quantiles}{\strong{\code{\link[base]{logical}}} | Whether to compute custom quantiles.}
-
-\item{quantiles}{\strong{\code{\link[base]{numeric}}} | Numeric vector of quantiles.}
-
-\item{compute_distribution_tails}{\strong{\code{\link[base]{logical}}} | Whether to compute distribution tails and color them.}
-
-\item{prob_tails}{\strong{\code{\link[base]{numeric}}} | The accumulated probability that the tails should contain.}
-
-\item{color_by_probabilities}{\strong{\code{\link[base]{logical}}} | Whether to color the ridges depending on the probability.}
 
 \item{use_viridis}{\strong{\code{\link[base]{logical}}} | Whether to use viridis color scales.}
 
@@ -199,29 +184,6 @@ This function computes ridge plots based on the \pkg{ggridges} package.
                               viridis.direction = 1)
     p
 
-    # Draw quantiles of the distribution.
-    p <- SCpubr::do_RidgePlot(sample = sample,
-                              feature = "nFeature_RNA",
-                              continuous_scale = TRUE,
-                              compute_quantiles = TRUE,
-                              compute_custom_quantiles = TRUE)
-    p
-
-    # Draw probability tails.
-    p <- SCpubr::do_RidgePlot(sample = sample,
-                              feature = "nFeature_RNA",
-                              continuous_scale = TRUE,
-                              compute_quantiles = TRUE,
-                              compute_distribution_tails = TRUE)
-    p
-
-    # Draw probability tails.
-    p <- SCpubr::do_RidgePlot(sample = sample,
-                              feature = "nFeature_RNA",
-                              continuous_scale = TRUE,
-                              compute_quantiles = TRUE,
-                              color_by_probabilities = TRUE)
-    p
   } else if (base::isFALSE(value)){
     message("This function can not be used without its suggested packages.")
     message("Check out which ones are needed using `SCpubr::state_dependencies()`.")

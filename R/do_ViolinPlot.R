@@ -20,6 +20,7 @@ do_ViolinPlot <- function(sample,
                           group.by = NULL,
                           split.by = NULL,
                           colors.use = NULL,
+                          colorblind = FALSE,
                           pt.size = 0,
                           line_width = 0.5,
                           y_cut = rep(NA, length(features)),
@@ -37,6 +38,7 @@ do_ViolinPlot <- function(sample,
                           plot.grid = TRUE,
                           grid.color = "grey75",
                           grid.type = "dashed",
+                          order = TRUE,
                           flip = FALSE,
                           ncol = NULL,
                           share.y.lims = FALSE,
@@ -64,13 +66,15 @@ do_ViolinPlot <- function(sample,
   sample <- out[["sample"]]
   assay <- out[["assay"]]
   # Check slot.
-  slot <- check_and_set_slot(slot = slot)
+  slot <- if(is.null(slot)){"data"} else {slot}
   # Check logical parameters.
   logical_list <- list("plot_boxplot" = plot_boxplot,
                        "plot.grid" = plot.grid,
                        "flip" = flip,
                        "share.y.lims" = share.y.lims,
-                       "legend.byrow" = legend.byrow)
+                       "legend.byrow" = legend.byrow,
+                       "order" = order,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("pt.size" = pt.size,
@@ -172,14 +176,27 @@ do_ViolinPlot <- function(sample,
   }
   
   if (is.null(colors.use)){
-    if (is.factor(sample@meta.data[, group.by])){
-      names.use <- levels(sample@meta.data[, group.by])
+    if (is.null(split.by)){
+      if (is.factor(sample@meta.data[, group.by])){
+        names.use <- levels(sample@meta.data[, group.by])
+      } else {
+        names.use <- sort(unique(sample@meta.data[, group.by]))
+      }
     } else {
-      names.use <- sort(unique(sample@meta.data[, group.by]))
+      if (is.factor(sample@meta.data[, split.by])){
+        names.use <- levels(sample@meta.data[, split.by])
+      } else {
+        names.use <- sort(unique(sample@meta.data[, split.by]))
+      }
     }
-    colors.use <- generate_color_scale(names.use)
+    
+    colors.use <- generate_color_scale(names.use, colorblind = colorblind)
   } else {
-    colors.use <- check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
+    if (is.null(split.by)){
+      colors.use <- check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = group.by)
+    } else {
+      colors.use <- check_consistency_colors_and_names(sample = sample, colors = colors.use, grouping_variable = split.by)
+    }
   }
   
   check_colors(grid.color, parameter_name = "grid.color")
@@ -218,7 +235,42 @@ do_ViolinPlot <- function(sample,
                                        slot = slot,
                                        group.by = group.by,
                                        split.by = split.by)
-
+    
+    
+    # Sort the groups.
+    if (isTRUE(order) & is.null(split.by)){
+      data <- data %>%
+              dplyr::mutate("group.by" = factor(as.character(.data[["group.by"]]),
+                                                levels = {data %>%
+                                                          tibble::as_tibble() %>%
+                                                          dplyr::group_by(.data[["group.by"]]) %>%
+                                                          dplyr::summarise("median" = stats::median(.data[["feature"]], na.rm = TRUE)) %>%
+                                                          dplyr::arrange(if(base::isFALSE(flip)){dplyr::desc(.data[["median"]])} else {.data[["median"]]}) %>%
+                                                          dplyr::pull(.data[["group.by"]]) %>%
+                                                          as.character()}))
+    }
+    if (isTRUE(order)){
+      assertthat::assert_that(is.null(split.by),
+                              msg = paste0(add_cross(), crayon_body("Parameter "),
+                                           crayon_key("split.by"),
+                                           crayon_body(" cannot be used alonside "),
+                                           crayon_key("order"),
+                                           crayon_body(". Please set "),
+                                           crayon_key("order = FALSE"),
+                                           crayon_body(".")))
+    }
+    
+    if (!is.null(split.by)){
+      assertthat::assert_that(base::isFALSE(order),
+                              msg = paste0(add_cross(), crayon_body("Parameter "),
+                                           crayon_key("split.by"),
+                                           crayon_body(" cannot be used alonside "),
+                                           crayon_key("order"),
+                                           crayon_body(". Please set "),
+                                           crayon_key("order = FALSE"),
+                                           crayon_body(".")))
+    }
+    
     if (!is.null(split.by)){
       p <- data %>%
            ggplot2::ggplot(mapping = ggplot2::aes(x = .data$group.by,
@@ -241,9 +293,8 @@ do_ViolinPlot <- function(sample,
                                            crayon_body(" are not implemented when "),
                                            crayon_key("split.by"),
                                            crayon_body(" is set. Set "),
-                                           crayon_key("plot_boxplots = FALSE"),
-                                           crayon_body("."),
-                                           crayon_key("NA")))
+                                           crayon_key("plot_boxplot = FALSE"),
+                                           crayon_body(".")))
       p <- p +
            ggplot2::geom_boxplot(fill = "white",
                                  color = "black",
@@ -294,9 +345,9 @@ do_ViolinPlot <- function(sample,
                         legend.text = ggplot2::element_text(face = legend.text.face),
                         legend.title = ggplot2::element_text(face = legend.title.face),
                         plot.title.position = "plot",
-                        panel.grid.major.x = ggplot2::element_blank(),
                         panel.grid.minor = ggplot2::element_blank(),
-                        panel.grid.major.y = if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()},
+                        panel.grid.major.x = if(base::isFALSE(flip)){ggplot2::element_blank()} else {if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()}},
+                        panel.grid.major.y = if(base::isFALSE(flip)){if (isTRUE(plot.grid)){ggplot2::element_line(color = grid.color, linetype = grid.type)} else {ggplot2::element_blank()}} else {ggplot2::element_blank()},
                         text = ggplot2::element_text(family = font.type),
                         plot.caption.position = "plot",
                         legend.position = legend.position,

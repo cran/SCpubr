@@ -42,7 +42,6 @@
 #' }
 #' @param padding_labels \strong{\code{\link[base]{numeric}}} | Number of extra padding (white spaces) of the labels so that they do not overlap with the scales.
 #' @param colors.from,colors.to \strong{\code{\link[SCpubr]{named_vector}}} | Named vector of colors corresponding to the unique values of "from" and "to".
-#' @param ... For internal use only.
 #'
 #' @return A circlize plot.
 #' @export
@@ -53,6 +52,7 @@ do_ChordDiagramPlot <- function(sample = NULL,
                                 to = NULL,
                                 colors.from = NULL,
                                 colors.to = NULL,
+                                colorblind = FALSE,
                                 big.gap = 10,
                                 small.gap = 1,
                                 link.border.color = NA,
@@ -71,7 +71,7 @@ do_ChordDiagramPlot <- function(sample = NULL,
                                 alignment = "default",
                                 annotationTrack = c("grid", "axis"),
                                 padding_labels = 4,
-                                ...){
+                                font.size = 1){
   # Add lengthy error messages.
   withr::local_options(.new = list("warning.length" = 8170))
 
@@ -81,7 +81,8 @@ do_ChordDiagramPlot <- function(sample = NULL,
   logical_list <- list("link.decreasing" = link.decreasing,
                        "z_index" = z_index,
                        "symmetric" = symmetric,
-                       "scale" = scale)
+                       "scale" = scale,
+                       "colorblind" = colorblind)
   check_type(parameters = logical_list, required_type = "logical", test_function = is.logical)
   # Check numeric parameters.
   numeric_list <- list("big.gap" = big.gap,
@@ -90,7 +91,8 @@ do_ChordDiagramPlot <- function(sample = NULL,
                        "alpha.highlight" = alpha.highlight,
                        "self.link" = self.link,
                        "directional" = directional,
-                       "padding_labels" = padding_labels)
+                       "padding_labels" = padding_labels,
+                       "font.size" = font.size)
   check_type(parameters = numeric_list, required_type = "numeric", test_function = is.numeric)
   # Check character parameters.
 
@@ -113,77 +115,6 @@ do_ChordDiagramPlot <- function(sample = NULL,
   check_parameters(parameter = alpha.highlight, parameter_name = "alpha.highlight")
   circlize::circos.clear()
 
-  extra_params <- list(...)
-
-  # Internal use only
-  if ("from_df" %in% names(extra_params) & "df" %in% names(extra_params)){
-    data <- extra_params[["df"]]
-
-    assertthat::assert_that("data.frame" %in% class(data),
-                            msg = paste0(add_cross(), crayon_body("Please provide a "),
-                                         crayon_key("data.frame"),
-                                         crayon_body(" or a "),
-                                         crayon_key("tibble"),
-                                         crayon_body(" to the parameter "),
-                                         crayon_key("df"),
-                                         crayon_body(".")))
-
-    assertthat::assert_that(ncol(data) == 3,
-                            msg = paste0(add_cross(), crayon_body("If you make use of "),
-                                         crayon_key("from_df"),
-                                         crayon_body(" parameter, make sure that the dataframe provided to "),
-                                         crayon_key("df"),
-                                         crayon_body(" has at least "),
-                                         crayon_key("three"),
-                                         crayon_body(" columns.")))
-
-    assertthat::assert_that(sum(colnames(data) %in% c("from", "to", "value")) == 3,
-                            msg = paste0(add_cross(), crayon_body("If you make use of "),
-                                         crayon_key("from_df"),
-                                         crayon_body(" parameter, make sure that the dataframe provided to "),
-                                         crayon_key("df"),
-                                         crayon_body(" has at least "),
-                                         crayon_key("three"),
-                                         crayon_body(" columns named: "),
-                                         crayon_key("from"),
-                                         crayon_body(", "),
-                                         crayon_key("to"),
-                                         crayon_body(" and "),
-                                         crayon_key("value"),
-                                         crayon_body(".")))
-
-    assertthat::assert_that(class(data[["from"]]) %in% c("factor", "character"),
-                            msg = paste0(add_cross(), crayon_body("Make sure that the column named "),
-                                         crayon_key("from"),
-                                         crayon_body(" in the dataframe provided to "),
-                                         crayon_key("df"),
-                                         crayon_body(" is a "),
-                                         crayon_key("character"),
-                                         crayon_body(" or "),
-                                         crayon_key("factor"),
-                                         crayon_body(" column.")))
-
-    assertthat::assert_that(class(data[["to"]]) %in% c("factor", "character"),
-                            msg = paste0(add_cross(), crayon_body("Make sure that the column named "),
-                                         crayon_key("to"),
-                                         crayon_body(" in the dataframe provided to "),
-                                         crayon_key("df"),
-                                         crayon_body(" is a "),
-                                         crayon_key("character"),
-                                         crayon_body(" or "),
-                                         crayon_key("factor"),
-                                         crayon_body(" column.")))
-
-    assertthat::assert_that("integer" %in% class(data[["value"]]),
-                            msg = paste0(add_cross(), crayon_body("Make sure that the column named "),
-                                         crayon_key("from"),
-                                         crayon_body(" in the dataframe provided to "),
-                                         crayon_key("df"),
-                                         crayon_body(" is a "),
-                                         crayon_key("numeric"),
-                                         crayon_body(" column.")))
-
-  }  else {
     assertthat::assert_that(!is.null(sample),
                             msg = paste0(add_cross(), crayon_body("Please provide a "),
                                          crayon_key("Seurat object"),
@@ -229,7 +160,6 @@ do_ChordDiagramPlot <- function(sample = NULL,
             dplyr::rename("from" = dplyr::all_of(c(from)),
                           "to" = dplyr::all_of(c(to))) %>%
             dplyr::select(dplyr::all_of(c("from", "to", "value")))
-  }
 
 
   max_char <- max(c(max(nchar(as.character(data[["from"]]))), max(nchar(as.character(data[["to"]]))))) + padding_labels
@@ -267,9 +197,9 @@ do_ChordDiagramPlot <- function(sample = NULL,
                                        grouping_variable = from)
   } else {
     if (is.factor(data[["from"]])){
-      colors.from <- generate_color_scale(names_use = levels(data[["from"]]))
+      colors.from <- generate_color_scale(names_use = levels(data[["from"]]), colorblind = colorblind)
     } else {
-      colors.from <- generate_color_scale(names_use = sort(unique(data[["from"]])))
+      colors.from <- generate_color_scale(names_use = sort(unique(data[["from"]])), colorblind = colorblind)
     }
   }
   names(colors.from) <- stringr::str_pad(names(colors.from), width = max_char, side = "both")
@@ -352,7 +282,8 @@ do_ChordDiagramPlot <- function(sample = NULL,
                                                                           facing = "clockwise",
                                                                           niceFacing = TRUE,
                                                                           adj = c(-0.15, 0.5),
-                                                                          font = 2)},
+                                                                          font = 2,
+                                                                          cex = font.size)},
                          bg.border = NA)
   p <- grDevices::recordPlot()
   circlize::circos.clear()
