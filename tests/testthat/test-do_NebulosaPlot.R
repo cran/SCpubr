@@ -1,94 +1,97 @@
 if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
+  testthat::test_that("do_NebulosaPlot: CRAN essentials", {
+    p <- SCpubr::do_NebulosaPlot(sample = sample,
+                                 features = "EPC1")
+    testthat::expect_true(ggplot2::is_ggplot(p))
+
+    p <- SCpubr::do_NebulosaPlot(sample = sample,
+                                 features = c("EPC1", "TOX2"))
+    testthat::expect_true(ggplot2::is_ggplot(p))
+
+    p <- SCpubr::do_NebulosaPlot(sample = sample,
+                                 features = c("EPC1", "TOX2"),
+                                 joint = TRUE)
+    testthat::expect_true(ggplot2::is_ggplot(p))
+  })
+
 
   testthat::test_that("do_NebulosaPlot: PASS - single feature", {
     testthat::skip_on_cran()
-    
-    p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1])
-    testthat::expect_true(ggplot2::is_ggplot(p))
-    
-    p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2])
-    testthat::expect_true(ggplot2::is_ggplot(p))
-    
-    p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
-                                 joint = TRUE)
-    testthat::expect_true(ggplot2::is_ggplot(p))
+
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  use_viridis = TRUE,
                                  viridis.direction = 1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  use_viridis = TRUE,
                                  viridis.direction = -1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  use_viridis = FALSE,
                                  sequential.direction = 1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  use_viridis = FALSE,
                                  sequential.direction = -1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = TRUE,
                                  viridis.direction = 1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = TRUE,
                                  viridis.direction = -1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = FALSE,
                                  sequential.direction = 1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = FALSE,
                                  sequential.direction = -1)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = TRUE,
                                  viridis.direction = 1,
                                  joint = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = TRUE,
                                  viridis.direction = -1,
                                  joint = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = FALSE,
                                  sequential.direction = 1,
                                  joint = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
     
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "TOX2"),
                                  use_viridis = FALSE,
                                  sequential.direction = -1,
                                  joint = TRUE)
@@ -99,9 +102,9 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
     testthat::skip_on_cran()
 
 
-    p <- SCpubr::do_NebulosaPlot(sample = sample, features = Seurat::VariableFeatures(sample)[1], plot_cell_borders = TRUE)
+    p <- SCpubr::do_NebulosaPlot(sample = sample, features = "EPC1", plot_cell_borders = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
-    p <- suppressWarnings({SCpubr::do_NebulosaPlot(sample = sample, features = Seurat::VariableFeatures(sample)[1:2], plot_cell_borders = TRUE)})
+    p <- suppressWarnings({SCpubr::do_NebulosaPlot(sample = sample, features = c("EPC1", "PC_1"), plot_cell_borders = TRUE)})
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
@@ -110,7 +113,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  legend.type = "normal")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -120,7 +123,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  legend.type = "colorbar")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -132,7 +135,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     testthat::expect_error(SCpubr::do_NebulosaPlot(sample = sample,
-                                                   features = Seurat::VariableFeatures(sample)[1],
+                                                   features = "EPC1",
                                                    legend.type = "wrong"))
   })
 
@@ -141,7 +144,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     testthat::expect_error(SCpubr::do_NebulosaPlot(sample = sample,
-                                                   features = Seurat::VariableFeatures(sample)[1],
+                                                   features = "EPC1",
                                                    legend.position = "wrong"))
   })
 
@@ -150,7 +153,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     testthat::expect_error(SCpubr::do_NebulosaPlot(sample = sample,
-                                                   features = Seurat::VariableFeatures(sample)[1],
+                                                   features = "EPC1",
                                                    font.type = "wrong"))
   })
 
@@ -159,7 +162,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  dims = c(2, 1))
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -183,7 +186,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2])
+                                 features = c("EPC1", "LTV1"))
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
 
@@ -192,7 +195,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  joint = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -202,7 +205,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  joint = TRUE,
                                  return_only_joint = TRUE)
     testthat::expect_true(ggplot2::is_ggplot(p))
@@ -213,7 +216,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  joint = TRUE,
                                  return_only_joint = TRUE,
                                  plot.title = "Title")
@@ -225,7 +228,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  joint = TRUE,
                                  return_only_joint = TRUE,
                                  plot.subtitle = "Subtitle")
@@ -237,7 +240,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  joint = TRUE,
                                  return_only_joint = TRUE,
                                  plot.caption = "Caption")
@@ -250,7 +253,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  viridis.palette = "F")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -260,7 +263,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  legend.position = "left")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -270,7 +273,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  legend.position = "top")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -280,7 +283,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     testthat::expect_warning(SCpubr::do_NebulosaPlot(sample = sample,
-                                                     features = list(Seurat::VariableFeatures(sample)[1]),
+                                                     features = list("EPC1"),
                                                      viridis.palette = "F"))
   })
 
@@ -290,7 +293,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1],
+                                 features = "EPC1",
                                  legend.position = "none")
     testthat::expect_true(ggplot2::is_ggplot(p))
   })
@@ -300,7 +303,7 @@ if(base::isFALSE(dep_check[["do_NebulosaPlot"]])){
 
 
     p <- SCpubr::do_NebulosaPlot(sample = sample,
-                                 features = Seurat::VariableFeatures(sample)[1:2],
+                                 features = c("EPC1", "LTV1"),
                                  plot.title = "A",
                                  plot.subtitle = "B",
                                  plot.caption = "C")

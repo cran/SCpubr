@@ -8,7 +8,7 @@ do_WafflePlot(
   sample,
   group.by,
   waffle.size = 2,
-  flip = TRUE,
+  flip = FALSE,
   colors.use = NULL,
   colorblind = FALSE,
   na.value = "grey75",

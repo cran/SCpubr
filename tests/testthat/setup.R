@@ -15,6 +15,9 @@ if (requireNamespace("dplyr", quietly = TRUE)) {
 }
 # nolint end
 
+# Suppress Nebulosa compatibility messages during testing
+options(SCpubr.nebulosa.quiet = TRUE)
+
 if (requireNamespace("Seurat", quietly = TRUE)) {
   sample <- readRDS(system.file("extdata/seurat_dataset_example.rds", package = "SCpubr"))
   sample@assays$SCT$counts <- sample@assays$SCT$data
@@ -68,7 +71,22 @@ liana_output <- readRDS(system.file("extdata/liana_output_example.rds", package 
 
 
 
-
+if (base::isFALSE(dep_check[["do_DimPlot"]]) &
+  base::isFALSE(dep_check[["do_CorrelationHeatmap"]]) &
+   base::isFALSE(dep_check[["do_ChordDiagramPlot"]]) &
+   isTRUE(requireNamespace(pkg, quietly = TRUE)) &
+   base::isFALSE(dep_check[["do_SavePlot"]])){
+p <- SCpubr::do_DimPlot(sample)
+data <- data.frame("A" = stats::runif(n = 10),
+                  "B" = stats::runif(n = 10),
+                  "C" = stats::runif(n = 10),
+                  "D" = stats::runif(n = 10))
+data <- as.matrix(data)
+p.pheatmap <- pheatmap::pheatmap(data, cluster_rows = FALSE, cluster_cols = FALSE)
+p.heatmap <- ComplexHeatmap::Heatmap(data, cluster_rows = FALSE, cluster_columns = FALSE)
+p.chord <- SCpubr::do_ChordDiagramPlot(sample = sample, from = "seurat_clusters", to = "orig.ident")
+figure_path <- getwd()
+}
 
 
 #monocle_sample <- sample

@@ -43,7 +43,7 @@ do_CellularStatesPlot(
   raster.dpi = 1024,
   plot_features = FALSE,
   features = NULL,
-  use_viridis = FALSE,
+  use_viridis = TRUE,
   viridis.palette = "G",
   viridis.direction = 1,
   sequential.palette = "YlGnBu",
